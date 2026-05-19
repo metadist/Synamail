@@ -125,7 +125,7 @@ This is the feature the user asked for: _"search by sender or recipient to creat
 
 ### 4.2 UI surfaces
 
-- **In ReadMode:** a "Contact: alice@example.com ▾" pill below the subject. Click → opens `ContactKnowledgeBase.vue` scoped to that contact. The pill is a picker for multi-recipient threads (sender + each To/Cc address).
+- **In ReadMode:** a "Contact: `alice@example.com` ▾" pill below the subject. Click → opens `ContactKnowledgeBase.vue` scoped to that contact. The pill is a picker for multi-recipient threads (sender + each To/Cc address).
 - **`ContactKnowledgeBase.vue`** shows:
   - The contact's email + name (from the original Outlook headers).
   - A search box that runs `POST /api/v1/rag/search` filtered to `groups=[contact:<email>]`.

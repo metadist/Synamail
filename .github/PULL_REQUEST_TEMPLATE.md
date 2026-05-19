@@ -19,7 +19,7 @@
 
 <!-- Which sprint and step from planning/STEPS.md does this advance? -->
 
-Sprint **, Step **.\_\_
+Sprint `__`, Step `__.__`
 
 ## Changes
 
