@@ -253,9 +253,12 @@ jobs:
 
       - name: Run E2E (CI subset)
         env:
-          # CI runners have no Office dev certs — Vite falls back to plain HTTP.
-          # Playwright spins the dev server itself via the `webServer` block.
-          BASE_URL: http://localhost:3000
+          # office-addin-dev-certs generates a self-signed cert on demand even
+          # when it isn't trusted by the OS, so Vite serves HTTPS in CI just
+          # like locally. Playwright's `ignoreHTTPSErrors` covers the missing
+          # trust. Playwright's `webServer` block (in playwright.config.ts)
+          # spins Vite up itself.
+          BASE_URL: https://localhost:3000
         run: npm run test:e2e -- --grep '@ci'
 
       - name: Upload Playwright artefacts
