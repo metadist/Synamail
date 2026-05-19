@@ -214,7 +214,7 @@ jobs:
 
       - name: Upload dist artefact
         if: success() && matrix.node == '24'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: synamail-dist
           path: dist/
@@ -263,7 +263,7 @@ jobs:
 
       - name: Upload Playwright artefacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-report
           path: |
