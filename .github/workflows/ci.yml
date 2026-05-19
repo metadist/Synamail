@@ -32,7 +32,7 @@ jobs:
       has_src: ${{ steps.check.outputs.has_src }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Inspect
         id: check
@@ -63,7 +63,7 @@ jobs:
     needs: [detect]
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -110,7 +110,7 @@ jobs:
     if: github.event_name == 'pull_request'
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -142,7 +142,7 @@ jobs:
     if: needs.detect.outputs.has_manifest == 'true'
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -176,7 +176,7 @@ jobs:
         node: ['22', '24']
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -231,7 +231,7 @@ jobs:
     if: github.event_name == 'pull_request' && needs.detect.outputs.has_src == 'true'
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
