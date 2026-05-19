@@ -47,11 +47,10 @@ module.exports = {
         'plan',
       ],
     ],
-    'subject-case': [
-      2,
-      'never',
-      ['sentence-case', 'start-case', 'pascal-case', 'upper-case'],
-    ],
+    // Allow `sentence-case` because Dependabot writes subjects like
+    // "ci(deps): Bump actions/checkout from 4 to 6". Block only the louder
+    // styles (Start-Case, PascalCase, ALL CAPS).
+    'subject-case': [2, 'never', ['start-case', 'pascal-case', 'upper-case']],
     'subject-empty': [2, 'never'],
     'subject-full-stop': [2, 'never', '.'],
     'header-max-length': [2, 'always', 72],
