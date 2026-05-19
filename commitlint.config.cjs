@@ -57,5 +57,9 @@ module.exports = {
     'header-max-length': [2, 'always', 72],
     'body-leading-blank': [2, 'always'],
     'footer-leading-blank': [2, 'always'],
+    // Disabled: Dependabot bodies always contain release-note URLs that exceed
+    // 100 chars and can't reasonably be wrapped. Subject + header are still
+    // capped at 72 by `header-max-length`.
+    'body-max-line-length': [0, 'always', 100],
   },
 }

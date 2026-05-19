@@ -86,7 +86,7 @@ This section is the **field-tested install guide** for running Synamail from a l
 | Node.js  | **≥ 22** (Active LTS is **24**, pinned in `.nvmrc`)                                                                                                                                                                                                                                   | [`fnm`](https://github.com/Schniz/fnm) recommended (see below). `nvm` works too. |
 | npm      | ≥ 10 (ships with Node 22+)                                                                                                                                                                                                                                                            | Comes with Node                                                                  |
 | Git      | any recent                                                                                                                                                                                                                                                                            | `apt install git` / Windows installer                                            |
-| Outlook  | One of: Outlook on the Web (any browser), new Outlook for Windows, classic Outlook 2024, Outlook on Mac. **Must be a mailbox you can sideload custom add-ins to** — see [Tenant policy](#tenant-policy-why-work--school-accounts-block-custom-add-ins) below, this is the #1 blocker. |
+| Outlook  | One of: Outlook on the Web (any browser), new Outlook for Windows, classic Outlook 2024, Outlook on Mac. **Must be a mailbox you can sideload custom add-ins to** — see [Tenant policy](#tenant-policy-why-work--school-accounts-block-custom-add-ins) below, this is the #1 blocker. | Use an existing account, or create a free [outlook.com](https://outlook.com) one |
 | Python 3 | ≥ 3.10 (only for placeholder-icon regeneration; optional)                                                                                                                                                                                                                             | `apt install python3`                                                            |
 
 #### Quick Node setup with `fnm` (recommended)
@@ -222,9 +222,11 @@ Bypasses M365 tenant policy entirely on classic Outlook for Windows.
 
 1. Create a folder on Windows: `C:\addin-catalog\`.
 2. Copy the manifest into it:
+
    ```bash
    cp /wwwroot/Synamail/manifest.xml /mnt/c/addin-catalog/
    ```
+
 3. Right-click the folder → **Properties → Sharing → Share**, share with yourself.
 4. Note the UNC path (e.g. `\\YOUR-PC\addin-catalog`).
 5. In classic Outlook: **File → Options → Trust Center → Trust Center Settings → Trusted Add-in Catalogs**.

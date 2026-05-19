@@ -1,7 +1,7 @@
 # Synamail — Outlook Add-in for Synaplan
 
 > **Corrigendum (2026-05-16):** This document is the original architecture brief written before Sprint 1. It still describes the system accurately, **except** for references to a "`synaplan-website`" repo (the bridge page, privacy policy, etc.). That repo does **not** exist. All Synaplan-side changes — including the `/addin/connect` bridge page — land in `@/wwwroot/synaplan/frontend/` and ship as part of the `ghcr.io/metadist/synaplan:latest` Docker image, which is then pulled onto the 3-node production cluster managed by `@/wwwroot/synaplan-platform/`. See [`SYNAPLAN_INTEGRATION.md`](SYNAPLAN_INTEGRATION.md) for the authoritative integration map. The rest of this document is unchanged for historical reference.
-
+>
 > Plan and design document. The repository currently contains only a README + LICENSE; this document is the blueprint we will execute against.
 >
 > The repo on disk is at `~/wwwroot/synaMail/` (filesystem path is what it is) — but the **product/brand name is "Synamail"** and that is what appears in the manifest, the AppSource listing, the ribbon button, the taskpane title, and every user-facing string.
