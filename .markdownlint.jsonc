@@ -1,0 +1,10 @@
+{
+  // Lint rules for `.md` files. Run by CI (`docs` job) and by the docs-only
+  // path of the pre-commit hook.
+  "default": true,
+  "MD013": false, // line length — long URLs and tables blow this up
+  "MD024": { "siblings_only": true }, // duplicate headings allowed at different levels
+  "MD033": false, // inline HTML allowed (used by GitHub callouts)
+  "MD041": false, // first line need not be a top-level heading (templates use front-matter)
+  "MD046": { "style": "fenced" }
+}

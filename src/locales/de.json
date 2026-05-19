@@ -1,0 +1,78 @@
+{
+  "app": {
+    "name": "Synamail",
+    "tagline": "Dein Synaplan-Arbeitsbereich in Outlook."
+  },
+  "signIn": {
+    "title": "Synamail",
+    "subtitle": "Verbinde Synamail mit deinem Synaplan-Arbeitsbereich.",
+    "button": "Bei Synaplan anmelden",
+    "selfHosted": "Eigene Instanz verwenden",
+    "errorTitle": "Anmeldung fehlgeschlagen",
+    "loading": "Anmeldefenster wird geöffnet…"
+  },
+  "read": {
+    "actions": {
+      "summarise": "Zusammenfassen",
+      "translate": "Übersetzen",
+      "draftReply": "Antwort entwerfen",
+      "classify": "Klassifizieren",
+      "saveToRag": "In Wissensdatenbank speichern",
+      "ask": "Fragen"
+    },
+    "result": "Ergebnis",
+    "askPlaceholder": "Frage zu dieser E-Mail…",
+    "contactPill": "Kontakt: {email}"
+  },
+  "compose": {
+    "title": "Verfassen-Modus",
+    "intentLabel": "Absicht",
+    "intentPlaceholder": "Beschreibe, was du schreiben möchtest…",
+    "draft": "Aus Vorgabe entwerfen",
+    "improve": "Auswahl verbessern",
+    "shorten": "Auswahl kürzen",
+    "translate": "Auswahl übersetzen",
+    "insertFromRag": "Aus Wissensdatenbank einfügen",
+    "ragSearchPlaceholder": "Wissensdatenbank durchsuchen…"
+  },
+  "settings": {
+    "title": "Einstellungen",
+    "signedInAs": "Angemeldet als",
+    "signOut": "Abmelden",
+    "synaplanInstance": "Synaplan-Instanz",
+    "instanceHint": "Vor der Anmeldung ändern, um einen eigenen Server zu nutzen.",
+    "preferences": "Einstellungen",
+    "defaultRagGroup": "Standard-RAG-Gruppe",
+    "language": "Sprache",
+    "autoDetectContactGroup": "Kontaktgruppe beim Speichern automatisch erkennen",
+    "advanced": "Erweitert",
+    "routingRules": "Routing-Regeln für E-Mails",
+    "resetRoaming": "Roaming-Einstellungen zurücksetzen"
+  },
+  "common": {
+    "back": "Zurück",
+    "cancel": "Abbrechen",
+    "save": "Speichern",
+    "close": "Schließen",
+    "loading": "Lädt…",
+    "error": "Etwas ist schiefgelaufen",
+    "tryAgain": "Erneut versuchen",
+    "comingSoon": "Kommt in einem späteren Sprint",
+    "mockMode": "Mock-Modus — Sprint 3 verbindet sich mit web.synaplan.com"
+  },
+  "tone": {
+    "formal": "Formell",
+    "concise": "Knapp",
+    "friendly": "Freundlich"
+  },
+  "language": {
+    "auto": "Automatisch erkennen",
+    "en": "Englisch",
+    "de": "Deutsch",
+    "fr": "Französisch",
+    "es": "Spanisch",
+    "it": "Italienisch",
+    "zh": "Chinesisch",
+    "ar": "Arabisch"
+  }
+}

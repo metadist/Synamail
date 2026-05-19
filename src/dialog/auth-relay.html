@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Synamail — Connect</title>
+    <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+    <style>
+      body {
+        font-family:
+          'Segoe UI Variable',
+          -apple-system,
+          system-ui,
+          sans-serif;
+        padding: 2rem;
+        max-width: 32rem;
+        margin: 0 auto;
+        color: #1f1f1f;
+      }
+      h1 {
+        font-size: 1.25rem;
+        margin-bottom: 0.5rem;
+      }
+      .muted {
+        color: #6b6b6b;
+        font-size: 0.875rem;
+      }
+      .err {
+        color: #b91c1c;
+        padding: 0.75rem;
+        background: #fef2f2;
+        border-radius: 0.375rem;
+        margin-top: 1rem;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Connecting to Synaplan…</h1>
+    <p class="muted">
+      Local development build. In production this page lives at
+      <code>https://web.synaplan.com/addin/connect</code> served by the
+      <code>synaplan/frontend/</code> SPA (Sprint 2 cross-repo PR; see
+      <code>docs/SYNAPLAN_INTEGRATION.md</code>).
+    </p>
+    <div id="err" class="err" hidden></div>
+    <script type="module" src="./auth-relay.ts"></script>
+  </body>
+</html>

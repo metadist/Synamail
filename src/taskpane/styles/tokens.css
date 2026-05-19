@@ -1,0 +1,56 @@
+/**
+ * Design tokens, lifted from Fluent UI's neutral palette and brand-tinted.
+ * No Fluent React dependency — just CSS variables we can ship anywhere.
+ *
+ * Dark mode follows Office's `Office.context.officeTheme` if available;
+ * for v0.1 we use prefers-color-scheme as a sane default.
+ */
+
+:root {
+  --syn-brand-50: #eff6ff;
+  --syn-brand-100: #dbeafe;
+  --syn-brand-300: #93c5fd;
+  --syn-brand-500: #4a90e2;
+  --syn-brand-600: #2563eb;
+  --syn-brand-700: #1d4ed8;
+
+  --syn-bg: #ffffff;
+  --syn-surface: #f8f9fa;
+  --syn-border: #e3e3e3;
+  --syn-text: #1f1f1f;
+  --syn-muted: #6b6b6b;
+  --syn-danger: #b91c1c;
+  --syn-success: #15803d;
+
+  --syn-radius-sm: 4px;
+  --syn-radius-md: 6px;
+  --syn-radius-lg: 8px;
+
+  --syn-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --syn-shadow-md: 0 2px 6px rgba(0, 0, 0, 0.08);
+
+  --syn-space-1: 0.25rem;
+  --syn-space-2: 0.5rem;
+  --syn-space-3: 0.75rem;
+  --syn-space-4: 1rem;
+  --syn-space-5: 1.25rem;
+  --syn-space-6: 1.5rem;
+
+  --syn-font:
+    'Segoe UI Variable', 'Segoe UI', -apple-system, BlinkMacSystemFont, system-ui, 'Helvetica Neue',
+    Arial, sans-serif;
+  --syn-font-size-sm: 0.8125rem;
+  --syn-font-size-md: 0.875rem;
+  --syn-font-size-lg: 1rem;
+  --syn-font-size-xl: 1.125rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --syn-bg: #1a1a1a;
+    --syn-surface: #242424;
+    --syn-border: #3a3a3a;
+    --syn-text: #f1f1f1;
+    --syn-muted: #a1a1a1;
+  }
+}

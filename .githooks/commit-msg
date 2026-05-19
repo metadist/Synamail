@@ -1,0 +1,81 @@
+#!/usr/bin/env bash
+# Synamail — commit-msg hook.
+#
+# Enforces Conventional Commits. Once package.json lands (Sprint 2.1), this
+# hook delegates to `commitlint` for richer validation; until then it does
+# a regex check that's good enough to keep history clean.
+#
+# Allowed types: feat, fix, refactor, perf, test, docs, build, ci, chore,
+# style, revert. Optional scope in parens. Optional ! for breaking change.
+# Optional WIP escape hatch: subject starting with `wip:` (must be squashed
+# before opening a PR).
+
+set -e
+
+msg_file="$1"
+msg=$(head -n 1 "$msg_file")
+
+# Skip merge / revert / fixup commits (git generates these).
+case "$msg" in
+  "Merge "*|"Revert "*|"fixup! "*|"squash! "*|"amend! "*)
+    exit 0
+    ;;
+esac
+
+# WIP escape hatch (must never be pushed; see docs/COMMIT_PROCESS.md §6).
+if [[ "$msg" =~ ^wip: ]]; then
+  echo "[commit-msg] WIP commit accepted — remember to squash before pushing"
+  exit 0
+fi
+
+# If commitlint is installed, hand off to it.
+if [ -f node_modules/.bin/commitlint ]; then
+  exec node_modules/.bin/commitlint --edit "$msg_file"
+fi
+
+# Otherwise, regex fallback.
+pattern='^(feat|fix|refactor|perf|test|docs|build|ci|chore|style|revert)(\([a-z0-9-]+\))?!?:[[:space:]].+'
+
+if ! [[ "$msg" =~ $pattern ]]; then
+  cat >&2 <<EOF
+[commit-msg] Commit message does not follow Conventional Commits.
+
+Got:
+  $msg
+
+Expected:
+  <type>(<scope>)?(!)?: <imperative-mood subject>
+
+Allowed types:
+  feat, fix, refactor, perf, test, docs, build, ci, chore, style, revert
+
+Examples:
+  feat(taskpane): add Translate button
+  fix(auth): clear roaming settings on persistent 401
+  ci: cache office-addin-validator binary
+
+See docs/COMMIT_PROCESS.md §1 for the full spec.
+EOF
+  exit 1
+fi
+
+# Subject length.
+subject_len=${#msg}
+if [ "$subject_len" -gt 72 ]; then
+  echo "[commit-msg] subject is ${subject_len} chars; max is 72" >&2
+  exit 1
+fi
+
+# Subject must not end with a period.
+if [[ "$msg" =~ \.$ ]]; then
+  echo "[commit-msg] subject must not end with a period" >&2
+  exit 1
+fi
+
+# Blocklisted AI-attribution footers.
+if grep -qiE '^(co-authored-by:[[:space:]]+(claude|chatgpt|gpt|cursor|copilot|gemini|llm)|generated with|signed-off-by:[[:space:]]+(claude|chatgpt|gpt|cursor|copilot|gemini))' "$msg_file"; then
+  echo "[commit-msg] AI-attribution footer detected — remove it (see docs/COMMIT_PROCESS.md §1)" >&2
+  exit 1
+fi
+
+exit 0

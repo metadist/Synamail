@@ -1,0 +1,14 @@
+node_modules
+dist
+dist-*
+coverage
+playwright-report
+test-results
+.vite
+src/generated
+manifest.unified.json
+LICENSE
+*.png
+*.jpg
+*.jpeg
+*.mp4

@@ -1,0 +1,78 @@
+{
+  "app": {
+    "name": "Synamail",
+    "tagline": "Your Synaplan workspace in Outlook."
+  },
+  "signIn": {
+    "title": "Synamail",
+    "subtitle": "Connect Synamail to your Synaplan workspace.",
+    "button": "Sign in to Synaplan",
+    "selfHosted": "Use a self-hosted instance",
+    "errorTitle": "Sign-in failed",
+    "loading": "Opening sign-in window…"
+  },
+  "read": {
+    "actions": {
+      "summarise": "Summarise",
+      "translate": "Translate",
+      "draftReply": "Draft reply",
+      "classify": "Classify",
+      "saveToRag": "Save to knowledge base",
+      "ask": "Ask"
+    },
+    "result": "Result",
+    "askPlaceholder": "Ask about this email…",
+    "contactPill": "Contact: {email}"
+  },
+  "compose": {
+    "title": "Compose mode",
+    "intentLabel": "Intent",
+    "intentPlaceholder": "Describe what you want to write…",
+    "draft": "Draft from prompt",
+    "improve": "Improve selection",
+    "shorten": "Shorten selection",
+    "translate": "Translate selection",
+    "insertFromRag": "Insert from knowledge base",
+    "ragSearchPlaceholder": "Search your knowledge base…"
+  },
+  "settings": {
+    "title": "Settings",
+    "signedInAs": "Signed in as",
+    "signOut": "Sign out",
+    "synaplanInstance": "Synaplan instance",
+    "instanceHint": "Edit before signing in to use a self-hosted server.",
+    "preferences": "Preferences",
+    "defaultRagGroup": "Default RAG group",
+    "language": "Language",
+    "autoDetectContactGroup": "Auto-detect contact group on save",
+    "advanced": "Advanced",
+    "routingRules": "Email routing rules",
+    "resetRoaming": "Reset roaming settings"
+  },
+  "common": {
+    "back": "Back",
+    "cancel": "Cancel",
+    "save": "Save",
+    "close": "Close",
+    "loading": "Loading…",
+    "error": "Something went wrong",
+    "tryAgain": "Try again",
+    "comingSoon": "Coming in a later sprint",
+    "mockMode": "Mock mode — Sprint 3 wires this to web.synaplan.com"
+  },
+  "tone": {
+    "formal": "Formal",
+    "concise": "Concise",
+    "friendly": "Friendly"
+  },
+  "language": {
+    "auto": "Auto-detect",
+    "en": "English",
+    "de": "Deutsch",
+    "fr": "Français",
+    "es": "Español",
+    "it": "Italiano",
+    "zh": "中文",
+    "ar": "العربية"
+  }
+}

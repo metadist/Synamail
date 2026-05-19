@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+# Synamail — pre-push hook.
+#
+# Reminds the contributor to run E2E locally when any auth / client / view
+# code is in the push range. Non-blocking by default — set
+# SYNAMAIL_PRE_PUSH_STRICT=1 to fail instead of warn.
+
+set -e
+
+cd "$(git rev-parse --show-toplevel)"
+
+strict="${SYNAMAIL_PRE_PUSH_STRICT:-0}"
+
+# git pushes pass refs on stdin: <local ref> <local sha> <remote ref> <remote sha>
+changed=""
+while read -r local_ref local_sha remote_ref remote_sha; do
+  if [ "$local_sha" = "0000000000000000000000000000000000000000" ]; then
+    continue  # deleting a ref
+  fi
+  if [ "$remote_sha" = "0000000000000000000000000000000000000000" ]; then
+    # New branch — compare against the upstream of HEAD if known.
+    range="$local_sha"
+  else
+    range="$remote_sha..$local_sha"
+  fi
+  changed="$changed $(git diff --name-only "$range" || true)"
+done
+
+if [ -z "$changed" ]; then
+  exit 0
+fi
+
+trigger_paths=(
+  'src/taskpane/composables/useAuth\.ts'
+  'src/dialog/'
+  'src/shared/synaplan-client\.ts'
+  'src/taskpane/views/'
+  'manifest\.xml'
+)
+
+needs_e2e=false
+for p in "${trigger_paths[@]}"; do
+  if echo "$changed" | tr ' ' '\n' | grep -qE "$p"; then
+    needs_e2e=true
+    break
+  fi
+done
+
+if $needs_e2e; then
+  msg="[pre-push] auth / client / view / manifest changed — run 'make test-e2e' before merging"
+  if [ "$strict" = "1" ]; then
+    echo "$msg" >&2
+    exit 1
+  else
+    echo "$msg"
+  fi
+fi
+
+exit 0

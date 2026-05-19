@@ -1,0 +1,57 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body {
+  font-family: var(--syn-font);
+  font-size: var(--syn-font-size-md);
+  color: var(--syn-text);
+  background: var(--syn-bg);
+}
+
+#app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+button {
+  font-family: inherit;
+  font-size: inherit;
+  cursor: pointer;
+}
+
+button:focus-visible {
+  outline: 2px solid var(--syn-brand-500);
+  outline-offset: 2px;
+}
+
+a {
+  color: var(--syn-brand-600);
+}
+
+.syn-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--syn-space-3);
+}
+
+.syn-row {
+  display: flex;
+  align-items: center;
+  gap: var(--syn-space-2);
+}
+
+.syn-muted {
+  color: var(--syn-muted);
+  font-size: var(--syn-font-size-sm);
+}

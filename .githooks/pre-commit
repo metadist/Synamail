@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+# Synamail — pre-commit hook.
+#
+# Behaviour:
+#   - Pure docs commits (only *.md / planning/* / docs/* / .github/*) → run docs lint only.
+#   - Otherwise → run `make ci-local` (lint + check-types + test + validate + build).
+#
+# Bypass with `git commit --no-verify` is only allowed for `wip:` commits that
+# will never be pushed. See docs/COMMIT_PROCESS.md §6.
+
+set -e
+
+cd "$(git rev-parse --show-toplevel)"
+
+# Files staged for commit (added/copied/modified/renamed, exclude deletions).
+staged=$(git diff --cached --name-only --diff-filter=ACMR)
+
+if [ -z "$staged" ]; then
+  # Nothing to commit; let git handle the no-op.
+  exit 0
+fi
+
+# Decide if the staged set is docs-only.
+docs_only=true
+while IFS= read -r f; do
+  case "$f" in
+    *.md|docs/*|planning/*|.github/*|LICENSE|.editorconfig|.gitattributes|.gitignore|.githooks/*)
+      ;;
+    *)
+      docs_only=false
+      break
+      ;;
+  esac
+done <<< "$staged"
+
+if $docs_only; then
+  echo "[pre-commit] docs-only commit — running docs lint"
+  # markdownlint via npx is too slow without node_modules; do a quick sanity grep.
+  bad=$(grep -InE '	' $(echo "$staged" | grep -E '\.md$' || true) 2>/dev/null || true)
+  if [ -n "$bad" ]; then
+    echo "[pre-commit] tabs found in markdown — please use spaces:"
+    echo "$bad"
+    exit 1
+  fi
+  echo "[pre-commit] OK"
+  exit 0
+fi
+
+# Full gate.
+echo "[pre-commit] running 'make ci-local'"
+if ! command -v make >/dev/null 2>&1; then
+  echo "[pre-commit] 'make' not available — skipping (CI will still gate the PR)"
+  exit 0
+fi
+
+make ci-local
