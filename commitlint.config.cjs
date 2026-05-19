@@ -53,7 +53,10 @@ module.exports = {
     'subject-case': [2, 'never', ['start-case', 'pascal-case', 'upper-case']],
     'subject-empty': [2, 'never'],
     'subject-full-stop': [2, 'never', '.'],
-    'header-max-length': [2, 'always', 72],
+    // Dependabot's group-bump subjects can reach ~80 chars
+    // ("build(deps-dev): Bump the minor-and-patch group across 1 directory with 2 updates").
+    // 100 is a common upper bound that still keeps `git log --oneline` readable.
+    'header-max-length': [2, 'always', 100],
     'body-leading-blank': [2, 'always'],
     'footer-leading-blank': [2, 'always'],
     // Disabled: Dependabot bodies always contain release-note URLs that exceed
