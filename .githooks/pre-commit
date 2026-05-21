@@ -1,4 +1,14 @@
-#!/usr/bin/env bash
+#!/usr/bin/env -S env LC_ALL=C.UTF-8 LANG=C.UTF-8 bash
+# The shebang above neutralises LC_ALL/LANG before bash starts up. IDE git
+# wrappers (Cursor, VS Code, JetBrains, …) hard-code LC_ALL=en_US.UTF-8 so
+# they can parse English git output reliably. Minimal Linux/WSL installs
+# don't ship en_US.UTF-8, which makes bash warn ("cannot change locale")
+# the moment it starts — and the IDE surfaces that warning as a fake "git
+# error" dialog. Forcing C.UTF-8 (always present) at the env level instead
+# of inside the script body matters because bash applies the locale BEFORE
+# the first line of the script runs. Requires `env -S` (GNU coreutils ≥8.30
+# / modern macOS BSD env); both are universal on dev machines from 2018+.
+#
 # Synamail — pre-commit hook.
 #
 # Behaviour:

@@ -1,4 +1,6 @@
-#!/usr/bin/env bash
+#!/usr/bin/env -S env LC_ALL=C.UTF-8 LANG=C.UTF-8 bash
+# See pre-commit for the rationale on this shebang.
+#
 # Synamail — pre-push hook.
 #
 # Reminds the contributor to run E2E locally when any auth / client / view
