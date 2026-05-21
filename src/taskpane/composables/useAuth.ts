@@ -59,11 +59,20 @@ export function buildDialogUrl(baseUrl: string, state: string): string {
  * Open the sign-in dialog. Resolves with the validated payload, or rejects
  * with an Error explaining the failure (cancel, bad state nonce, dialog
  * couldn't open).
+ *
+ * Listens on TWO channels in parallel:
+ *   1. Office.EventType.DialogMessageReceived — the proper Office channel.
+ *   2. window 'message' events from the bridge origin — fallback for OWA,
+ *      where Office's cross-domain messageParent is unreliable when the
+ *      taskpane and bridge live on different origins. The bridge fires
+ *      BOTH messageParent and window.opener.postMessage; whichever
+ *      channel delivers first wins.
  */
 export function openSignInDialog(opts: UseAuthOptions = {}): Promise<SignInPayload> {
   const baseUrl = opts.baseUrl ?? defaultBaseUrl()
   const state = generateStateNonce()
   const url = opts.dialogUrl ?? buildDialogUrl(baseUrl, state)
+  const expectedOrigin = originOf(baseUrl)
 
   return new Promise<SignInPayload>((resolve, reject) => {
     if (typeof Office === 'undefined' || !Office.context?.ui?.displayDialogAsync) {
@@ -82,37 +91,84 @@ export function openSignInDialog(opts: UseAuthOptions = {}): Promise<SignInPaylo
         const dialog = asyncResult.value as unknown as DialogLike
         let settled = false
 
-        dialog.addEventHandler(Office.EventType.DialogMessageReceived, (arg) => {
+        const cleanupWindowListener = (): void => {
+          window.removeEventListener('message', onWindowMessage)
+        }
+
+        const finalizeError = (err: Error): void => {
           if (settled) return
           settled = true
+          cleanupWindowListener()
           try {
-            const payload = JSON.parse(arg.message ?? '{}') as SignInPayload
-            if (!payload.state || payload.state !== state) {
-              dialog.close()
-              reject(new Error('State nonce mismatch — sign-in rejected'))
-              return
-            }
-            if (!payload.apiKey || !payload.email || !payload.baseUrl) {
-              dialog.close()
-              reject(new Error('Sign-in payload missing required fields'))
-              return
-            }
             dialog.close()
-            resolve(payload)
-          } catch (err) {
-            dialog.close()
-            reject(err instanceof Error ? err : new Error(String(err)))
+          } catch {
+            // Dialog may already be closing — ignore.
           }
+          reject(err)
+        }
+
+        const finalizeSuccess = (payload: SignInPayload): void => {
+          if (settled) return
+          settled = true
+          cleanupWindowListener()
+          try {
+            dialog.close()
+          } catch {
+            // Same as above — best-effort close.
+          }
+          resolve(payload)
+        }
+
+        const handlePayload = (raw: string): void => {
+          let payload: SignInPayload
+          try {
+            payload = JSON.parse(raw) as SignInPayload
+          } catch (err) {
+            finalizeError(err instanceof Error ? err : new Error(String(err)))
+            return
+          }
+          if (!payload.state || payload.state !== state) {
+            finalizeError(new Error('State nonce mismatch — sign-in rejected'))
+            return
+          }
+          if (!payload.apiKey || !payload.email || !payload.baseUrl) {
+            finalizeError(new Error('Sign-in payload missing required fields'))
+            return
+          }
+          finalizeSuccess(payload)
+        }
+
+        function onWindowMessage(event: MessageEvent): void {
+          if (settled) return
+          // Only accept messages from the expected bridge origin.
+          if (event.origin !== expectedOrigin) return
+          if (typeof event.data !== 'string') return
+          handlePayload(event.data)
+        }
+
+        window.addEventListener('message', onWindowMessage)
+
+        dialog.addEventHandler(Office.EventType.DialogMessageReceived, (arg) => {
+          if (settled) return
+          handlePayload(arg.message ?? '{}')
         })
 
         dialog.addEventHandler(Office.EventType.DialogEventReceived, () => {
           if (settled) return
-          settled = true
-          reject(new Error('Sign-in cancelled'))
+          finalizeError(new Error('Sign-in cancelled'))
         })
       },
     )
   })
+}
+
+/** Extract the URL origin (scheme + host + port) for postMessage validation. */
+function originOf(url: string): string {
+  try {
+    return new URL(url).origin
+  } catch {
+    return url
+  }
 }
 
 export async function signIn(opts: UseAuthOptions = {}): Promise<void> {
