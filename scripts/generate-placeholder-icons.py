@@ -1,58 +1,82 @@
 #!/usr/bin/env python3
-"""Generate placeholder PNG icons for the Synamail manifest.
+"""Generate Synamail PNG icons from the Synaplan parrot SVG.
 
-This is intentionally tiny — real artwork lands in Sprint 4 (see
-planning/APPSOURCE_CHECKLIST.md). For sideload / dev / CI we only need
-valid PNGs at the correct dimensions so office-addin-manifest validates.
+Renders the parrot from `assets/source/parrot.svg` onto a cream-coloured
+square "button" at every manifest-required size. The placeholders this
+script used to emit (solid brand-blue squares) are now replaced by branded
+artwork suitable for sideload, OWA "Get add-ins" listings, and AppSource
+submission (Sprint 4 will still want store hero retouching, but the icons
+themselves are real).
+
+Re-run after editing the source SVG, the background colour, or the padding.
+
+    python3 scripts/generate-placeholder-icons.py
+
+Dependencies: ImageMagick `convert` (commonly `apt install imagemagick`).
 """
 
-import os
-import struct
+import shutil
+import subprocess
 import sys
-import zlib
 from pathlib import Path
 
-# Synaplan-ish brand blue (oklch ~ 0.55, hue ~250 → approximately).
-BRAND = (74, 144, 226, 255)
+# Warm off-white, like card stock. Provides a friendly "button" feel against
+# Outlook's white/grey chrome without being pure white (which disappears).
+BG_COLOR = "#F5F2EA"
 
-ICON_SIZES = [16, 32, 64, 80, 128]
-HERO_SIZES = [256, 512]
+# Fraction of canvas height the parrot occupies. 64% leaves a comfortable
+# margin all around without making the bird tiny at 16 px.
+BIRD_HEIGHT_PCT = 64
+
+ICON_SIZES = (16, 32, 64, 80, 128)
+HERO_SIZES = (256, 512)
 
 
-def png_solid(width: int, height: int, color: tuple[int, int, int, int]) -> bytes:
-    """Produce a minimal PNG byte stream of solid colour."""
-
-    def chunk(typ: bytes, data: bytes) -> bytes:
-        return (
-            struct.pack(">I", len(data))
-            + typ
-            + data
-            + struct.pack(">I", zlib.crc32(typ + data) & 0xFFFFFFFF)
-        )
-
-    sig = b"\x89PNG\r\n\x1a\n"
-    ihdr = chunk(b"IHDR", struct.pack(">IIBBBBB", width, height, 8, 6, 0, 0, 0))
-    row = bytes(color) * width
-    raw = b"".join(b"\x00" + row for _ in range(height))
-    idat = chunk(b"IDAT", zlib.compress(raw, level=9))
-    iend = chunk(b"IEND", b"")
-    return sig + ihdr + idat + iend
+def render(svg: Path, png: Path, size: int) -> None:
+    """Rasterize `svg` onto a `size`×`size` cream-coloured PNG at `png`."""
+    inner = max(int(size * BIRD_HEIGHT_PCT / 100), min(size - 2, 12))
+    cmd = [
+        "convert",
+        "-background", "none",
+        "-density", "384",
+        str(svg),
+        "-resize", f"x{inner}",
+        "-background", BG_COLOR,
+        "-gravity", "center",
+        "-extent", f"{size}x{size}",
+        f"PNG32:{png}",
+    ]
+    subprocess.run(cmd, check=True)
 
 
 def main() -> int:
+    if shutil.which("convert") is None:
+        print(
+            "error: ImageMagick `convert` not found. Install with `apt install imagemagick`.",
+            file=sys.stderr,
+        )
+        return 1
+
     repo_root = Path(__file__).resolve().parent.parent
+    src = repo_root / "assets" / "source" / "parrot.svg"
+    if not src.exists():
+        print(f"error: source SVG missing at {src}", file=sys.stderr)
+        return 1
+
     assets = repo_root / "assets"
     store = assets / "store"
     assets.mkdir(parents=True, exist_ok=True)
     store.mkdir(parents=True, exist_ok=True)
 
     for size in ICON_SIZES:
-        (assets / f"icon-{size}.png").write_bytes(png_solid(size, size, BRAND))
-        print(f"  wrote assets/icon-{size}.png ({size}x{size})")
+        out = assets / f"icon-{size}.png"
+        render(src, out, size)
+        print(f"  wrote {out.relative_to(repo_root)} ({size}x{size}, {out.stat().st_size} B)")
 
     for size in HERO_SIZES:
-        (store / f"hero-{size}.png").write_bytes(png_solid(size, size, BRAND))
-        print(f"  wrote assets/store/hero-{size}.png ({size}x{size})")
+        out = store / f"hero-{size}.png"
+        render(src, out, size)
+        print(f"  wrote {out.relative_to(repo_root)} ({size}x{size}, {out.stat().st_size} B)")
 
     return 0
 

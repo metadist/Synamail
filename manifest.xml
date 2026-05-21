@@ -14,7 +14,7 @@
   -->
 
   <Id>5b6e8f74-2c5a-4f1d-9d3c-1b9a4a3c0e01</Id>
-  <Version>1.0.0.0</Version>
+  <Version>1.0.0.1</Version>
   <ProviderName>Synaplan</ProviderName>
   <DefaultLocale>en-US</DefaultLocale>
   <DisplayName DefaultValue="Synamail" />
