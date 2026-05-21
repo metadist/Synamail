@@ -78,6 +78,13 @@ export interface ChatTurnInput {
   question: string
   /** Optional context: original email body. */
   emailContext?: string
+  /**
+   * Existing chat id for this conversation (from roaming.chats[conversationId]).
+   * When set, the client reuses the chat via `trackId`; when undefined, the
+   * client creates a new chat first and the returned `chatId` should be
+   * persisted by the caller for subsequent turns.
+   */
+  chatId?: number
 }
 
 export interface ChatTurnResult {
@@ -104,10 +111,17 @@ export interface FileUploadInput {
   filename: string
   contentBase64: string
   mimeType: string
-  /** RAG group id to add the file to. */
+  /** RAG group id to add the file to (becomes `group_key` in the upload). */
   groupId?: string
   /** Free-form metadata; we tag email-sourced files with from/to addresses. */
   metadata?: Record<string, string>
+  /**
+   * How aggressively Synaplan processes the file after upload. Combines what
+   * used to be a separate POST /files/{id}/process call into the same
+   * request. Defaults to `extract` (safe minimum); use `vectorize` for RAG
+   * ingestion and `full` for full extraction + vectorisation + analysis.
+   */
+  processLevel?: 'store' | 'extract' | 'vectorize' | 'full'
 }
 
 export interface FileUploadResult {

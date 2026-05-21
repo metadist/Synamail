@@ -1,17 +1,35 @@
 /**
  * Synaplan API client.
  *
- * Sprint 2 ships the interface, the mock implementation, and a thin real
- * implementation that hits the live API. Sprint 3 replaces the mock as the
- * default and adds Zod validation generated from the OpenAPI spec.
+ * The interface (`SynaplanClient`) is shaped around the taskpane's
+ * read-mode / compose-mode features. Two implementations:
  *
- * Selection happens via the `SYNAMAIL_USE_MOCK_CLIENT` build-time flag
- * (`vite.config.ts`) and a runtime override exposed through Settings.
+ *   - `RealSynaplanClient` — hits a live Synaplan instance.
+ *   - `MockSynaplanClient` — returns canned data for offline dev / Vitest.
+ *
+ * Selection happens via `createSynaplanClient({ useMock })` and the auto-
+ * detection of mock keys (prefix `mock-key-`). Sprint 3 swaps the default
+ * to the real client.
+ *
+ * All AI features (summarise / translate / draftReply / classify / ask)
+ * route through Synaplan's single `POST /api/v1/messages/send` chat
+ * endpoint with a per-action system prompt prepended to the email body.
+ * Synaplan's `outgoingMessage` response field carries the AI's reply
+ * text; its exact internal shape is `type: object` (undocumented) in the
+ * OpenAPI spec, so `extractAiText()` tries a handful of common field
+ * names. See the comment on that helper for the live-smoke checklist.
  *
  * 401 handling: callers wrap calls; on `ApiError.status === 401` the
  * useAuth composable clears roaming settings and bounces to SignIn.
  */
 
+import {
+  ask as askPrompt,
+  classify as classifyPrompt,
+  reply as replyPrompt,
+  summarise as summarisePrompt,
+  translate as translatePrompt,
+} from './prompts'
 import type {
   ApiError,
   ChatTurnInput,
@@ -40,9 +58,14 @@ export interface SynaplanClient {
   ask(input: ChatTurnInput): Promise<ChatTurnResult>
   ragSearch(input: RagSearchInput): Promise<RagSearchHit[]>
   ragGroups(): Promise<RagGroup[]>
+  /**
+   * Returns a synthetic RagGroup with the requested name. Synaplan creates
+   * groups implicitly when an upload uses a new `group_key`, so this call
+   * is a client-side reservation — the group materialises server-side as
+   * soon as `fileUpload({ groupId: name })` runs.
+   */
   ragCreateGroup(name: string): Promise<RagGroup>
   fileUpload(input: FileUploadInput): Promise<FileUploadResult>
-  fileProcess(fileId: number, level: 'extract' | 'vectorize' | 'analyze'): Promise<void>
   revokeApiKey(keyId: number): Promise<void>
 }
 
@@ -56,7 +79,8 @@ export interface ClientOptions {
 }
 
 // ---------------------------------------------------------------------------
-// Real client — hits web.synaplan.com (or a self-hosted Synaplan instance).
+// Real client — hits a live Synaplan instance (`web.synaplan.com` by
+// default, overridable for self-hosted instances).
 // ---------------------------------------------------------------------------
 
 export class RealSynaplanClient implements SynaplanClient {
@@ -76,10 +100,12 @@ export class RealSynaplanClient implements SynaplanClient {
     const url = `${this.baseUrl}${path}`
     const headers = new Headers(init.headers)
     headers.set('X-API-Key', this.apiKey)
-    if (!headers.has('Content-Type') && init.body) {
+    headers.set('Accept', 'application/json')
+    // Only set JSON content-type when the caller hasn't supplied a body
+    // shape of its own (e.g. multipart for /files/upload).
+    if (!headers.has('Content-Type') && init.body && typeof init.body === 'string') {
       headers.set('Content-Type', 'application/json')
     }
-    headers.set('Accept', 'application/json')
 
     let lastErr: unknown
     for (let attempt = 0; attempt <= this.maxRetries; attempt++) {
@@ -108,86 +134,176 @@ export class RealSynaplanClient implements SynaplanClient {
     throw lastErr
   }
 
-  ping(): Promise<{ ok: boolean; email?: string }> {
-    return this.request('/api/v1/profile')
+  // -------------------------------------------------------------------------
+  // Ping — uses GET /auth/me, which is purpose-built for "who am I" and
+  // returns a compact, stable `user.email` (vs /profile which returns the
+  // larger billing-oriented record).
+  // -------------------------------------------------------------------------
+
+  async ping(): Promise<{ ok: boolean; email?: string }> {
+    const res = await this.request<AuthMeResponse>('/api/v1/auth/me')
+    return { ok: !!res?.success, email: res?.user?.email }
   }
 
-  summarise(input: SummariseInput): Promise<SummariseResult> {
-    return this.request('/api/v1/messages/send', {
+  // -------------------------------------------------------------------------
+  // AI actions — every one of these is a single POST /messages/send call
+  // whose `message` field is the system prompt prepended to the email body.
+  // The AI's reply comes back in `outgoingMessage` (undocumented shape;
+  // extracted via extractAiText below).
+  // -------------------------------------------------------------------------
+
+  async summarise(input: SummariseInput): Promise<SummariseResult> {
+    const lang = pickLanguage(input)
+    const message = composeMessage(summarisePrompt(lang), buildEmailBlock(input))
+    const text = await this.sendChat(message)
+    return {
+      summary: text,
+      bullets: parseMarkdownBullets(text),
+      language: lang,
+    }
+  }
+
+  async translate(input: TranslateInput): Promise<TranslateResult> {
+    const message = composeMessage(translatePrompt(input.targetLanguage), input.text)
+    const text = await this.sendChat(message)
+    return {
+      translation: text,
+      // Detection isn't returned by the server in this call shape; we record
+      // the target so downstream UI has something deterministic to show.
+      detectedLanguage: 'auto',
+    }
+  }
+
+  async draftReply(input: DraftReplyInput): Promise<DraftReplyResult> {
+    const message = composeMessage(
+      replyPrompt(input.tone, input.language),
+      buildEmailBlock({
+        subject: input.subject,
+        body: input.body,
+      }),
+    )
+    const text = await this.sendChat(message)
+    return { htmlBody: text }
+  }
+
+  async classify(input: ClassifyInput): Promise<ClassifyResult> {
+    const categories = ['billing', 'support', 'internal', 'personal', 'spam', 'general']
+    const message = composeMessage(classifyPrompt(categories), buildEmailBlock(input))
+    const text = await this.sendChat(message)
+    return parseClassifyResponse(text)
+  }
+
+  async ask(input: ChatTurnInput): Promise<ChatTurnResult> {
+    // 1. Ensure a chat exists for this conversation. If the caller didn't
+    //    supply chatId from roaming, create a fresh chat now and return its
+    //    id alongside the answer so the caller can persist it.
+    let chatId = input.chatId
+    if (!chatId) {
+      const created = await this.request<CreateChatResponse>('/api/v1/chats', {
+        method: 'POST',
+        body: JSON.stringify({ title: `Outlook: ${input.conversationId.slice(0, 40)}` }),
+      })
+      if (!created?.success || !created.chat?.id) {
+        throw apiError(0, 'CHAT_CREATE_FAILED', 'Could not create chat')
+      }
+      chatId = created.chat.id
+    }
+    // 2. Send the question into that chat via /messages/send with trackId.
+    const prefix = input.emailContext
+      ? `${askPrompt()}\n\n[email context]\n${input.emailContext}\n\n[question]\n`
+      : `${askPrompt()}\n\n`
+    const answer = await this.sendChat(`${prefix}${input.question}`, chatId)
+    return { chatId, answer }
+  }
+
+  // -------------------------------------------------------------------------
+  // RAG
+  // -------------------------------------------------------------------------
+
+  async ragSearch(input: RagSearchInput): Promise<RagSearchHit[]> {
+    // Synaplan's /rag/search takes one group_key; multi-group search would
+    // need to be fanned out client-side. V1 just uses the first group when
+    // multiple are provided (matches how the contact-KB feature uses it).
+    const body: Record<string, unknown> = { query: input.query }
+    if (input.limit !== undefined) body.limit = input.limit
+    if (input.threshold !== undefined) body.min_score = input.threshold
+    if (input.groups && input.groups.length > 0) body.group_key = input.groups[0]
+
+    const res = await this.request<RagSearchResponse>('/api/v1/rag/search', {
       method: 'POST',
-      body: JSON.stringify({ action: 'summarise', input }),
+      body: JSON.stringify(body),
     })
+    return (res?.results ?? []).map((hit) => ({
+      fileId: hit.file_id ?? 0,
+      filename: hit.file_name ?? '',
+      snippet: hit.text ?? '',
+      score: hit.score ?? 0,
+      group: hit.group_key ?? undefined,
+    }))
   }
 
-  translate(input: TranslateInput): Promise<TranslateResult> {
-    return this.request('/api/v1/messages/send', {
+  async ragGroups(): Promise<RagGroup[]> {
+    const res = await this.request<RagGroupsResponse>('/api/v1/files/groups')
+    // The endpoint returns either `{groups: [...]}` or a bare array depending
+    // on the deployment; normalise both.
+    const list: RawRagGroup[] = Array.isArray(res) ? res : (res?.groups ?? [])
+    return list.map((g) => ({
+      id: g.key ?? g.id ?? g.name ?? '',
+      name: g.name ?? g.key ?? '',
+      description: g.description ?? undefined,
+    }))
+  }
+
+  async ragCreateGroup(name: string): Promise<RagGroup> {
+    // No backend endpoint exists for explicit group creation; groups are
+    // materialised on first upload with a new `group_key`. We return a
+    // synthetic descriptor so the picker can list the name immediately.
+    return { id: name, name }
+  }
+
+  async fileUpload(input: FileUploadInput): Promise<FileUploadResult> {
+    const blob = base64ToBlob(input.contentBase64, input.mimeType)
+    const form = new FormData()
+    form.append('files[]', blob, input.filename)
+    if (input.groupId) form.append('group_key', input.groupId)
+    form.append('process_level', input.processLevel ?? 'extract')
+
+    const res = await this.request<FileUploadResponse>('/api/v1/files/upload', {
       method: 'POST',
-      body: JSON.stringify({ action: 'translate', input }),
+      body: form,
     })
+    // The response shape varies (`files[0].id` vs `fileIds[0]` vs `file_id`);
+    // pick the first id we can find so callers get a stable `FileUploadResult`.
+    const fileId = pickFirstFileId(res)
+    return { fileId }
   }
 
-  draftReply(input: DraftReplyInput): Promise<DraftReplyResult> {
-    return this.request('/api/v1/messages/send', {
+  async revokeApiKey(keyId: number): Promise<void> {
+    await this.request(`/api/v1/apikeys/${keyId}`, { method: 'DELETE' })
+  }
+
+  // -------------------------------------------------------------------------
+  // Internal: AI chat round-trip
+  // -------------------------------------------------------------------------
+
+  private async sendChat(message: string, trackId?: number): Promise<string> {
+    const body: Record<string, unknown> = { message }
+    if (trackId !== undefined) body.trackId = trackId
+    const res = await this.request<MessagesSendResponse>('/api/v1/messages/send', {
       method: 'POST',
-      body: JSON.stringify({ action: 'reply', input }),
+      body: JSON.stringify(body),
     })
-  }
-
-  classify(input: ClassifyInput): Promise<ClassifyResult> {
-    return this.request('/api/v1/messages/send', {
-      method: 'POST',
-      body: JSON.stringify({ action: 'classify', input }),
-    })
-  }
-
-  ask(input: ChatTurnInput): Promise<ChatTurnResult> {
-    return this.request('/api/v1/chats', {
-      method: 'POST',
-      body: JSON.stringify(input),
-    })
-  }
-
-  ragSearch(input: RagSearchInput): Promise<RagSearchHit[]> {
-    return this.request('/api/v1/rag/search', {
-      method: 'POST',
-      body: JSON.stringify(input),
-    })
-  }
-
-  ragGroups(): Promise<RagGroup[]> {
-    return this.request('/api/v1/files/groups')
-  }
-
-  ragCreateGroup(name: string): Promise<RagGroup> {
-    return this.request('/api/v1/files/groups', {
-      method: 'POST',
-      body: JSON.stringify({ name }),
-    })
-  }
-
-  fileUpload(input: FileUploadInput): Promise<FileUploadResult> {
-    return this.request('/api/v1/files/upload', {
-      method: 'POST',
-      body: JSON.stringify(input),
-    })
-  }
-
-  fileProcess(fileId: number, level: 'extract' | 'vectorize' | 'analyze'): Promise<void> {
-    return this.request(`/api/v1/files/${fileId}/process`, {
-      method: 'POST',
-      body: JSON.stringify({ level }),
-    })
-  }
-
-  revokeApiKey(keyId: number): Promise<void> {
-    return this.request(`/api/v1/apikeys/${keyId}`, { method: 'DELETE' })
+    if (!res?.success) {
+      throw apiError(0, 'AI_FAILED', 'Synaplan reported a non-success response')
+    }
+    return extractAiText(res.outgoingMessage)
   }
 }
 
 // ---------------------------------------------------------------------------
-// Mock client — used in Sprint 2 and as the offline-dev default.
-// Returns canned, deterministic shapes after a short simulated delay so
-// the UI exercises loading + error states properly.
+// Mock client — used for offline-dev / Vitest. Returns canned, deterministic
+// shapes after a short simulated delay so the UI exercises loading + error
+// states properly.
 // ---------------------------------------------------------------------------
 
 export class MockSynaplanClient implements SynaplanClient {
@@ -246,7 +362,7 @@ export class MockSynaplanClient implements SynaplanClient {
 
   ask(input: ChatTurnInput): Promise<ChatTurnResult> {
     return this.wait({
-      chatId: hashToChatId(input.conversationId),
+      chatId: input.chatId ?? hashToChatId(input.conversationId),
       answer: `(mock answer) You asked: ${input.question}`,
     })
   }
@@ -276,10 +392,6 @@ export class MockSynaplanClient implements SynaplanClient {
 
   fileUpload(_input: FileUploadInput): Promise<FileUploadResult> {
     return this.wait({ fileId: Math.floor(Math.random() * 10_000) })
-  }
-
-  fileProcess(_fileId: number, _level: 'extract' | 'vectorize' | 'analyze'): Promise<void> {
-    return this.wait(undefined)
   }
 
   revokeApiKey(_keyId: number): Promise<void> {
@@ -343,4 +455,165 @@ function hashToChatId(s: string): number {
     h = (h * 31 + s.charCodeAt(i)) | 0
   }
   return Math.abs(h) || 1
+}
+
+function composeMessage(systemPrompt: string, userBlock: string): string {
+  return `${systemPrompt}\n\n${userBlock}`
+}
+
+function buildEmailBlock(input: {
+  subject?: string
+  body: string
+  from?: string
+  to?: string[]
+}): string {
+  const parts: string[] = []
+  if (input.subject) parts.push(`Subject: ${input.subject}`)
+  if (input.from) parts.push(`From: ${input.from}`)
+  if (input.to && input.to.length) parts.push(`To: ${input.to.join(', ')}`)
+  parts.push('', input.body)
+  return parts.join('\n')
+}
+
+function pickLanguage(input: SummariseInput | ClassifyInput): string {
+  // Summarise / classify don't carry a target language in their input shape
+  // today; default to English. Sprint 3.x adds a user override hooked off
+  // Settings.language and Office.context.displayLanguage.
+  void input
+  return 'en'
+}
+
+function parseMarkdownBullets(text: string): string[] {
+  // The summarise prompt asks for `- ` bullets. Extract the leaf text from
+  // any line that starts with `-`, `*`, or `•` (with leading whitespace),
+  // stripping the marker. Falls back to splitting on newlines.
+  const lines = text.split(/\r?\n/)
+  const bullets = lines
+    .map((l) => l.match(/^\s*(?:[-*•]|\d+[.)])\s+(.+)$/)?.[1] ?? null)
+    .filter((b): b is string => !!b)
+    .map((b) => b.trim())
+  if (bullets.length > 0) return bullets
+  return lines.map((l) => l.trim()).filter(Boolean)
+}
+
+function parseClassifyResponse(text: string): ClassifyResult {
+  // The classify prompt asks for JSON: { category, confidence, reasoning }.
+  // Tolerate fenced output (```json ... ```), surrounding prose, and the
+  // occasional missing field.
+  const cleaned = text
+    .replace(/```(?:json)?\s*/gi, '')
+    .replace(/```/g, '')
+    .trim()
+  const start = cleaned.indexOf('{')
+  const end = cleaned.lastIndexOf('}')
+  if (start === -1 || end === -1 || end <= start) {
+    return { category: 'unknown', confidence: 0, reasoning: 'parse_failed: no JSON object found' }
+  }
+  try {
+    const parsed = JSON.parse(cleaned.slice(start, end + 1)) as Partial<ClassifyResult>
+    return {
+      category: typeof parsed.category === 'string' ? parsed.category : 'unknown',
+      confidence: typeof parsed.confidence === 'number' ? parsed.confidence : 0,
+      reasoning: typeof parsed.reasoning === 'string' ? parsed.reasoning : '',
+    }
+  } catch (err) {
+    return {
+      category: 'unknown',
+      confidence: 0,
+      reasoning: `parse_failed: ${err instanceof Error ? err.message : String(err)}`,
+    }
+  }
+}
+
+/**
+ * Extract the AI reply text from `outgoingMessage`. The OpenAPI spec only
+ * declares this as `type: object`, so we try the most common field names
+ * Synaplan uses in adjacent endpoints (`text`, `content`, `body`,
+ * `message`, `answer`). Once we have a real API key we should do a one-
+ * shot live smoke and pin the exact field name here.
+ *
+ * If none of those match but the object is itself a string, return it.
+ * If nothing fits, return JSON-stringified shape so the UI still shows
+ * SOMETHING the user can copy to a bug report rather than a silent
+ * empty string.
+ */
+function extractAiText(msg: unknown): string {
+  if (typeof msg === 'string') return msg
+  if (msg && typeof msg === 'object') {
+    const obj = msg as Record<string, unknown>
+    for (const key of ['text', 'content', 'body', 'message', 'answer', 'reply']) {
+      const v = obj[key]
+      if (typeof v === 'string' && v.length > 0) return v
+    }
+  }
+  return typeof msg === 'undefined' ? '' : JSON.stringify(msg)
+}
+
+function base64ToBlob(b64: string, mime: string): Blob {
+  const bin = atob(b64)
+  const bytes = new Uint8Array(bin.length)
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i)
+  return new Blob([bytes], { type: mime })
+}
+
+interface FileUploadResponse {
+  files?: { id?: number; file_id?: number }[]
+  fileIds?: number[]
+  file_id?: number
+}
+
+function pickFirstFileId(res: FileUploadResponse | undefined | null): number {
+  if (!res) return 0
+  if (Array.isArray(res.files) && res.files.length > 0) {
+    return res.files[0].id ?? res.files[0].file_id ?? 0
+  }
+  if (Array.isArray(res.fileIds) && res.fileIds.length > 0) return res.fileIds[0]
+  if (typeof res.file_id === 'number') return res.file_id
+  return 0
+}
+
+// ---------------------------------------------------------------------------
+// Wire-format type shims for the response shapes we accept
+// ---------------------------------------------------------------------------
+
+interface AuthMeResponse {
+  success?: boolean
+  user?: { email?: string; id?: number; level?: string; isAdmin?: boolean }
+}
+
+interface MessagesSendResponse {
+  success?: boolean
+  incomingMessage?: unknown
+  // `type: object` in the OpenAPI; extracted by extractAiText().
+  outgoingMessage?: unknown
+}
+
+interface CreateChatResponse {
+  success?: boolean
+  chat?: { id?: number; title?: string; createdAt?: string; updatedAt?: string }
+}
+
+interface RagSearchResponse {
+  success?: boolean
+  results?: {
+    id?: number
+    text?: string
+    score?: number
+    file_id?: number
+    file_name?: string
+    group_key?: string | null
+  }[]
+  query?: string
+  total_results?: number
+}
+
+interface RawRagGroup {
+  id?: string
+  key?: string
+  name?: string
+  description?: string
+}
+
+interface RagGroupsResponse {
+  groups?: RawRagGroup[]
 }
