@@ -1,4 +1,6 @@
-#!/usr/bin/env bash
+#!/usr/bin/env -S env LC_ALL=C.UTF-8 LANG=C.UTF-8 bash
+# See pre-commit for the rationale on this shebang.
+#
 # Synamail — commit-msg hook.
 #
 # Enforces Conventional Commits. Once package.json lands (Sprint 2.1), this
