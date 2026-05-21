@@ -9,6 +9,14 @@
 
 set -e
 
+# Print informational progress only to interactive terminals — see pre-commit
+# for the rationale.
+info() {
+  if [ -t 1 ]; then
+    printf '%s\n' "$*"
+  fi
+}
+
 cd "$(git rev-parse --show-toplevel)"
 
 strict="${SYNAMAIL_PRE_PUSH_STRICT:-0}"
@@ -54,7 +62,7 @@ if $needs_e2e; then
     echo "$msg" >&2
     exit 1
   else
-    echo "$msg"
+    info "$msg"
   fi
 fi
 

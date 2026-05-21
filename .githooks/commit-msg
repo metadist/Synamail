@@ -14,6 +14,14 @@
 
 set -e
 
+# Print informational progress only to interactive terminals — see pre-commit
+# for the rationale.
+info() {
+  if [ -t 1 ]; then
+    printf '%s\n' "$*"
+  fi
+}
+
 msg_file="$1"
 msg=$(head -n 1 "$msg_file")
 
@@ -26,7 +34,7 @@ esac
 
 # WIP escape hatch (must never be pushed; see docs/COMMIT_PROCESS.md §6).
 if [[ "$msg" =~ ^wip: ]]; then
-  echo "[commit-msg] WIP commit accepted — remember to squash before pushing"
+  info "[commit-msg] WIP commit accepted — remember to squash before pushing"
   exit 0
 fi
 

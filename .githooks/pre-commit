@@ -20,6 +20,18 @@
 
 set -e
 
+# Print informational progress only when stdout is an interactive terminal
+# (i.e. the developer ran `git commit` in a real shell). IDE git wrappers
+# (Cursor, VS Code, JetBrains, …) pipe hook stdout/stderr into a UI dialog
+# and treat ANY non-empty output as a fake "Git error" modal, even when the
+# hook exits 0. Failures still go to stderr unconditionally so the IDE
+# correctly surfaces real problems.
+info() {
+  if [ -t 1 ]; then
+    printf '%s\n' "$*"
+  fi
+}
+
 cd "$(git rev-parse --show-toplevel)"
 
 # Files staged for commit (added/copied/modified/renamed, exclude deletions).
@@ -44,22 +56,22 @@ while IFS= read -r f; do
 done <<< "$staged"
 
 if $docs_only; then
-  echo "[pre-commit] docs-only commit — running docs lint"
+  info "[pre-commit] docs-only commit — running docs lint"
   # markdownlint via npx is too slow without node_modules; do a quick sanity grep.
   bad=$(grep -InE '	' $(echo "$staged" | grep -E '\.md$' || true) 2>/dev/null || true)
   if [ -n "$bad" ]; then
-    echo "[pre-commit] tabs found in markdown — please use spaces:"
-    echo "$bad"
+    echo "[pre-commit] tabs found in markdown — please use spaces:" >&2
+    echo "$bad" >&2
     exit 1
   fi
-  echo "[pre-commit] OK"
+  info "[pre-commit] OK"
   exit 0
 fi
 
 # Full gate.
-echo "[pre-commit] running 'make ci-local'"
+info "[pre-commit] running 'make ci-local'"
 if ! command -v make >/dev/null 2>&1; then
-  echo "[pre-commit] 'make' not available — skipping (CI will still gate the PR)"
+  info "[pre-commit] 'make' not available — skipping (CI will still gate the PR)"
   exit 0
 fi
 
