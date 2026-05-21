@@ -8,6 +8,11 @@ test-results
 src/generated
 manifest.unified.json
 LICENSE
+
+# Pinned vendor OpenAPI snapshots — verbatim copy of the upstream
+# /api/doc.json at the timestamp in the filename. Do not reformat.
+docs/openapi-*.json
+
 *.png
 *.jpg
 *.jpeg
