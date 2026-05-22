@@ -211,3 +211,49 @@ Almost nothing in v1. For completeness:
 - Helper scripts: `synaplan-platform/re-startweb{1,2,3}.sh`, `synaplan-platform/startweb{1,2,3}.sh`.
 - Plugin precedent: `synaplan-sortx/sortx-plugin/` (the source-of-truth pattern for synaplan plugins).
 - Synaplan pre-commit gate (mandatory for the bridge-page PR): `make lint && make -C backend phpstan && make test && docker compose exec -T frontend npm run check:types`.
+
+## 7. Local sign-in loop against a dev Synaplan (HTTPS workaround)
+
+The Synamail sign-in dialog goes through `Office.context.ui.displayDialogAsync`, which Office hard-rejects unless the URL is HTTPS. The local Synaplan dev server at `http://localhost:5173` therefore can't be pasted into Synamail's "Self-hosted instance" override as-is. The workaround is to put a one-line HTTPS proxy in front of the Vite dev server — no source changes to `synaplan/`, no Docker changes.
+
+### 7.1 One-time setup
+
+The taskpane's outbound connections are restricted by `<AppDomains>` in `manifest.xml`. The dev origin `https://localhost:5174` is already listed there (alongside `web.synaplan.com` / `addin.synaplan.com`). If you want a different port, add a new `<AppDomain>` entry and re-run `make sideload`.
+
+### 7.2 The loop
+
+```bash
+# Terminal 1 — Synaplan dev backend + frontend (frontend on :5173, backend on :8000)
+cd /wwwroot/synaplan
+docker compose up -d
+
+# Terminal 2 — HTTPS terminator in front of the Vite dev server.
+# Self-signed cert; the browser will prompt once and remember.
+npx local-ssl-proxy --source 5174 --target 5173
+
+# Terminal 3 — Synamail taskpane + Outlook on the Web sideload
+cd /wwwroot/Synamail
+make dev &       # https://localhost:3000
+make sideload    # opens OWA with the manifest
+
+# In OWA: open any message → Synamail panel → "Self-hosted instance →"
+# Paste:  https://localhost:5174
+# Click "Sign in to Synaplan".
+```
+
+First click triggers the browser cert warning for `https://localhost:5174` — accept it once. The dialog then loads `/addin/connect` from the local `synaplan/frontend/`, which calls `POST /api/v1/apikeys` (proxied through Vite to the backend container) and posts the `{ state, apiKey, keyId, email, baseUrl }` payload back through both `window.opener.postMessage` and `Office.context.ui.messageParent`.
+
+### 7.3 Switching back to live before deploying
+
+Synamail keeps the override only for the next sign-in (it isn't persisted). To verify against `web.synaplan.com` again:
+
+1. Sign out from the Synamail taskpane (resets `Office.context.roamingSettings`).
+2. On the next sign-in, leave the "Self-hosted instance" field at its default (`https://web.synaplan.com`) — that's what `defaultBaseUrl()` (`src/taskpane/composables/useAuth.ts`) returns when no settings are present.
+
+Nothing on the production / `synaplan-platform` side changes.
+
+### 7.4 Caveats
+
+- **OWA only.** New Outlook for Windows / classic Outlook 2024 / Outlook for Mac open dialogs in their own WebView and reject untrusted certs entirely. For desktop testing, install a locally-trusted root with `mkcert` and feed those certs to `local-ssl-proxy` via `--cert`/`--key`.
+- **One-time browser exception.** The self-signed cert exception is per-browser-profile. If you switch profiles, accept it again at `https://localhost:5174/addin/connect`.
+- **AppSource submissions.** Strip the `<AppDomain>https://localhost:5174</AppDomain>` line from `manifest.xml` before the certification build (`planning/APPSOURCE_CHECKLIST.md` calls this out). It's harmless in dev sideloads, but Microsoft's validator flags localhost domains in store submissions.
