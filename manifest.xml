@@ -26,6 +26,9 @@
   <AppDomains>
     <AppDomain>https://web.synaplan.com</AppDomain>
     <AppDomain>https://addin.synaplan.com</AppDomain>
+    <!-- Local dev loop: HTTPS-terminate the Synaplan Vite dev server on :5174
+         (see docs/SYNAPLAN_INTEGRATION.md §7). Strip before AppSource. -->
+    <AppDomain>https://localhost:5174</AppDomain>
   </AppDomains>
 
   <Hosts>

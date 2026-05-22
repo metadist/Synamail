@@ -101,10 +101,13 @@ async function saveToRag(): Promise<void> {
         mimeType: 'message/rfc822',
         groupId: senderEmail.value ? `contact:${senderEmail.value.toLowerCase()}` : undefined,
         metadata: { from: item.value.from ?? '', subject: item.value.subject },
+        // Synaplan's upload now extracts as part of the same request — no
+        // separate fileProcess call needed (and the interface no longer
+        // exposes one). Use 'vectorize' if the user opts into RAG retrieval.
+        processLevel: 'extract',
       }),
     )
     if (r) {
-      await call((c) => c.fileProcess(r.fileId, 'extract'))
       result.value = `Saved file #${r.fileId}.`
     }
     return r
