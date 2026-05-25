@@ -38,7 +38,7 @@
     "@playwright/test": "^1.47.0",
     "@types/node": "^25.9.0",
     "@types/office-js": "^1.0.450",
-    "@vitejs/plugin-vue": "^5.1.0",
+    "@vitejs/plugin-vue": "^6.0.7",
     "@vue/test-utils": "^2.4.6",
     "@vue/tsconfig": "^0.9.1",
     "eslint": "^9.10.0",
