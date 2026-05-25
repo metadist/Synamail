@@ -27,7 +27,7 @@
   "dependencies": {
     "vue": "^3.5.0",
     "vue-i18n": "^9.14.0",
-    "zod": "^3.23.0"
+    "zod": "^4.4.3"
   },
   "overrides": {
     "strip-bom": "3.0.0"
