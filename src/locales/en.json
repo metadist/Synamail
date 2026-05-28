@@ -22,7 +22,24 @@
     },
     "result": "Result",
     "askPlaceholder": "Ask about this email…",
-    "contactPill": "Contact: {email}"
+    "contactPill": "Contact: {email}",
+    "saveDialog": {
+      "title": "Save to knowledge base",
+      "group": "Knowledge group",
+      "newGroup": "Or create a new group",
+      "newGroupPlaceholder": "e.g. contact:alice@example.com",
+      "contactGroup": "Use contact group",
+      "contactGroupHint": "suggested for this sender",
+      "processLevel": "Processing",
+      "processLevels": {
+        "store": "Store only",
+        "extract": "Extract text",
+        "vectorize": "Extract + vectorize for RAG",
+        "full": "Full analysis"
+      },
+      "loadingGroups": "Loading groups…",
+      "savedTo": "Saved as file #{fileId} in {group}."
+    }
   },
   "compose": {
     "title": "Compose mode",

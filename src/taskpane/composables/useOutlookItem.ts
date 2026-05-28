@@ -190,3 +190,58 @@ async function readAttachments(raw: Office.Item): Promise<Office.AttachmentDetai
   if (Array.isArray(direct)) return direct
   return []
 }
+
+// ---------------------------------------------------------------------------
+// File extraction for "Save to knowledge base"
+// ---------------------------------------------------------------------------
+
+export interface MessageFile {
+  filename: string
+  contentBase64: string
+  mimeType: string
+}
+
+/**
+ * Capture the currently-selected read-mode message as a file payload suitable
+ * for `synaplanClient.fileUpload(...)`. Uses `getAsFileAsync` (Mailbox 1.8)
+ * which returns base64 EML when available. Falls back to a plain-text export
+ * of the body when the API is missing (older clients, unit tests).
+ */
+export async function getReadItemAsFile(snapshot: OutlookItemSnapshot): Promise<MessageFile> {
+  const baseName = sanitizeFilename(snapshot.subject || 'message')
+  const raw = (typeof Office !== 'undefined' ? Office.context?.mailbox?.item : undefined) as
+    | (Office.MessageRead & {
+        getAsFileAsync?: (cb: (r: Office.AsyncResult<string>) => void) => void
+      })
+    | undefined
+
+  if (raw && typeof raw.getAsFileAsync === 'function') {
+    const eml = await new Promise<string>((resolve, reject) => {
+      raw.getAsFileAsync!((r) => {
+        if (r.status === Office.AsyncResultStatus.Succeeded) resolve(r.value ?? '')
+        else reject(new Error(r.error?.message ?? 'getAsFileAsync failed'))
+      })
+    })
+    return {
+      filename: `${baseName}.eml`,
+      contentBase64: eml,
+      mimeType: 'message/rfc822',
+    }
+  }
+
+  return {
+    filename: `${baseName}.txt`,
+    contentBase64: toBase64Utf8(snapshot.bodyText ?? ''),
+    mimeType: 'text/plain',
+  }
+}
+
+function sanitizeFilename(s: string): string {
+  const cleaned = s.replace(/[^a-zA-Z0-9-_]+/g, '_').replace(/^_+|_+$/g, '')
+  return cleaned.slice(0, 80) || 'message'
+}
+
+function toBase64Utf8(s: string): string {
+  // `btoa` exists in browsers, Office WebViews, and jsdom (test runtime).
+  return globalThis.btoa(unescape(encodeURIComponent(s)))
+}

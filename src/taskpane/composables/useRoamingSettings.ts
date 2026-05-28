@@ -105,3 +105,40 @@ export function patchSettings(patch: Partial<RoamingSettings>): Promise<void> {
   }
   return saveSettings({ ...current, ...patch })
 }
+
+// ---------------------------------------------------------------------------
+// Per-conversation chat-id cache
+//
+// The Ask feature creates a Synaplan chat on the first turn and then sends
+// follow-ups via `trackId = chatId`. To make the same Outlook thread reuse
+// the same chat across taskpane reloads, we persist the mapping inside
+// `roamingSettings.chats[conversationId]`.
+// ---------------------------------------------------------------------------
+
+export function getChatIdForConversation(conversationId: string): number | undefined {
+  return loadSettings()?.chats?.[conversationId]
+}
+
+export async function setChatIdForConversation(
+  conversationId: string,
+  chatId: number,
+): Promise<void> {
+  const current = loadSettings()
+  if (!current) return
+  const chats = { ...(current.chats ?? {}), [conversationId]: chatId }
+  await saveSettings({ ...current, chats })
+}
+
+// ---------------------------------------------------------------------------
+// Last-used RAG group id (so the save-to-RAG picker pre-selects it).
+// ---------------------------------------------------------------------------
+
+export function getLastRagGroupId(): string | undefined {
+  return loadSettings()?.lastRagGroupId
+}
+
+export async function setLastRagGroupId(id: string): Promise<void> {
+  const current = loadSettings()
+  if (!current) return
+  await saveSettings({ ...current, lastRagGroupId: id })
+}

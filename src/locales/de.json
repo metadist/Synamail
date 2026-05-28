@@ -22,7 +22,24 @@
     },
     "result": "Ergebnis",
     "askPlaceholder": "Frage zu dieser E-Mail…",
-    "contactPill": "Kontakt: {email}"
+    "contactPill": "Kontakt: {email}",
+    "saveDialog": {
+      "title": "In Wissensdatenbank speichern",
+      "group": "Wissensgruppe",
+      "newGroup": "Oder neue Gruppe anlegen",
+      "newGroupPlaceholder": "z. B. contact:alice@example.com",
+      "contactGroup": "Kontaktgruppe verwenden",
+      "contactGroupHint": "für diesen Absender vorgeschlagen",
+      "processLevel": "Verarbeitung",
+      "processLevels": {
+        "store": "Nur speichern",
+        "extract": "Text extrahieren",
+        "vectorize": "Extrahieren + für RAG vektorisieren",
+        "full": "Vollständige Analyse"
+      },
+      "loadingGroups": "Gruppen werden geladen…",
+      "savedTo": "Als Datei #{fileId} in {group} gespeichert."
+    }
   },
   "compose": {
     "title": "Verfassen-Modus",

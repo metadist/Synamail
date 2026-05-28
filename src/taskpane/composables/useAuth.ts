@@ -13,6 +13,7 @@
  */
 
 import { ref } from 'vue'
+import { createSynaplanClient } from '@shared/synaplan-client'
 import type { SignInPayload } from '@shared/types'
 import { clearSettings, loadSettings, saveSettings } from './useRoamingSettings'
 
@@ -186,15 +187,14 @@ export async function signOut(opts: { revokeRemote?: boolean } = {}): Promise<vo
   const settings = loadSettings()
   if (settings && opts.revokeRemote) {
     try {
-      const { createSynaplanClient } = await import('@shared/synaplan-client')
       const client = createSynaplanClient({
         baseUrl: settings.baseUrl,
         apiKey: settings.apiKey,
       })
       await client.revokeApiKey(settings.keyId)
     } catch {
-      // Sprint 3 surfaces this as a toast. In Sprint 2 we tolerate failure
-      // and proceed with local clear so the user is never stuck.
+      // Best-effort remote revoke: tolerate failure so the user is never
+      // stuck locally with stale roaming settings if Synaplan is offline.
     }
   }
   await clearSettings()

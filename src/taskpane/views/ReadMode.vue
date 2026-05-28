@@ -3,9 +3,16 @@ import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import ActionButton from '@/taskpane/components/ActionButton.vue'
 import LanguagePicker from '@/taskpane/components/LanguagePicker.vue'
+import SaveToRagDialog from '@/taskpane/components/SaveToRagDialog.vue'
 import TonePicker from '@/taskpane/components/TonePicker.vue'
 import Toast from '@/taskpane/components/Toast.vue'
-import { useOutlookItem } from '@/taskpane/composables/useOutlookItem'
+import {
+  getChatIdForConversation,
+  getLastRagGroupId,
+  setChatIdForConversation,
+  setLastRagGroupId,
+} from '@/taskpane/composables/useRoamingSettings'
+import { getReadItemAsFile, useOutlookItem } from '@/taskpane/composables/useOutlookItem'
 import { useSynaplanClient } from '@/taskpane/composables/useSynaplanClient'
 import { go } from '@/taskpane/router'
 
@@ -13,16 +20,21 @@ const { t } = useI18n()
 const { item } = useOutlookItem()
 const { call } = useSynaplanClient()
 
-type ActionKey = 'summarise' | 'translate' | 'reply' | 'classify' | 'save' | null
+type ActionKey = 'summarise' | 'translate' | 'reply' | 'classify' | 'save' | 'ask' | null
 const active = ref<ActionKey>(null)
 const result = ref<string>('')
 const error = ref<string | null>(null)
+const status = ref<string | null>(null)
 const targetLang = ref<'auto' | 'en' | 'de' | 'fr' | 'es' | 'it' | 'zh' | 'ar'>('en')
 const tone = ref<'formal' | 'concise' | 'friendly'>('concise')
 const question = ref('')
 const askHistory = ref<{ q: string; a: string }[]>([])
+const showSaveDialog = ref(false)
 
 const senderEmail = computed(() => item.value.from ?? '')
+const conversationKey = computed(
+  () => item.value.conversationId ?? `synamail:${item.value.subject}`,
+)
 
 async function run<T>(key: NonNullable<ActionKey>, fn: () => Promise<T | null>): Promise<T | null> {
   active.value = key
@@ -92,23 +104,39 @@ async function classify(): Promise<void> {
   if (r) result.value = `${r.category} (${Math.round(r.confidence * 100)}%) — ${r.reasoning}`
 }
 
-async function saveToRag(): Promise<void> {
+function openSaveDialog(): void {
+  error.value = null
+  status.value = null
+  showSaveDialog.value = true
+}
+
+async function handleSaveConfirm(payload: {
+  groupId: string
+  processLevel: 'store' | 'extract' | 'vectorize' | 'full'
+}): Promise<void> {
+  showSaveDialog.value = false
   await run('save', async () => {
+    const file = await getReadItemAsFile(item.value)
     const r = await call((c) =>
       c.fileUpload({
-        filename: item.value.subject + '.eml',
-        contentBase64: btoa(unescape(encodeURIComponent(item.value.bodyText))),
-        mimeType: 'message/rfc822',
-        groupId: senderEmail.value ? `contact:${senderEmail.value.toLowerCase()}` : undefined,
-        metadata: { from: item.value.from ?? '', subject: item.value.subject },
-        // Synaplan's upload now extracts as part of the same request — no
-        // separate fileProcess call needed (and the interface no longer
-        // exposes one). Use 'vectorize' if the user opts into RAG retrieval.
-        processLevel: 'extract',
+        filename: file.filename,
+        contentBase64: file.contentBase64,
+        mimeType: file.mimeType,
+        groupId: payload.groupId,
+        metadata: {
+          from: item.value.from ?? '',
+          subject: item.value.subject,
+          to: item.value.to.join(', '),
+        },
+        processLevel: payload.processLevel,
       }),
     )
     if (r) {
-      result.value = `Saved file #${r.fileId}.`
+      await setLastRagGroupId(payload.groupId)
+      status.value = t('read.saveDialog.savedTo', {
+        group: payload.groupId,
+        fileId: r.fileId,
+      })
     }
     return r
   })
@@ -117,11 +145,27 @@ async function saveToRag(): Promise<void> {
 async function ask(): Promise<void> {
   const q = question.value.trim()
   if (!q) return
-  const conversationId = item.value.conversationId ?? `synamail:${item.value.subject}`
-  const r = await run('classify', () =>
-    call((c) => c.ask({ conversationId, question: q, emailContext: item.value.bodyText })),
+  const conversationId = conversationKey.value
+  const chatId = getChatIdForConversation(conversationId)
+  const r = await run('ask', () =>
+    call((c) =>
+      c.ask({
+        conversationId,
+        question: q,
+        emailContext: item.value.bodyText,
+        chatId,
+      }),
+    ),
   )
   if (r) {
+    if (!chatId && r.chatId) {
+      try {
+        await setChatIdForConversation(conversationId, r.chatId)
+      } catch {
+        // Roaming write can fail in tests / offline; the in-memory chatId
+        // still works for the rest of this session.
+      }
+    }
     askHistory.value.push({ q, a: r.answer })
     question.value = ''
   }
@@ -165,12 +209,13 @@ async function ask(): Promise<void> {
         {{ t('read.actions.classify') }}
       </ActionButton>
 
-      <ActionButton :loading="active === 'save'" @click="saveToRag">
+      <ActionButton :loading="active === 'save'" @click="openSaveDialog">
         {{ t('read.actions.saveToRag') }}
       </ActionButton>
     </div>
 
     <pre v-if="result" class="read__result">{{ result }}</pre>
+    <Toast v-if="status" kind="success" :message="status" />
     <Toast v-if="error" kind="error" :message="error" />
 
     <section class="read__ask">
@@ -186,11 +231,19 @@ async function ask(): Promise<void> {
           class="read__ask-input"
           @keyup.enter="ask"
         />
-        <ActionButton :block="false" :loading="active === 'classify'" @click="ask">
+        <ActionButton :block="false" :loading="active === 'ask'" @click="ask">
           {{ t('read.actions.ask') }}
         </ActionButton>
       </div>
     </section>
+
+    <SaveToRagDialog
+      v-if="showSaveDialog"
+      :contact-email="senderEmail"
+      :last-used-group-id="getLastRagGroupId()"
+      @cancel="showSaveDialog = false"
+      @confirm="handleSaveConfirm"
+    />
   </section>
 </template>
 
