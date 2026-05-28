@@ -1,5 +1,5 @@
 .PHONY: help bootstrap dev sideload lint format check-types test test-e2e validate \
-        build build-manifest generate-schemas ci-local clean deps doctor
+        build build-manifest generate-schemas ci-local clean deps doctor sync
 
 # Default target — print help.
 help: ## Show this help
@@ -56,6 +56,9 @@ dev: ## Run the Vite dev server on https://localhost:3000
 
 sideload: ## Sideload manifest.xml into Outlook on the Web
 	npm run sideload
+
+sync: ## (WSL) Copy a bumped manifest to C:\addin-catalog — only when manifest.xml itself changes
+	@scripts/win-sync.sh
 
 ## ---------------------------------------------------------------------------
 ## Quality (mirrors CI)

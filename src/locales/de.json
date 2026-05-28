@@ -18,7 +18,9 @@
       "draftReply": "Antwort entwerfen",
       "classify": "Klassifizieren",
       "saveToRag": "In Wissensdatenbank speichern",
-      "ask": "Fragen"
+      "ask": "Fragen",
+      "moreFromSender": "Mehr von diesem Absender",
+      "blockSender": "Absender blockieren"
     },
     "result": "Ergebnis",
     "askPlaceholder": "Frage zu dieser E-Mail…",
@@ -39,6 +41,22 @@
       },
       "loadingGroups": "Gruppen werden geladen…",
       "savedTo": "Als Datei #{fileId} in {group} gespeichert."
+    },
+    "senderHistory": {
+      "title": "Nachrichten von {email}",
+      "count": "{n} aktuelle Nachrichten",
+      "mockBadge": "Mock",
+      "summariseAll": "Diese Nachrichten zusammenfassen",
+      "summarySubject": "Letzte Konversation mit {email} ({n} Nachrichten)"
+    },
+    "blockDialog": {
+      "title": "Diesen Absender blockieren?",
+      "body": "Künftige Nachrichten von {email} werden in den Junk-Ordner verschoben und von Synamail übersprungen.",
+      "alsoClean": "Bestehende Nachrichten dieses Absenders ebenfalls in Junk verschieben",
+      "undoHint": "Du kannst das jederzeit über Outlook → Regeln rückgängig machen.",
+      "confirm": "Absender blockieren",
+      "successServer": "Regel erstellt. {moved} bestehende Nachrichten in Junk verschoben.",
+      "successMock": "Regel erstellt (Dev-Mock) für {email}. Die echte Regel folgt in Sprint 4."
     }
   },
   "compose": {

@@ -1,7 +1,9 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { fileURLToPath, URL } from 'node:url'
-import { resolve, dirname } from 'node:path'
+import { resolve, dirname, join } from 'node:path'
+import { existsSync, readFileSync } from 'node:fs'
+import { homedir } from 'node:os'
 
 // Multi-entry Vite config: one entry per HTML surface in the add-in.
 //
@@ -25,6 +27,17 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
  * the manifest. Run the install command and restart `make dev`.
  */
 async function loadDevCerts(): Promise<{ key: Buffer; cert: Buffer } | undefined> {
+  // Fast path: read the cert files directly from the location that
+  // `npx office-addin-dev-certs install` writes to. This avoids the
+  // package's CA-trust-store verify step, which can't elevate via sudo
+  // on WSL and would otherwise force the dev server down to plain HTTP.
+  const certDir = join(homedir(), '.office-addin-dev-certs')
+  const keyPath = join(certDir, 'localhost.key')
+  const certPath = join(certDir, 'localhost.crt')
+  if (existsSync(keyPath) && existsSync(certPath)) {
+    return { key: readFileSync(keyPath), cert: readFileSync(certPath) }
+  }
+
   try {
     const devCerts = await import('office-addin-dev-certs')
     const opts = await devCerts.getHttpsServerOptions()

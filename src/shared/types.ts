@@ -134,6 +134,52 @@ export interface RagGroup {
   description?: string
 }
 
+export interface SenderHistoryInput {
+  email: string
+  /** Hard cap on results (default 25). */
+  limit?: number
+  /** Optional folder hint; defaults to all mailbox folders. */
+  folder?: 'inbox' | 'all' | 'archive'
+}
+
+export interface SenderHistoryItem {
+  /** ISO 8601 received date. */
+  date: string
+  subject: string
+  /** Short plain-text preview (~120 chars). */
+  snippet: string
+  /** Whether the message has been read. Drives the bold/regular treatment. */
+  unread: boolean
+  /** Stable id usable to deep-link back to the message (EWS id when available). */
+  messageId?: string
+}
+
+export interface SenderHistoryResult {
+  email: string
+  total: number
+  items: SenderHistoryItem[]
+  /** True when the source was Outlook itself (EWS / REST); false when the
+   *  client returned canned mock data — drives the "(mock)" UI badge. */
+  fromOutlook: boolean
+}
+
+export interface CreateSpamRuleInput {
+  senderEmail: string
+  /** Also move existing messages from this sender to Junk. */
+  alsoCleanExisting?: boolean
+  /** Display name for the rule (defaults to "Synamail: block <sender>"). */
+  displayName?: string
+}
+
+export interface CreateSpamRuleResult {
+  ruleId: string
+  /** Number of existing messages moved to Junk (0 when alsoCleanExisting is false). */
+  movedCount: number
+  /** When true the rule was created server-side via EWS / Graph; false when
+   *  the mock client stubbed it for dev. */
+  serverSide: boolean
+}
+
 export interface ApiError {
   status: number
   code: string

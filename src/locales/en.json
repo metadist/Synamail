@@ -18,7 +18,9 @@
       "draftReply": "Draft reply",
       "classify": "Classify",
       "saveToRag": "Save to knowledge base",
-      "ask": "Ask"
+      "ask": "Ask",
+      "moreFromSender": "More from this sender",
+      "blockSender": "Block sender"
     },
     "result": "Result",
     "askPlaceholder": "Ask about this email…",
@@ -39,6 +41,22 @@
       },
       "loadingGroups": "Loading groups…",
       "savedTo": "Saved as file #{fileId} in {group}."
+    },
+    "senderHistory": {
+      "title": "Messages from {email}",
+      "count": "{n} recent messages",
+      "mockBadge": "mock",
+      "summariseAll": "Summarise these messages",
+      "summarySubject": "Recent thread with {email} ({n} messages)"
+    },
+    "blockDialog": {
+      "title": "Block this sender?",
+      "body": "Future messages from {email} will be moved to Junk and Synamail will skip them.",
+      "alsoClean": "Also move existing messages from this sender to Junk",
+      "undoHint": "You can undo this any time in Outlook → Rules.",
+      "confirm": "Block sender",
+      "successServer": "Rule created. {moved} existing messages moved to Junk.",
+      "successMock": "Rule created (dev mock) for {email}. The real rule lands in Sprint 4."
     }
   },
   "compose": {

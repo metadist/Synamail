@@ -50,6 +50,18 @@ export function generateStateNonce(): string {
 }
 
 export function buildDialogUrl(baseUrl: string, state: string): string {
+  // Dev shortcut: in Vite dev mode point at the local mock relay so the
+  // sign-in loop closes in <100 ms with no real Synaplan round-trip. The
+  // mock fires Office.context.ui.messageParent same-origin from
+  // https://localhost:3000, sidestepping the cross-origin messageParent
+  // issue with the production https://web.synaplan.com/addin/connect
+  // bridge. Set DEV_MOCK_AUTH=false in .env.local to force the real flow.
+  if (import.meta.env.DEV && import.meta.env.VITE_DEV_MOCK_AUTH !== 'false') {
+    const u = new URL('/src/dialog/auth-relay.html', 'https://localhost:3000')
+    u.searchParams.set('state', state)
+    u.searchParams.set('baseUrl', baseUrl)
+    return u.toString()
+  }
   const u = new URL('/addin/connect', baseUrl)
   u.searchParams.set('state', state)
   u.searchParams.set('label', 'Outlook Add-in')
