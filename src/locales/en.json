@@ -43,6 +43,7 @@
       "mailboxResults": "From your mailbox",
       "mockBadge": "mock",
       "noMailboxHits": "No matching messages found.",
+      "permissionNeeded": "Mailbox search needs a one-time permission update. Remove and re-add the Synamail add-in to grant mailbox access (knowledge-base results still work).",
       "kbResults": "Already in your knowledge base",
       "vectorize": "Vectorize {n} into '{group}'",
       "vectorized": "Vectorized {n} message(s) into {group}.",

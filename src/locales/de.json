@@ -43,6 +43,7 @@
       "mailboxResults": "Aus deinem Postfach",
       "mockBadge": "Mock",
       "noMailboxHits": "Keine passenden Nachrichten gefunden.",
+      "permissionNeeded": "Die Postfachsuche benötigt eine einmalige Berechtigungsaktualisierung. Entferne das Synamail-Add-in und füge es erneut hinzu, um Postfachzugriff zu gewähren (Wissensdatenbank-Ergebnisse funktionieren weiterhin).",
       "kbResults": "Bereits in deiner Wissensdatenbank",
       "vectorize": "{n} in '{group}' vektorisieren",
       "vectorized": "{n} Nachricht(en) in {group} vektorisiert.",

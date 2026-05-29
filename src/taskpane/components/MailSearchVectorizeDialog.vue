@@ -29,6 +29,7 @@ const error = ref<string | null>(null)
 const status = ref<string | null>(null)
 const searched = ref(false)
 const fromOutlook = ref(true)
+const mailboxNotice = ref<string | null>(null)
 
 const mailboxHits = ref<MailboxHit[]>([])
 const kbHits = ref<RagSearchHit[]>([])
@@ -61,22 +62,37 @@ async function search(): Promise<void> {
   searching.value = true
   error.value = null
   status.value = null
-  try {
-    const [kb, mailbox] = await Promise.all([
-      call((c) => c.ragSearch({ query: q, limit: 10 })),
-      searchMailbox(q, 10),
-    ])
-    kbHits.value = kb ?? []
-    mailboxHits.value = mailbox.hits
-    fromOutlook.value = mailbox.fromOutlook
-    // Pre-select every live-mailbox hit for vectorization by default.
-    selected.value = new Set(mailbox.hits.map((h) => h.id))
-    searched.value = true
-  } catch (err) {
-    error.value = errorMessage(err)
-  } finally {
-    searching.value = false
+  mailboxNotice.value = null
+  // Run both sources independently so one failing (e.g. mailbox search needs
+  // a permission update, or the RAG provider is misconfigured) never hides
+  // the results from the other.
+  const [kbRes, mbRes] = await Promise.allSettled([
+    call((c) => c.ragSearch({ query: q, limit: 10 })),
+    searchMailbox(q, 10),
+  ])
+
+  if (kbRes.status === 'fulfilled') {
+    kbHits.value = kbRes.value ?? []
+  } else {
+    kbHits.value = []
+    error.value = errorMessage(kbRes.reason)
   }
+
+  if (mbRes.status === 'fulfilled') {
+    mailboxHits.value = mbRes.value.hits
+    fromOutlook.value = mbRes.value.fromOutlook
+    // Pre-select every live-mailbox hit for vectorization by default.
+    selected.value = new Set(mbRes.value.hits.map((h) => h.id))
+  } else {
+    mailboxHits.value = []
+    const msg = errorMessage(mbRes.reason)
+    mailboxNotice.value = /makeEwsRequest|Elevated permission/i.test(msg)
+      ? t('home.search.permissionNeeded')
+      : msg
+  }
+
+  searched.value = true
+  searching.value = false
 }
 
 async function vectorize(): Promise<void> {
@@ -144,7 +160,8 @@ async function vectorize(): Promise<void> {
           {{ t('home.search.mailboxResults') }}
           <span v-if="!fromOutlook"> · {{ t('home.search.mockBadge') }}</span>
         </p>
-        <p v-if="mailboxHits.length === 0" class="syn-muted sv__empty">
+        <p v-if="mailboxNotice" class="sv__notice">{{ mailboxNotice }}</p>
+        <p v-else-if="mailboxHits.length === 0" class="syn-muted sv__empty">
           {{ t('home.search.noMailboxHits') }}
         </p>
         <label v-for="h in mailboxHits" :key="h.id" class="sv__hit">
@@ -243,6 +260,11 @@ async function vectorize(): Promise<void> {
 .sv__empty {
   margin: 0;
   font-size: var(--syn-font-size-sm);
+}
+.sv__notice {
+  margin: 0;
+  font-size: var(--syn-font-size-sm);
+  color: var(--syn-danger);
 }
 .sv__hit {
   display: flex;
