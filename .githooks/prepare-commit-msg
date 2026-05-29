@@ -1,0 +1,54 @@
+#!/usr/bin/env -S env LC_ALL=C.UTF-8 LANG=C.UTF-8 bash
+# See pre-commit for the rationale on this shebang.
+#
+# Synamail — prepare-commit-msg hook (quality-of-life).
+#
+# Conventional Commits are enforced by .githooks/commit-msg AND by the GitHub
+# Actions `commitlint` job, so a message without a type (e.g. "Local dev
+# improvements") is rejected with `type-empty` / `subject-empty`.
+#
+# To avoid that papercut, when your message has no Conventional Commits type
+# prefix we prepend `chore: ` automatically. You stay in control: type your own
+# type (feat:, fix:, docs:, refactor:, …) and we leave the message untouched.
+#
+# Skips: merges, squashes, `--amend`/`-c` reuse, comment/blank subjects, the
+# `wip:` escape hatch, and anything already conventional.
+set -e
+
+msg_file="$1"
+source_type="${2:-}"
+
+# Only normalize `-m` (source=message) and template/editor-seed commits.
+# Leave git-generated reuse (merge/squash/commit) alone.
+case "$source_type" in
+  merge | squash | commit) exit 0 ;;
+esac
+
+first_line="$(head -n 1 "$msg_file")"
+
+# Empty or comment-only first line → let the user (or editor) write it.
+if [ -z "$first_line" ] || [[ "$first_line" =~ ^[[:space:]]*# ]]; then
+  exit 0
+fi
+
+# Already git-generated, WIP, or conventional → leave as-is.
+case "$first_line" in
+  "Merge "* | "Revert "* | "fixup! "* | "squash! "* | "amend! "*) exit 0 ;;
+esac
+conv='^(feat|fix|refactor|perf|test|docs|build|ci|chore|style|revert)(\([a-z0-9-]+\))?!?:[[:space:]]'
+if [[ "$first_line" =~ $conv ]] || [[ "$first_line" =~ ^wip: ]]; then
+  exit 0
+fi
+
+# Prepend a safe default type to the subject line, preserving the body.
+rest="$(tail -n +2 "$msg_file")"
+{
+  printf 'chore: %s\n' "$first_line"
+  if [ -n "$rest" ]; then printf '%s\n' "$rest"; fi
+} >"$msg_file"
+
+if [ -t 2 ]; then
+  printf '%s\n' "[prepare-commit-msg] No Conventional Commits type found — prefixed 'chore:'. Use feat:/fix:/docs:/refactor:/… to choose your own." >&2
+fi
+
+exit 0

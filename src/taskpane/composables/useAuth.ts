@@ -15,7 +15,12 @@
 import { ref } from 'vue'
 import { createSynaplanClient } from '@shared/synaplan-client'
 import type { SignInPayload } from '@shared/types'
-import { clearSettings, loadSettings, saveSettings } from './useRoamingSettings'
+import {
+  clearSettings,
+  getPreferredBaseUrl,
+  loadSettings,
+  saveSettings,
+} from './useRoamingSettings'
 
 export interface UseAuthOptions {
   /** Override the base URL for the next sign-in (does not persist). */
@@ -49,22 +54,38 @@ export function generateStateNonce(): string {
   return Array.from(arr, (b) => b.toString(16).padStart(2, '0')).join('')
 }
 
+/**
+ * URL of the same-origin relay page (on the add-in's own origin, i.e. the
+ * manifest SourceLocation domain). The Synaplan bridge redirects back here
+ * with the sign-in payload so that `messageParent` is called same-origin —
+ * cross-origin `messageParent` is dropped by Outlook desktop after the login
+ * navigations, which is why a direct bridge->taskpane handshake fails.
+ */
+export function relayUrl(): string {
+  const origin =
+    typeof window !== 'undefined' && window.location?.origin
+      ? window.location.origin
+      : 'https://localhost:3000'
+  return `${origin}/src/dialog/auth-relay.html`
+}
+
 export function buildDialogUrl(baseUrl: string, state: string): string {
   // Dev shortcut: in Vite dev mode point at the local mock relay so the
-  // sign-in loop closes in <100 ms with no real Synaplan round-trip. The
-  // mock fires Office.context.ui.messageParent same-origin from
-  // https://localhost:3000, sidestepping the cross-origin messageParent
-  // issue with the production https://web.synaplan.com/addin/connect
-  // bridge. Set DEV_MOCK_AUTH=false in .env.local to force the real flow.
+  // sign-in loop closes in <100 ms with no real Synaplan round-trip.
+  // Set VITE_DEV_MOCK_AUTH=false in .env.local to force the real flow.
   if (import.meta.env.DEV && import.meta.env.VITE_DEV_MOCK_AUTH !== 'false') {
-    const u = new URL('/src/dialog/auth-relay.html', 'https://localhost:3000')
+    const u = new URL(relayUrl())
     u.searchParams.set('state', state)
     u.searchParams.set('baseUrl', baseUrl)
+    u.searchParams.set('mock', '1')
     return u.toString()
   }
+  // Real flow: open the Synaplan bridge directly (login happens on its origin),
+  // and tell it to redirect back to our same-origin relay with the payload.
   const u = new URL('/addin/connect', baseUrl)
   u.searchParams.set('state', state)
   u.searchParams.set('label', 'Outlook Add-in')
+  u.searchParams.set('redirect', relayUrl())
   return u.toString()
 }
 
@@ -213,6 +234,8 @@ export async function signOut(opts: { revokeRemote?: boolean } = {}): Promise<vo
   hydrateAuthState()
 }
 
+export const DEFAULT_BASE_URL = 'https://web.synaplan.com'
+
 export function defaultBaseUrl(): string {
-  return loadSettings()?.baseUrl ?? 'https://web.synaplan.com'
+  return loadSettings()?.baseUrl ?? getPreferredBaseUrl() ?? DEFAULT_BASE_URL
 }

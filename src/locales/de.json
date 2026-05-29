@@ -9,7 +9,54 @@
     "button": "Bei Synaplan anmelden",
     "selfHosted": "Eigene Instanz verwenden",
     "errorTitle": "Anmeldung fehlgeschlagen",
-    "loading": "Anmeldefenster wird geöffnet…"
+    "loading": "Anmeldefenster wird geöffnet…",
+    "invalidUrl": "Das sieht nicht nach einer gültigen URL aus. Mit https:// angeben — z. B. https://web.synaplan.com",
+    "httpsRequired": "Outlook benötigt für die Anmeldung eine HTTPS-Adresse. Eine reine http://-URL (auch http://localhost) funktioniert nicht — starte die lokale HTTPS-Bridge und verwende stattdessen https://localhost:5174.",
+    "instanceSaved": "Instanz gespeichert: {url}",
+    "devSettingsLabel": "Dev-Einstellungen",
+    "localDevHint": "Für Entwickler: Synamail über HTTPS auf eine lokale Instanz richten, z. B. https://localhost:5174 ('make bridge' starten). Mit Speichern bleibt der Wert erhalten und geht beim Ändern nicht verloren."
+  },
+  "home": {
+    "title": "Start",
+    "intro": "Chatte mit Synaplan, durchsuche und vektorisiere deine E-Mails oder entwirf eine neue E-Mail — ganz ohne ausgewählte Nachricht.",
+    "emailLoaded": "E-Mail geöffnet: {subject}",
+    "emailActions": "E-Mail-Aktionen",
+    "commands": {
+      "chat": "Chat",
+      "search": "E-Mails suchen & vektorisieren",
+      "searchSub": "Nachrichten zu einem Thema finden und der Wissensdatenbank hinzufügen",
+      "newMail": "Neue E-Mail",
+      "newMailSub": "Beschreibe sie und lass die KI die E-Mail entwerfen"
+    },
+    "chat": {
+      "placeholder": "Frag Synaplan alles…",
+      "send": "Senden",
+      "thinking": "Denkt nach…",
+      "emptyHint": "Starte eine Unterhaltung — stelle eine Frage oder füge Text ein."
+    },
+    "search": {
+      "title": "E-Mails suchen & vektorisieren",
+      "topic": "Thema",
+      "topicPlaceholder": "z. B. Liefervertrag 2026",
+      "keyword": "Wissensgruppe (Stichwort)",
+      "run": "Suchen",
+      "mailboxResults": "Aus deinem Postfach",
+      "mockBadge": "Mock",
+      "noMailboxHits": "Keine passenden Nachrichten gefunden.",
+      "kbResults": "Bereits in deiner Wissensdatenbank",
+      "vectorize": "{n} in '{group}' vektorisieren",
+      "vectorized": "{n} Nachricht(en) in {group} vektorisiert.",
+      "done": "Nachrichten zu {group} hinzugefügt."
+    },
+    "newMail": {
+      "title": "Neue E-Mail",
+      "description": "Was soll die E-Mail enthalten?",
+      "descriptionPlaceholder": "z. B. Den Lieferanten um Bestätigung des Liefertermins im Mai bitten und die Buchhaltung in CC setzen.",
+      "generate": "Mit KI entwerfen",
+      "openInOutlook": "In Outlook öffnen",
+      "unsupportedHost": "Dieser Outlook-Host kann kein neues Nachrichtenfenster aus einem Add-in öffnen.",
+      "opened": "Entwurf in einem neuen Outlook-Fenster geöffnet."
+    }
   },
   "read": {
     "actions": {
@@ -76,6 +123,14 @@
     "signOut": "Abmelden",
     "synaplanInstance": "Synaplan-Instanz",
     "instanceHint": "Vor der Anmeldung ändern, um einen eigenen Server zu nutzen.",
+    "models": {
+      "title": "KI-Modelle",
+      "loading": "Modelle werden geladen…",
+      "chat": "Chat-Modell",
+      "imageGen": "Bildgenerierung",
+      "vectorize": "Vektorisierungs-Modell",
+      "configure": "Modelle in Synaplan konfigurieren"
+    },
     "preferences": "Einstellungen",
     "defaultRagGroup": "Standard-RAG-Gruppe",
     "language": "Sprache",

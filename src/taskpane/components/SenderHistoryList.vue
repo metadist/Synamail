@@ -20,7 +20,8 @@ const dateFmt = computed(
       day: '2-digit',
       month: 'short',
       year:
-        new Date().getFullYear() === new Date(props.history.items[0]?.date ?? Date.now()).getFullYear()
+        new Date().getFullYear() ===
+        new Date(props.history.items[0]?.date ?? Date.now()).getFullYear()
           ? undefined
           : '2-digit',
     }),

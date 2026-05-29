@@ -142,3 +142,29 @@ export async function setLastRagGroupId(id: string): Promise<void> {
   if (!current) return
   await saveSettings({ ...current, lastRagGroupId: id })
 }
+
+// ---------------------------------------------------------------------------
+// Preferred Synaplan instance URL.
+//
+// Stored independently of the auth-gated settings (it has its own key, no
+// `apiKey` required) so the SignIn screen remembers the instance the user
+// last chose — even before they have signed in, and after sign-out.
+// ---------------------------------------------------------------------------
+
+const BASE_URL_KEY = 'synamail.preferredBaseUrl'
+
+export function getPreferredBaseUrl(): string | undefined {
+  const v = store().get(BASE_URL_KEY)
+  return typeof v === 'string' && v.length > 0 ? v : undefined
+}
+
+export function setPreferredBaseUrl(url: string): Promise<void> {
+  const s = store()
+  s.set(BASE_URL_KEY, url)
+  return new Promise((resolve, reject) => {
+    s.saveAsync((res?: Office.AsyncResult<void>) => {
+      if (res && res.status === Office.AsyncResultStatus.Succeeded) resolve()
+      else reject(res?.error ?? new Error('saveAsync failed'))
+    })
+  })
+}

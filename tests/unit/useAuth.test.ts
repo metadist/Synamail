@@ -21,11 +21,14 @@ describe('generateStateNonce', () => {
 })
 
 describe('buildDialogUrl', () => {
-  it('appends state and label', () => {
+  it('appends state, label, and a same-origin relay redirect', () => {
     const u = new URL(buildDialogUrl('https://web.synaplan.com', 'abc'))
     expect(u.pathname).toBe('/addin/connect')
     expect(u.searchParams.get('state')).toBe('abc')
     expect(u.searchParams.get('label')).toBe('Outlook Add-in')
+    const redirect = u.searchParams.get('redirect')
+    expect(redirect).toBeTruthy()
+    expect(redirect).toContain('/src/dialog/auth-relay.html')
   })
 })
 

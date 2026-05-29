@@ -26,7 +26,9 @@
 import {
   ask as askPrompt,
   classify as classifyPrompt,
+  newMail as newMailPrompt,
   reply as replyPrompt,
+  simpleChat as simpleChatPrompt,
   summarise as summarisePrompt,
   translate as translatePrompt,
 } from './prompts'
@@ -36,12 +38,15 @@ import type {
   ChatTurnResult,
   ClassifyInput,
   ClassifyResult,
+  ComposeNewInput,
+  ComposeNewResult,
   CreateSpamRuleInput,
   CreateSpamRuleResult,
   DraftReplyInput,
   DraftReplyResult,
   FileUploadInput,
   FileUploadResult,
+  ModelConfig,
   RagGroup,
   RagSearchHit,
   RagSearchInput,
@@ -60,6 +65,15 @@ export interface SynaplanClient {
   draftReply(input: DraftReplyInput): Promise<DraftReplyResult>
   classify(input: ClassifyInput): Promise<ClassifyResult>
   ask(input: ChatTurnInput): Promise<ChatTurnResult>
+  /**
+   * General-purpose chat, not tied to a specific email. Mirrors `ask` for
+   * chat-id persistence (caller stores the returned `chatId` in roaming
+   * under a stable key such as `home`), but uses the simple-chat system
+   * prompt instead of the email-grounded one.
+   */
+  chat(input: ChatTurnInput): Promise<ChatTurnResult>
+  /** Draft a brand-new email (subject + HTML body) from a description. */
+  composeNew(input: ComposeNewInput): Promise<ComposeNewResult>
   ragSearch(input: RagSearchInput): Promise<RagSearchHit[]>
   ragGroups(): Promise<RagGroup[]>
   /**
@@ -71,6 +85,13 @@ export interface SynaplanClient {
   ragCreateGroup(name: string): Promise<RagGroup>
   fileUpload(input: FileUploadInput): Promise<FileUploadResult>
   revokeApiKey(keyId: number): Promise<void>
+
+  /**
+   * The user's currently-configured models for Chat, Image generation
+   * (TEXT2PIC) and Vectorization (VECTORIZE). Resolved by joining
+   * `GET /config/models/defaults` (ids) with `GET /config/models` (catalog).
+   */
+  getModelConfig(): Promise<ModelConfig>
 
   /**
    * List recent messages from a single sender. The data source depends on
@@ -239,6 +260,28 @@ export class RealSynaplanClient implements SynaplanClient {
     return { chatId, answer }
   }
 
+  async chat(input: ChatTurnInput): Promise<ChatTurnResult> {
+    let chatId = input.chatId
+    if (!chatId) {
+      const created = await this.request<CreateChatResponse>('/api/v1/chats', {
+        method: 'POST',
+        body: JSON.stringify({ title: 'Synamail chat' }),
+      })
+      if (!created?.success || !created.chat?.id) {
+        throw apiError(0, 'CHAT_CREATE_FAILED', 'Could not create chat')
+      }
+      chatId = created.chat.id
+    }
+    const answer = await this.sendChat(`${simpleChatPrompt()}\n\n${input.question}`, chatId)
+    return { chatId, answer }
+  }
+
+  async composeNew(input: ComposeNewInput): Promise<ComposeNewResult> {
+    const message = composeMessage(newMailPrompt(input.language ?? 'en'), input.description)
+    const text = await this.sendChat(message)
+    return parseComposeResponse(text, input.description)
+  }
+
   // -------------------------------------------------------------------------
   // RAG
   // -------------------------------------------------------------------------
@@ -303,6 +346,25 @@ export class RealSynaplanClient implements SynaplanClient {
 
   async revokeApiKey(keyId: number): Promise<void> {
     await this.request(`/api/v1/apikeys/${keyId}`, { method: 'DELETE' })
+  }
+
+  async getModelConfig(): Promise<ModelConfig> {
+    const [defaults, catalog] = await Promise.all([
+      this.request<ConfigDefaultsResponse>('/api/v1/config/models/defaults'),
+      this.request<ConfigModelsResponse>('/api/v1/config/models'),
+    ])
+    const resolve = (capability: 'CHAT' | 'TEXT2PIC' | 'VECTORIZE') => {
+      const id = defaults?.defaults?.[capability]
+      if (typeof id !== 'number') return null
+      const model = (catalog?.models?.[capability] ?? []).find((m) => m.id === id)
+      if (!model) return { id, name: `#${id}` }
+      return { id, name: model.name ?? `#${id}`, service: model.service ?? undefined }
+    }
+    return {
+      chat: resolve('CHAT'),
+      imageGen: resolve('TEXT2PIC'),
+      vectorize: resolve('VECTORIZE'),
+    }
   }
 
   // -------------------------------------------------------------------------
@@ -419,6 +481,23 @@ export class MockSynaplanClient implements SynaplanClient {
     })
   }
 
+  chat(input: ChatTurnInput): Promise<ChatTurnResult> {
+    return this.wait({
+      chatId: input.chatId ?? hashToChatId(input.conversationId),
+      answer: `(mock chat) Re "${input.question}": this is a canned reply — sign in to a real Synaplan instance for live answers.`,
+    })
+  }
+
+  composeNew(input: ComposeNewInput): Promise<ComposeNewResult> {
+    const subject = input.description.split(/\r?\n/)[0]?.slice(0, 60) || 'New message'
+    return this.wait({
+      subject: `(mock) ${subject}`,
+      htmlBody:
+        `<p>(Mock draft for: ${subject})</p>` +
+        `<p>Sign in to a real Synaplan instance to generate a live draft from your description.</p>`,
+    })
+  }
+
   ragSearch(input: RagSearchInput): Promise<RagSearchHit[]> {
     return this.wait([
       {
@@ -448,6 +527,14 @@ export class MockSynaplanClient implements SynaplanClient {
 
   revokeApiKey(_keyId: number): Promise<void> {
     return this.wait(undefined)
+  }
+
+  getModelConfig(): Promise<ModelConfig> {
+    return this.wait({
+      chat: { id: 53, name: 'Llama 3.3 70B', service: 'Groq' },
+      imageGen: { id: 21, name: 'FLUX.1 schnell', service: 'Replicate' },
+      vectorize: { id: 3, name: 'nomic-embed-text', service: 'Ollama' },
+    })
   }
 
   senderHistory(input: SenderHistoryInput): Promise<SenderHistoryResult> {
@@ -542,6 +629,22 @@ export function isApiError(err: unknown): err is ApiError {
   )
 }
 
+/**
+ * Human-readable message for any thrown value. Crucially handles the plain
+ * `ApiError` objects this client throws (which are NOT `Error` instances, so
+ * `String(err)` would render the useless "[object Object]").
+ */
+export function errorMessage(err: unknown): string {
+  if (err instanceof Error) return err.message
+  if (isApiError(err)) return err.message || err.code || `Request failed (${err.status})`
+  if (typeof err === 'string') return err
+  try {
+    return JSON.stringify(err)
+  } catch {
+    return String(err)
+  }
+}
+
 function hashToChatId(s: string): number {
   let h = 0
   for (let i = 0; i < s.length; i++) {
@@ -616,6 +719,45 @@ function parseClassifyResponse(text: string): ClassifyResult {
       reasoning: `parse_failed: ${err instanceof Error ? err.message : String(err)}`,
     }
   }
+}
+
+function parseComposeResponse(text: string, description: string): ComposeNewResult {
+  // The newMail prompt asks for JSON { subject, htmlBody }. Tolerate fenced
+  // output and surrounding prose; fall back to treating the whole reply as
+  // the body with a subject derived from the user's description.
+  const cleaned = text
+    .replace(/```(?:json)?\s*/gi, '')
+    .replace(/```/g, '')
+    .trim()
+  const start = cleaned.indexOf('{')
+  const end = cleaned.lastIndexOf('}')
+  if (start !== -1 && end > start) {
+    try {
+      const parsed = JSON.parse(cleaned.slice(start, end + 1)) as Partial<ComposeNewResult>
+      const subject = typeof parsed.subject === 'string' ? parsed.subject.trim() : ''
+      const htmlBody = typeof parsed.htmlBody === 'string' ? parsed.htmlBody.trim() : ''
+      if (subject || htmlBody) {
+        return {
+          subject: subject || deriveSubject(description),
+          htmlBody: htmlBody || `<p>${escapeHtml(text)}</p>`,
+        }
+      }
+    } catch {
+      // Fall through to the plain-text fallback below.
+    }
+  }
+  return {
+    subject: deriveSubject(description),
+    htmlBody: `<p>${escapeHtml(text || description)}</p>`,
+  }
+}
+
+function deriveSubject(description: string): string {
+  return description.split(/\r?\n/)[0]?.slice(0, 80).trim() || 'New message'
+}
+
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 }
 
 /**
@@ -709,4 +851,20 @@ interface RawRagGroup {
 
 interface RagGroupsResponse {
   groups?: RawRagGroup[]
+}
+
+interface ConfigDefaultsResponse {
+  success?: boolean
+  defaults?: Record<string, number | null>
+}
+
+interface RawCatalogModel {
+  id: number
+  name?: string
+  service?: string
+}
+
+interface ConfigModelsResponse {
+  success?: boolean
+  models?: Record<string, RawCatalogModel[]>
 }

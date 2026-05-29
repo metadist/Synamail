@@ -36,6 +36,9 @@ yarn-error.log*
 # Office add-in dev certs (auto-generated)
 .office-addin-dev-certs/
 
+# Local dev-loop logs (start-dev.sh)
+.dev-logs/
+
 # Generated artefacts (committed only at release time)
 manifest.unified.json
 

@@ -1,23 +1,79 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import ActionButton from '@/taskpane/components/ActionButton.vue'
 import Toast from '@/taskpane/components/Toast.vue'
 import { signIn, defaultBaseUrl } from '@/taskpane/composables/useAuth'
+import { setPreferredBaseUrl } from '@/taskpane/composables/useRoamingSettings'
 import { go } from '@/taskpane/router'
 
 const { t } = useI18n()
 const loading = ref(false)
 const error = ref<string | null>(null)
-const baseUrlOverride = ref<string>(defaultBaseUrl())
+const status = ref<string | null>(null)
+const savedUrl = ref<string>(defaultBaseUrl())
+const baseUrlOverride = ref<string>(savedUrl.value)
 const showOverride = ref(false)
 
-async function handleClick(): Promise<void> {
-  loading.value = true
-  error.value = null
+function normalize(url: string): string {
+  return url.trim().replace(/\/+$/, '')
+}
+
+/** Returns an error message key, or null when the URL is usable. */
+function validate(url: string): string | null {
+  const v = normalize(url)
+  let parsed: URL
   try {
-    await signIn({ baseUrl: baseUrlOverride.value })
-    go('read')
+    parsed = new URL(v)
+  } catch {
+    return t('signIn.invalidUrl')
+  }
+  // Office's sign-in dialog (displayDialogAsync) hard-rejects non-HTTPS URLs,
+  // so an http://localhost instance can't be used directly — point the user
+  // at the local HTTPS bridge instead.
+  if (parsed.protocol !== 'https:') return t('signIn.httpsRequired')
+  return null
+}
+
+const dirty = computed(() => normalize(baseUrlOverride.value) !== savedUrl.value)
+
+async function saveInstance(): Promise<void> {
+  error.value = null
+  status.value = null
+  const invalid = validate(baseUrlOverride.value)
+  if (invalid) {
+    error.value = invalid
+    return
+  }
+  const v = normalize(baseUrlOverride.value)
+  try {
+    await setPreferredBaseUrl(v)
+    baseUrlOverride.value = v
+    savedUrl.value = v
+    status.value = t('signIn.instanceSaved', { url: v })
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : String(err)
+  }
+}
+
+async function handleClick(): Promise<void> {
+  error.value = null
+  status.value = null
+  const invalid = validate(baseUrlOverride.value)
+  if (invalid) {
+    error.value = invalid
+    showOverride.value = true
+    return
+  }
+  loading.value = true
+  try {
+    const v = normalize(baseUrlOverride.value)
+    // Remember the instance even if the round-trip fails, so the field keeps
+    // the user's choice next time.
+    await setPreferredBaseUrl(v).catch(() => undefined)
+    savedUrl.value = v
+    await signIn({ baseUrl: v })
+    go('home')
   } catch (err) {
     error.value = err instanceof Error ? err.message : String(err)
   } finally {
@@ -52,9 +108,18 @@ async function handleClick(): Promise<void> {
         type="url"
         spellcheck="false"
         autocomplete="off"
+        @keyup.enter="saveInstance"
       />
+      <div class="signin__override-actions">
+        <ActionButton v-if="dirty" :block="false" @click="saveInstance">
+          {{ t('common.save') }}
+        </ActionButton>
+        <span class="signin__dev-badge">{{ t('signIn.devSettingsLabel') }}</span>
+      </div>
+      <p class="syn-muted signin__hint">{{ t('signIn.localDevHint') }}</p>
     </div>
 
+    <Toast v-if="status" kind="success" :message="status" />
     <Toast v-if="error" kind="error" :message="error" />
   </section>
 </template>
@@ -97,5 +162,22 @@ async function handleClick(): Promise<void> {
   border-radius: var(--syn-radius-sm);
   border: 1px solid var(--syn-border);
   font-family: inherit;
+}
+.signin__override-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--syn-space-2);
+}
+.signin__dev-badge {
+  font-size: var(--syn-font-size-sm);
+  font-weight: 600;
+  color: var(--syn-muted);
+  border: 1px solid var(--syn-border);
+  border-radius: 999px;
+  padding: 2px var(--syn-space-2);
+}
+.signin__hint {
+  margin: 0;
+  font-size: var(--syn-font-size-sm);
 }
 </style>

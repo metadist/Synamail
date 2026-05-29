@@ -92,6 +92,19 @@ export interface ChatTurnResult {
   answer: string
 }
 
+export interface ComposeNewInput {
+  /** Free-form description of the email the user wants written. */
+  description: string
+  /** Target language code; defaults to English. */
+  language?: string
+}
+
+export interface ComposeNewResult {
+  subject: string
+  /** HTML body content (no doctype/html/head wrapper). */
+  htmlBody: string
+}
+
 export interface RagSearchInput {
   query: string
   threshold?: number
@@ -132,6 +145,23 @@ export interface RagGroup {
   id: string
   name: string
   description?: string
+}
+
+export interface ModelChoice {
+  id: number
+  name: string
+  /** Provider/service name (e.g. "Groq", "OpenAI"). */
+  service?: string
+}
+
+/**
+ * The user's currently-configured Synaplan models for the three capabilities
+ * Synamail surfaces. `null` means no model is set for that capability.
+ */
+export interface ModelConfig {
+  chat: ModelChoice | null
+  imageGen: ModelChoice | null
+  vectorize: ModelChoice | null
 }
 
 export interface SenderHistoryInput {

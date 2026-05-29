@@ -1,5 +1,5 @@
 .PHONY: help bootstrap dev sideload lint format check-types test test-e2e validate \
-        build build-manifest generate-schemas ci-local clean deps doctor sync
+        build build-manifest generate-schemas ci-local clean deps doctor sync bridge
 
 # Default target — print help.
 help: ## Show this help
@@ -59,6 +59,9 @@ sideload: ## Sideload manifest.xml into Outlook on the Web
 
 sync: ## (WSL) Copy a bumped manifest to C:\addin-catalog — only when manifest.xml itself changes
 	@scripts/win-sync.sh
+
+bridge: ## HTTPS-terminate the local Synaplan frontend on :5174 for the dev sign-in loop
+	@scripts/dev-bridge-proxy.sh
 
 ## ---------------------------------------------------------------------------
 ## Quality (mirrors CI)

@@ -9,7 +9,54 @@
     "button": "Sign in to Synaplan",
     "selfHosted": "Use a self-hosted instance",
     "errorTitle": "Sign-in failed",
-    "loading": "Opening sign-in window…"
+    "loading": "Opening sign-in window…",
+    "invalidUrl": "That doesn't look like a valid URL. Include https:// — e.g. https://web.synaplan.com",
+    "httpsRequired": "Outlook requires an HTTPS address for sign-in. A plain http:// URL (including http://localhost) won't work — run the local HTTPS bridge and use https://localhost:5174 instead.",
+    "instanceSaved": "Instance saved: {url}",
+    "devSettingsLabel": "Dev settings",
+    "localDevHint": "Developers: point Synamail at a local instance over HTTPS, e.g. https://localhost:5174 (run 'make bridge'). Click Save so the value persists and isn't lost when you change something."
+  },
+  "home": {
+    "title": "Home",
+    "intro": "Chat with Synaplan, search and vectorize your mail, or draft a new email — no message selection needed.",
+    "emailLoaded": "Email open: {subject}",
+    "emailActions": "Email actions",
+    "commands": {
+      "chat": "Chat",
+      "search": "Search & vectorize mail",
+      "searchSub": "Find messages about a topic and add them to your knowledge base",
+      "newMail": "New email",
+      "newMailSub": "Describe it and let AI draft the email"
+    },
+    "chat": {
+      "placeholder": "Ask Synaplan anything…",
+      "send": "Send",
+      "thinking": "Thinking…",
+      "emptyHint": "Start a conversation — ask a question or paste some text."
+    },
+    "search": {
+      "title": "Search & vectorize mail",
+      "topic": "Topic",
+      "topicPlaceholder": "e.g. supplier contract 2026",
+      "keyword": "Knowledge group (keyword)",
+      "run": "Search",
+      "mailboxResults": "From your mailbox",
+      "mockBadge": "mock",
+      "noMailboxHits": "No matching messages found.",
+      "kbResults": "Already in your knowledge base",
+      "vectorize": "Vectorize {n} into '{group}'",
+      "vectorized": "Vectorized {n} message(s) into {group}.",
+      "done": "Messages added to {group}."
+    },
+    "newMail": {
+      "title": "New email",
+      "description": "What should the email say?",
+      "descriptionPlaceholder": "e.g. Ask the supplier to confirm the May delivery date and CC accounting.",
+      "generate": "Draft with AI",
+      "openInOutlook": "Open in Outlook",
+      "unsupportedHost": "This Outlook host can't open a new message window from an add-in.",
+      "opened": "Draft opened in a new Outlook window."
+    }
   },
   "read": {
     "actions": {
@@ -76,6 +123,14 @@
     "signOut": "Sign out",
     "synaplanInstance": "Synaplan instance",
     "instanceHint": "Edit before signing in to use a self-hosted server.",
+    "models": {
+      "title": "AI models",
+      "loading": "Loading models…",
+      "chat": "Chat Model",
+      "imageGen": "Image Generation",
+      "vectorize": "Vectorization Model",
+      "configure": "Configure models in Synaplan"
+    },
     "preferences": "Preferences",
     "defaultRagGroup": "Default RAG group",
     "language": "Language",

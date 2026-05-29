@@ -20,30 +20,16 @@ function mount(): void {
   app.mount('#app')
 }
 
-function routeFromItem(): void {
-  if (!isSignedIn.value) {
-    go('sign-in')
-    return
-  }
-  if (typeof Office === 'undefined' || !Office.context?.mailbox?.item) {
-    return
-  }
-  // Use the composable's snapshot detection to decide read vs compose. We
-  // can't await composable code here, so do a quick local check on the body
-  // surface to set the initial view immediately.
-  const body = Office.context.mailbox.item.body as
-    | { setAsync?: unknown; getAsync?: unknown }
-    | undefined
-  if (body && typeof (body as { setAsync?: unknown }).setAsync === 'function') {
-    go('compose')
-  } else if (body && typeof (body as { getAsync?: unknown }).getAsync === 'function') {
-    go('read')
-  }
+function routeAfterAuth(): void {
+  // Chat-first: after sign-in we always land on Home, which works with or
+  // without a selected message. The email-specific Read/Compose views are
+  // reachable from Home's contextual link when an item is loaded.
+  go(isSignedIn.value ? 'home' : 'sign-in')
 }
 
 function bootstrap(): void {
   hydrateAuthState()
-  routeFromItem()
+  routeAfterAuth()
   // Keep useOutlookItem warm for child components.
   void useOutlookItem()
 

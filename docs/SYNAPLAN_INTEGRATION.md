@@ -212,36 +212,53 @@ Almost nothing in v1. For completeness:
 - Plugin precedent: `synaplan-sortx/sortx-plugin/` (the source-of-truth pattern for synaplan plugins).
 - Synaplan pre-commit gate (mandatory for the bridge-page PR): `make lint && make -C backend phpstan && make test && docker compose exec -T frontend npm run check:types`.
 
-## 7. Local sign-in loop against a dev Synaplan (HTTPS workaround)
+## 7. Local sign-in loop against a dev Synaplan (no Office.com detour)
 
-The Synamail sign-in dialog goes through `Office.context.ui.displayDialogAsync`, which Office hard-rejects unless the URL is HTTPS. The local Synaplan dev server at `http://localhost:5173` therefore can't be pasted into Synamail's "Self-hosted instance" override as-is. The workaround is to put a one-line HTTPS proxy in front of the Vite dev server — no source changes to `synaplan/`, no Docker changes.
+This is the **fast local loop**: develop Synamail in WSL, run Synaplan in Docker, and test in your Windows Outlook — no Microsoft 365 dev tenant, no AppSource, no `web.synaplan.com` round-trip.
+
+The Synamail sign-in dialog goes through `Office.context.ui.displayDialogAsync`, which Office hard-rejects unless the URL is HTTPS. The taskpane is itself an HTTPS origin (`https://localhost:3000`), so its `fetch()` calls to Synaplan are also blocked as mixed content unless Synaplan answers over HTTPS. Your local Synaplan exposes the frontend on plain `http://localhost:5173` (which proxies `/api` → backend `:8000`). `make bridge` puts a one-process HTTPS terminator in front of it on `:5174` — no source changes to `synaplan/`, no Docker changes.
+
+The bridge **reuses the office-addin-dev-certs certificate** that already fronts Synamail on `:3000`, instead of a throwaway self-signed one. That matters: a **single** trusted root in Windows then covers both origins, so **desktop Outlook's WebView2 accepts the dialog too** — not just Outlook on the Web.
 
 ### 7.1 One-time setup
 
-The taskpane's outbound connections are restricted by `<AppDomains>` in `manifest.xml`. The dev origin `https://localhost:5174` is already listed there (alongside `web.synaplan.com` / `addin.synaplan.com`). If you want a different port, add a new `<AppDomain>` entry and re-run `make sideload`.
+1. **Dev cert** (provisions `~/.office-addin-dev-certs/`, shared by `:3000` and the `:5174` bridge):
+
+   ```bash
+   cd /wwwroot/Synamail && npx office-addin-dev-certs install
+   ```
+
+2. **Trust the CA in Windows** so desktop Outlook's WebView2 stops warning (skip if you only use Outlook on the Web and are happy clicking through the warning once):
+
+   ```bash
+   cp ~/.office-addin-dev-certs/ca.crt /mnt/c/Users/<you>/Downloads/
+   ```
+
+   In Windows: double-click `ca.crt` → **Install Certificate** → **Local Machine** → **Place all certificates in the following store** → **Trusted Root Certification Authorities** → Finish.
+
+3. **Real-auth toggle.** `.env.local` ships with `VITE_DEV_MOCK_AUTH=false`, which makes the sign-in dialog open the real `/addin/connect` bridge against the base URL you pick (instead of the in-repo mock relay that hands back a `mock-key-…`). Leave it `false` to talk to your Docker Synaplan; set it back to `true` (or delete the file) for pure offline UI work with `MockSynaplanClient`.
+
+The taskpane's outbound connections are restricted by `<AppDomains>` in `manifest.xml`; `https://localhost:5174` is already listed. A different port needs a new `<AppDomain>` entry and a re-`make sideload`.
 
 ### 7.2 The loop
 
 ```bash
-# Terminal 1 — Synaplan dev backend + frontend (frontend on :5173, backend on :8000)
-cd /wwwroot/synaplan
-docker compose up -d
+# Terminal 1 — Synaplan Docker (frontend :5173, backend :8000)
+cd /wwwroot/synaplan && docker compose up -d
 
-# Terminal 2 — HTTPS terminator in front of the Vite dev server.
-# Self-signed cert; the browser will prompt once and remember.
-npx local-ssl-proxy --source 5174 --target 5173
+# Terminal 2 — HTTPS bridge in front of the Synaplan frontend (:5174 → :5173)
+cd /wwwroot/Synamail && make bridge
 
-# Terminal 3 — Synamail taskpane + Outlook on the Web sideload
-cd /wwwroot/Synamail
-make dev &       # https://localhost:3000
-make sideload    # opens OWA with the manifest
-
-# In OWA: open any message → Synamail panel → "Self-hosted instance →"
-# Paste:  https://localhost:5174
-# Click "Sign in to Synaplan".
+# Terminal 3 — Synamail taskpane
+cd /wwwroot/Synamail && make dev        # https://localhost:3000
 ```
 
-First click triggers the browser cert warning for `https://localhost:5174` — accept it once. The dialog then loads `/addin/connect` from the local `synaplan/frontend/`, which calls `POST /api/v1/apikeys` (proxied through Vite to the backend container) and posts the `{ state, apiKey, keyId, email, baseUrl }` payload back through both `window.opener.postMessage` and `Office.context.ui.messageParent`.
+Then sideload into Outlook. Two no-tenant routes:
+
+- **Outlook on the Web / new Outlook for Windows** — `make sideload` (registers `manifest.xml`). Use a personal `outlook.live.com` account, which allows user sideloading without admin policy.
+- **Classic Outlook for Windows desktop** — `make sync` copies the manifest into `C:\addin-catalog\`; add that folder as a Trusted Add-in Catalog once (see `INSTALL.md` Route C). Bypasses tenant policy entirely.
+
+In the Synamail panel: open a message → **"Use a self-hosted instance"** → enter `https://localhost:5174` → **Sign in to Synaplan**. The dialog loads `/addin/connect` from your local `synaplan/frontend/`, which (after you log into local Synaplan) calls `POST /api/v1/apikeys` and posts `{ state, apiKey, keyId, email, baseUrl }` back via both `window.opener.postMessage` and `Office.context.ui.messageParent`. Every subsequent feature call then hits `https://localhost:5174/api/v1/*` → Vite → backend.
 
 ### 7.3 Switching back to live before deploying
 
@@ -254,6 +271,6 @@ Nothing on the production / `synaplan-platform` side changes.
 
 ### 7.4 Caveats
 
-- **OWA only.** New Outlook for Windows / classic Outlook 2024 / Outlook for Mac open dialogs in their own WebView and reject untrusted certs entirely. For desktop testing, install a locally-trusted root with `mkcert` and feed those certs to `local-ssl-proxy` via `--cert`/`--key`.
-- **One-time browser exception.** The self-signed cert exception is per-browser-profile. If you switch profiles, accept it again at `https://localhost:5174/addin/connect`.
+- **Desktop Outlook needs the trusted CA** (step 7.1.2). With it imported, new Outlook for Windows and classic Outlook 2024 accept the `:5174` dialog. Without it, you're limited to Outlook on the Web (accept the cert warning once per browser profile at `https://localhost:5174/addin/connect`).
+- **Cert lifetime.** `office-addin-dev-certs` certs are valid ~30 days; re-run the install command when the bridge or `:3000` starts failing TLS.
 - **AppSource submissions.** Strip the `<AppDomain>https://localhost:5174</AppDomain>` line from `manifest.xml` before the certification build (`planning/APPSOURCE_CHECKLIST.md` calls this out). It's harmless in dev sideloads, but Microsoft's validator flags localhost domains in store submissions.

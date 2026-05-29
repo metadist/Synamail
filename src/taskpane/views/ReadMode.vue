@@ -201,7 +201,9 @@ async function handleBlockConfirm(payload: { alsoCleanExisting: boolean }): Prom
   const email = senderEmail.value
   if (!email) return
   const r = await run('block', () =>
-    call((c) => c.createSpamRule({ senderEmail: email, alsoCleanExisting: payload.alsoCleanExisting })),
+    call((c) =>
+      c.createSpamRule({ senderEmail: email, alsoCleanExisting: payload.alsoCleanExisting }),
+    ),
   )
   if (r) {
     status.value = r.serverSide
@@ -261,7 +263,11 @@ async function ask(): Promise<void> {
         >
           {{ active === 'senderHistory' ? t('common.loading') : t('read.actions.moreFromSender') }}
         </button>
-        <button type="button" class="read__sender-link read__sender-link--danger" @click="openBlockDialog">
+        <button
+          type="button"
+          class="read__sender-link read__sender-link--danger"
+          @click="openBlockDialog"
+        >
           {{ t('read.actions.blockSender') }}
         </button>
       </div>
