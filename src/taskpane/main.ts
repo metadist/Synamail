@@ -6,8 +6,9 @@
 
 import { createApp } from 'vue'
 import App from './App.vue'
-import { i18n } from '@/i18n'
+import { i18n, setLocale, SUPPORTED_LOCALES, type Locale } from '@/i18n'
 import { hydrateAuthState, isSignedIn } from './composables/useAuth'
+import { loadSettings } from './composables/useRoamingSettings'
 import { useOutlookItem } from './composables/useOutlookItem'
 import { currentView, go } from './router'
 import { AUTH_INVALIDATED_EVENT } from './composables/useSynaplanClient'
@@ -20,6 +21,18 @@ function mount(): void {
   app.mount('#app')
 }
 
+/**
+ * Honour a saved UI-language preference once roaming settings are available.
+ * `'auto'` (or no preference) leaves the Outlook-detected locale that i18n
+ * was created with; an explicit shipped locale overrides it.
+ */
+function applyStoredLocale(): void {
+  const pref = loadSettings()?.language
+  if (pref && pref !== 'auto' && (SUPPORTED_LOCALES as readonly string[]).includes(pref)) {
+    setLocale(pref as Locale)
+  }
+}
+
 function routeAfterAuth(): void {
   // Chat-first: after sign-in we always land on Home, which works with or
   // without a selected message. The email-specific Read/Compose views are
@@ -29,6 +42,7 @@ function routeAfterAuth(): void {
 
 function bootstrap(): void {
   hydrateAuthState()
+  applyStoredLocale()
   routeAfterAuth()
   // Keep useOutlookItem warm for child components.
   void useOutlookItem()

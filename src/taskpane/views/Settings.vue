@@ -7,6 +7,7 @@ import { signOut, signedInEmail, signedInBaseUrl, isSignedIn } from '@/taskpane/
 import { useSynaplanClient } from '@/taskpane/composables/useSynaplanClient'
 import { go } from '@/taskpane/router'
 import { loadSettings, patchSettings } from '@/taskpane/composables/useRoamingSettings'
+import { setLocale, detectLocale, SUPPORTED_LOCALES, type Locale } from '@/i18n'
 import type { ModelConfig } from '@shared/types'
 
 const { t } = useI18n()
@@ -77,49 +78,56 @@ async function saveBaseUrl(): Promise<void> {
 }
 
 const lastRagGroupId = loadSettings()?.lastRagGroupId ?? ''
-const language = loadSettings()?.language ?? 'auto'
+
+type LanguagePref = 'auto' | Locale
+const LANGUAGE_OPTIONS = ['auto', ...SUPPORTED_LOCALES] as const
+const languagePref = ref<LanguagePref>((loadSettings()?.language as LanguagePref) ?? 'auto')
+
+async function onLanguageChange(): Promise<void> {
+  const pref = languagePref.value
+  // Apply to the live UI immediately; 'auto' re-resolves the Outlook language.
+  setLocale(pref === 'auto' ? detectLocale() : pref)
+  // Persist for next launch. Roaming settings require a signed-in record;
+  // when signed out the choice still applies for this session.
+  if (!isSignedIn.value) return
+  try {
+    await patchSettings({ language: pref })
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : String(err)
+  }
+}
 </script>
 
 <template>
   <section class="settings">
-    <header class="syn-row">
-      <button type="button" class="settings__back" @click="go('home')">
-        ← {{ t('common.back') }}
-      </button>
-      <h2>{{ t('settings.title') }}</h2>
+    <header class="syn-view-header">
+      <button type="button" class="syn-back" @click="go('home')">← {{ t('common.back') }}</button>
+      <h2 class="syn-view-title">{{ t('settings.title') }}</h2>
     </header>
 
-    <div class="settings__section">
-      <p class="syn-muted">
-        {{ t('settings.signedInAs') }}
-      </p>
-      <p>
+    <div class="syn-card">
+      <h3 class="syn-card-title">{{ t('settings.signedInAs') }}</h3>
+      <div class="settings__identity">
         <strong>{{ signedInEmail ?? '—' }}</strong>
-      </p>
-      <p class="syn-muted">on {{ signedInBaseUrl ?? '—' }}</p>
+        <span class="syn-card-sub">{{ signedInBaseUrl ?? '—' }}</span>
+      </div>
       <ActionButton variant="primary" @click="handleSignOut">
         {{ t('settings.signOut') }}
       </ActionButton>
     </div>
 
-    <div class="settings__section">
-      <p class="syn-muted">
-        {{ t('settings.synaplanInstance') }}
-      </p>
-      <p class="syn-muted">
-        {{ t('settings.instanceHint') }}
-      </p>
+    <div class="syn-card">
+      <h3 class="syn-card-title">{{ t('settings.synaplanInstance') }}</h3>
+      <p class="syn-card-sub">{{ t('settings.instanceHint') }}</p>
       <input v-model="baseUrlEdit" :disabled="!editable" type="url" spellcheck="false" />
       <ActionButton v-if="editable" @click="saveBaseUrl">
         {{ t('common.save') }}
       </ActionButton>
     </div>
 
-    <div class="settings__section">
-      <p>
-        <strong>{{ t('settings.models.title') }}</strong>
-      </p>
-      <p v-if="modelsLoading" class="syn-muted">{{ t('settings.models.loading') }}</p>
+    <div class="syn-card">
+      <h3 class="syn-card-title">{{ t('settings.models.title') }}</h3>
+      <p v-if="modelsLoading" class="syn-card-sub">{{ t('settings.models.loading') }}</p>
       <dl v-else class="settings__models">
         <div class="settings__model-row">
           <dt>{{ t('settings.models.chat') }}</dt>
@@ -138,22 +146,24 @@ const language = loadSettings()?.language ?? 'auto'
       <ActionButton @click="openModelConfig"> {{ t('settings.models.configure') }} → </ActionButton>
     </div>
 
-    <div class="settings__section">
-      <p>
-        <strong>{{ t('settings.preferences') }}</strong>
-      </p>
-      <label
-        >{{ t('settings.defaultRagGroup') }}: <code>{{ lastRagGroupId || '—' }}</code></label
-      >
-      <label
-        >{{ t('settings.language') }}: <code>{{ language }}</code></label
-      >
+    <div class="syn-card">
+      <h3 class="syn-card-title">{{ t('settings.preferences') }}</h3>
+      <label class="settings__field">
+        <span>{{ t('settings.defaultRagGroup') }}</span>
+        <code>{{ lastRagGroupId || '—' }}</code>
+      </label>
+      <label class="settings__field">
+        <span>{{ t('settings.language') }}</span>
+        <select v-model="languagePref" class="settings__select" @change="onLanguageChange">
+          <option v-for="l in LANGUAGE_OPTIONS" :key="l" :value="l">
+            {{ t(`language.${l}`) }}
+          </option>
+        </select>
+      </label>
     </div>
 
-    <div class="settings__section">
-      <p>
-        <strong>{{ t('settings.advanced') }}</strong>
-      </p>
+    <div class="syn-card">
+      <h3 class="syn-card-title">{{ t('settings.advanced') }}</h3>
       <ActionButton @click="go('rule-editor')"> {{ t('settings.routingRules') }} → </ActionButton>
     </div>
 
@@ -166,27 +176,34 @@ const language = loadSettings()?.language ?? 'auto'
   padding: var(--syn-space-3);
   display: flex;
   flex-direction: column;
-  gap: var(--syn-space-4);
+  gap: var(--syn-space-3);
 }
-.settings__back {
-  background: none;
-  border: 0;
-  color: var(--syn-brand-600);
-  padding: 0;
-}
-.settings__section {
+.settings__identity {
   display: flex;
   flex-direction: column;
-  gap: var(--syn-space-2);
-  padding: var(--syn-space-3);
-  border: 1px solid var(--syn-border);
-  border-radius: var(--syn-radius-md);
+  gap: var(--syn-space-1);
+  word-break: break-all;
 }
 input {
   padding: var(--syn-space-2);
   border: 1px solid var(--syn-border);
   border-radius: var(--syn-radius-sm);
   font-family: inherit;
+}
+.settings__field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--syn-space-2);
+}
+.settings__select {
+  padding: var(--syn-space-1) var(--syn-space-2);
+  border: 1px solid var(--syn-border);
+  border-radius: var(--syn-radius-sm);
+  background: var(--syn-bg);
+  color: var(--syn-text);
+  font-family: inherit;
+  font-size: var(--syn-font-size-sm);
 }
 .settings__models {
   margin: 0;

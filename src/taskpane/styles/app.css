@@ -55,3 +55,59 @@ a {
   color: var(--syn-muted);
   font-size: var(--syn-font-size-sm);
 }
+
+/* Shared section card — one consistent box style across every view:
+   headline → optional one-line description → content/action. */
+.syn-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--syn-space-2);
+  padding: var(--syn-space-3);
+  background: var(--syn-surface);
+  border: 1px solid var(--syn-border);
+  border-radius: var(--syn-radius-md);
+}
+.syn-card-title {
+  margin: 0;
+  font-size: var(--syn-font-size-lg);
+  font-weight: 600;
+}
+.syn-card-sub {
+  margin: 0;
+  font-size: var(--syn-font-size-sm);
+  line-height: 1.35;
+  color: var(--syn-muted);
+}
+
+/* Shared "back to parent view" control for submenus. */
+.syn-back {
+  align-self: flex-start;
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--syn-brand-600);
+  font-size: var(--syn-font-size-sm);
+  font-weight: 500;
+}
+.syn-back:hover {
+  text-decoration: underline;
+}
+
+/* Shared view header — one consistent rule for every secondary view:
+   back link on its own row, then the page title, then an optional subtitle. */
+.syn-view-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--syn-space-1);
+}
+.syn-view-title {
+  margin: 0;
+  font-size: var(--syn-font-size-xl);
+  font-weight: 600;
+  line-height: 1.25;
+}
+.syn-view-subtitle {
+  margin: 0;
+  color: var(--syn-muted);
+  font-size: var(--syn-font-size-sm);
+}

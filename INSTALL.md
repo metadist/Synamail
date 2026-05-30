@@ -369,6 +369,25 @@ For genuine enterprise deployment of Synamail, the admin deploys via AppSource o
 
 ## Cross-platform notes
 
+### One-shot dev loop (any platform)
+
+After Step 3 (dev cert) is provisioned, you don't need to remember the three
+moving parts (`docker compose up`, `make dev`, `make bridge`) — there's a
+single command that brings everything up on **macOS, native Linux, and WSL**:
+
+```bash
+cd /path/to/Synamail
+./start-dev.sh        # or: make up
+
+# Stop the Synamail-side processes (Synaplan Docker stays up):
+./start-dev.sh stop   # or: make down
+```
+
+It auto-locates the Synaplan repo from `SYNAPLAN_DIR`, the sibling directory
+(e.g. `/path/to/wwwroot/synaplan` next to `/path/to/wwwroot/Synamail`), or the
+WSL convention `/wwwroot/synaplan`. Logs land in `.dev-logs/`. The script is
+idempotent — re-run after a reboot and it skips anything already up.
+
 ### WSL (Ubuntu / Debian on Windows)
 
 - Repo should live under `/wwwroot/...` or `~/...` — the **Linux** filesystem. Putting the repo under `/mnt/c/...` (Windows filesystem mounted into WSL) makes everything 10× slower due to filesystem translation overhead.
@@ -383,7 +402,12 @@ For genuine enterprise deployment of Synamail, the admin deploys via AppSource o
 ### Native macOS
 
 - `office-addin-dev-certs install` may need the keychain password (it adds the CA to the System keychain).
-- Outlook for Mac sideloads via the same UI as OWA.
+- The unified `./start-dev.sh` (or `make up`) brings the Synaplan stack, the Vite taskpane, and the HTTPS sign-in bridge up in one go — same script as Linux/WSL, no Mac-specific runner.
+- **Sideload target on Mac:** Outlook for Mac sideloading still goes through a tenant that allows custom add-ins (see Step 6) — the platform doesn't change the policy story. Two field-tested paths:
+  - **Outlook on the Web** in any browser (Safari, Chrome, Firefox). Identical to the OWA flow described in Step 7. The simplest option, recommended for fast iteration.
+  - **Outlook for Mac (new UI):** open any email → toolbar **Apps** icon → **Get Add-ins** → **My add-ins → Add a custom add-in → Add from File…** and pick `manifest.xml`. The ribbon group lands in the same toolbar.
+- `make sideload` works on Mac the same way it does elsewhere (`office-addin-debugging start manifest.xml` opens the configured Outlook target).
+- Apple Silicon: everything is native arm64, including the Docker images Synaplan uses.
 
 ### Native Linux (running Outlook in a browser only)
 
@@ -406,8 +430,9 @@ For genuine enterprise deployment of Synamail, the admin deploys via AppSource o
 
 ## Changelog (install-process findings)
 
-| Date       | Finding                                                                                                                                                                        |
-| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 2026-05-16 | Initial dev-cert + Vite HTTPS plumbing verified end-to-end. Manifest validates clean.                                                                                          |
-| 2026-05-19 | Tenant-policy block surfaced on a corporate M365 OWA — no "Add custom add-in" UI present. Documented the four routes (dev tenant / personal / classic catalog / admin upload). |
-| 2026-05-19 | `fnm` + Node 24 confirmed as the dev runtime. `.nvmrc` pins 24; `engines.node: ">=22"`.                                                                                        |
+| Date       | Finding                                                                                                                                                                                                                                                                     |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-05-16 | Initial dev-cert + Vite HTTPS plumbing verified end-to-end. Manifest validates clean.                                                                                                                                                                                       |
+| 2026-05-19 | Tenant-policy block surfaced on a corporate M365 OWA — no "Add custom add-in" UI present. Documented the four routes (dev tenant / personal / classic catalog / admin upload).                                                                                              |
+| 2026-05-19 | `fnm` + Node 24 confirmed as the dev runtime. `.nvmrc` pins 24; `engines.node: ">=22"`.                                                                                                                                                                                     |
+| 2026-05-30 | `start-dev.sh` + `scripts/dev-bridge-proxy.sh` reworked to be cross-platform (macOS / native Linux / WSL): `lsof` instead of `ss`/`fuser`, `SYNAPLAN_DIR` auto-detected from the sibling repo. Added `make up` / `make down` aliases. Verified end-to-end on Apple Silicon. |

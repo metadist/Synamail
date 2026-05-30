@@ -5,6 +5,7 @@ import ActionButton from '@/taskpane/components/ActionButton.vue'
 import LanguagePicker from '@/taskpane/components/LanguagePicker.vue'
 import Toast from '@/taskpane/components/Toast.vue'
 import { useSynaplanClient } from '@/taskpane/composables/useSynaplanClient'
+import { go } from '@/taskpane/router'
 
 const { t } = useI18n()
 const { call } = useSynaplanClient()
@@ -124,7 +125,10 @@ async function insertHit(hit: { filename: string; snippet: string }): Promise<vo
 
 <template>
   <section class="compose">
-    <h2>{{ t('compose.title') }}</h2>
+    <header class="syn-view-header">
+      <button type="button" class="syn-back" @click="go('home')">← {{ t('common.back') }}</button>
+      <h2 class="syn-view-title">{{ t('compose.title') }}</h2>
+    </header>
 
     <div class="syn-stack">
       <label for="intent" class="syn-muted">{{ t('compose.intentLabel') }}</label>

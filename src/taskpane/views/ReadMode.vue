@@ -244,74 +244,68 @@ async function ask(): Promise<void> {
 
 <template>
   <section class="read">
-    <header class="read__header">
-      <h2 class="read__subject">
-        {{ item.subject || '—' }}
-      </h2>
-      <p class="syn-muted">
-        <span v-if="item.from">From: {{ item.from }}</span>
-      </p>
-      <div v-if="senderEmail" class="read__sender-actions">
-        <button class="read__contact" type="button" @click="go('contact-kb')">
-          {{ t('read.contactPill', { email: senderEmail }) }}
-        </button>
-        <button
-          type="button"
-          class="read__sender-link"
-          :disabled="active === 'senderHistory'"
-          @click="loadSenderHistory"
-        >
-          {{ active === 'senderHistory' ? t('common.loading') : t('read.actions.moreFromSender') }}
-        </button>
-        <button
-          type="button"
-          class="read__sender-link read__sender-link--danger"
-          @click="openBlockDialog"
-        >
-          {{ t('read.actions.blockSender') }}
-        </button>
-      </div>
+    <header class="syn-view-header">
+      <button type="button" class="syn-back" @click="go('home')">← {{ t('common.back') }}</button>
+      <h2 class="syn-view-title">{{ item.subject || '—' }}</h2>
+      <p v-if="item.from" class="syn-view-subtitle">{{ t('read.from') }}: {{ item.from }}</p>
     </header>
 
-    <div class="syn-stack">
-      <ActionButton :loading="active === 'summarise'" @click="summarise">
-        {{ t('read.actions.summarise') }}
-      </ActionButton>
-
-      <div class="syn-row">
-        <ActionButton :loading="active === 'translate'" :block="false" @click="translate">
-          {{ t('read.actions.translate') }}
+    <div class="syn-card">
+      <h3 class="syn-card-title">{{ t('read.title') }}</h3>
+      <div class="syn-stack">
+        <ActionButton :loading="active === 'summarise'" @click="summarise">
+          {{ t('read.actions.summarise') }}
         </ActionButton>
-        <LanguagePicker v-model="targetLang" />
-      </div>
 
-      <div class="syn-row">
-        <ActionButton :loading="active === 'reply'" :block="false" @click="draftReply">
-          {{ t('read.actions.draftReply') }}
+        <div class="syn-row">
+          <ActionButton :loading="active === 'translate'" :block="false" @click="translate">
+            {{ t('read.actions.translate') }}
+          </ActionButton>
+          <LanguagePicker v-model="targetLang" />
+        </div>
+
+        <div class="syn-row">
+          <ActionButton :loading="active === 'reply'" :block="false" @click="draftReply">
+            {{ t('read.actions.draftReply') }}
+          </ActionButton>
+          <TonePicker v-model="tone" />
+        </div>
+
+        <ActionButton :loading="active === 'classify'" @click="classify">
+          {{ t('read.actions.classify') }}
         </ActionButton>
-        <TonePicker v-model="tone" />
+
+        <ActionButton :loading="active === 'save'" @click="openSaveDialog">
+          {{ t('read.actions.saveToRag') }}
+        </ActionButton>
       </div>
-
-      <ActionButton :loading="active === 'classify'" @click="classify">
-        {{ t('read.actions.classify') }}
-      </ActionButton>
-
-      <ActionButton :loading="active === 'save'" @click="openSaveDialog">
-        {{ t('read.actions.saveToRag') }}
-      </ActionButton>
     </div>
-
-    <SenderHistoryList
-      v-if="senderHistory"
-      :history="senderHistory"
-      @summarise="summariseSenderHistory"
-    />
 
     <pre v-if="result" class="read__result">{{ result }}</pre>
     <Toast v-if="status" kind="success" :message="status" />
     <Toast v-if="error" kind="error" :message="error" />
 
-    <section class="read__ask">
+    <div v-if="senderEmail" class="syn-card">
+      <h3 class="syn-card-title">{{ t('read.senderTitle') }}</h3>
+      <p class="syn-card-sub">{{ senderEmail }}</p>
+      <div class="syn-stack">
+        <ActionButton @click="go('contact-kb')">{{ t('read.contactKb') }}</ActionButton>
+        <ActionButton :loading="active === 'senderHistory'" @click="loadSenderHistory">
+          {{ t('read.actions.moreFromSender') }}
+        </ActionButton>
+        <ActionButton variant="danger" @click="openBlockDialog">
+          {{ t('read.actions.blockSender') }}
+        </ActionButton>
+      </div>
+      <SenderHistoryList
+        v-if="senderHistory"
+        :history="senderHistory"
+        @summarise="summariseSenderHistory"
+      />
+    </div>
+
+    <div class="syn-card">
+      <h3 class="syn-card-title">{{ t('read.askTitle') }}</h3>
       <div v-for="(turn, i) in askHistory" :key="i" class="read__turn">
         <p><strong>You:</strong> {{ turn.q }}</p>
         <p><strong>Synaplan:</strong> {{ turn.a }}</p>
@@ -328,7 +322,7 @@ async function ask(): Promise<void> {
           {{ t('read.actions.ask') }}
         </ActionButton>
       </div>
-    </section>
+    </div>
 
     <SaveToRagDialog
       v-if="showSaveDialog"
@@ -354,58 +348,15 @@ async function ask(): Promise<void> {
   flex-direction: column;
   gap: var(--syn-space-3);
 }
-.read__header {
-  display: flex;
-  flex-direction: column;
-  gap: var(--syn-space-1);
-}
-.read__subject {
-  margin: 0;
-  font-size: var(--syn-font-size-lg);
-}
-.read__sender-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--syn-space-2);
-  align-items: center;
-}
-.read__contact {
-  border: 1px solid var(--syn-border);
-  background: var(--syn-surface);
-  color: var(--syn-text);
-  padding: var(--syn-space-1) var(--syn-space-2);
-  border-radius: 999px;
-  font-size: var(--syn-font-size-sm);
-}
-.read__sender-link {
-  background: none;
-  border: 0;
-  color: var(--syn-brand-600);
-  padding: 0;
-  font-size: var(--syn-font-size-sm);
-  text-decoration: underline;
-  cursor: pointer;
-}
-.read__sender-link:disabled {
-  opacity: 0.6;
-  cursor: progress;
-}
-.read__sender-link--danger {
-  color: var(--syn-danger-600, #b91c1c);
-}
 .read__result {
   background: var(--syn-surface);
   padding: var(--syn-space-3);
+  border: 1px solid var(--syn-border);
   border-radius: var(--syn-radius-md);
   white-space: pre-wrap;
   margin: 0;
   font-family: inherit;
   font-size: var(--syn-font-size-sm);
-}
-.read__ask {
-  display: flex;
-  flex-direction: column;
-  gap: var(--syn-space-2);
 }
 .read__turn {
   padding: var(--syn-space-2);

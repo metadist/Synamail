@@ -18,35 +18,41 @@
   },
   "home": {
     "title": "Start",
-    "intro": "Chatte mit Synaplan, durchsuche und vektorisiere deine E-Mails oder entwirf eine neue E-Mail — ganz ohne ausgewählte Nachricht.",
+    "intro": "Chatte mit Synaplan, füge deine E-Mails zur Wissensdatenbank hinzu oder entwirf eine neue E-Mail — ganz ohne ausgewählte Nachricht.",
     "emailLoaded": "E-Mail geöffnet: {subject}",
     "emailActions": "E-Mail-Aktionen",
+    "emailTitle": "Geöffnete E-Mail",
     "commands": {
       "chat": "Chat",
-      "search": "E-Mails suchen & vektorisieren",
+      "search": "E-Mails filtern für Wissensdatenbank",
       "searchSub": "Nachrichten zu einem Thema finden und der Wissensdatenbank hinzufügen",
+      "searchAction": "E-Mails durchsuchen",
       "newMail": "Neue E-Mail",
-      "newMailSub": "Beschreibe sie und lass die KI die E-Mail entwerfen"
+      "newMailSub": "Beschreibe sie und lass die KI die E-Mail entwerfen",
+      "newMailAction": "E-Mail verfassen"
     },
     "chat": {
       "placeholder": "Frag Synaplan alles…",
       "send": "Senden",
       "thinking": "Denkt nach…",
-      "emptyHint": "Starte eine Unterhaltung — stelle eine Frage oder füge Text ein."
+      "emptyHint": "Starte eine Unterhaltung — stelle eine Frage oder füge Text ein.",
+      "sample": "Was heißt Effizienz auf Englisch?",
+      "scrollTop": "Nach oben",
+      "reset": "Neuer Chat"
     },
     "search": {
-      "title": "E-Mails suchen & vektorisieren",
+      "title": "E-Mails filtern für Wissensdatenbank",
       "topic": "Thema",
       "topicPlaceholder": "z. B. Liefervertrag 2026",
-      "keyword": "Wissensgruppe (Stichwort)",
+      "keyword": "Wissensdatenbank-Ordner",
       "run": "Suchen",
       "mailboxResults": "Aus deinem Postfach",
       "mockBadge": "Mock",
       "noMailboxHits": "Keine passenden Nachrichten gefunden.",
       "permissionNeeded": "Die Postfachsuche benötigt eine einmalige Berechtigungsaktualisierung. Entferne das Synamail-Add-in und füge es erneut hinzu, um Postfachzugriff zu gewähren (Wissensdatenbank-Ergebnisse funktionieren weiterhin).",
       "kbResults": "Bereits in deiner Wissensdatenbank",
-      "vectorize": "{n} in '{group}' vektorisieren",
-      "vectorized": "{n} Nachricht(en) in {group} vektorisiert.",
+      "vectorize": "{n} zu '{group}' hinzufügen",
+      "vectorized": "{n} Nachricht(en) zu {group} hinzugefügt.",
       "done": "Nachrichten zu {group} hinzugefügt."
     },
     "newMail": {
@@ -60,6 +66,11 @@
     }
   },
   "read": {
+    "title": "E-Mail-Aktionen",
+    "from": "Von",
+    "senderTitle": "Absender",
+    "contactKb": "Kontakt-Wissensdatenbank",
+    "askTitle": "Zu dieser E-Mail fragen",
     "actions": {
       "summarise": "Zusammenfassen",
       "translate": "Übersetzen",
@@ -75,19 +86,19 @@
     "contactPill": "Kontakt: {email}",
     "saveDialog": {
       "title": "In Wissensdatenbank speichern",
-      "group": "Wissensgruppe",
-      "newGroup": "Oder neue Gruppe anlegen",
+      "group": "Wissensdatenbank-Ordner",
+      "newGroup": "Oder neuen Ordner anlegen",
       "newGroupPlaceholder": "z. B. contact:alice@example.com",
-      "contactGroup": "Kontaktgruppe verwenden",
+      "contactGroup": "Kontakt-Ordner verwenden",
       "contactGroupHint": "für diesen Absender vorgeschlagen",
       "processLevel": "Verarbeitung",
       "processLevels": {
         "store": "Nur speichern",
         "extract": "Text extrahieren",
-        "vectorize": "Extrahieren + für RAG vektorisieren",
+        "vectorize": "Für die KI-Suche aufbereiten",
         "full": "Vollständige Analyse"
       },
-      "loadingGroups": "Gruppen werden geladen…",
+      "loadingGroups": "Ordner werden geladen…",
       "savedTo": "Als Datei #{fileId} in {group} gespeichert."
     },
     "senderHistory": {
@@ -129,16 +140,16 @@
       "loading": "Modelle werden geladen…",
       "chat": "Chat-Modell",
       "imageGen": "Bildgenerierung",
-      "vectorize": "Vektorisierungs-Modell",
+      "vectorize": "Wissensdatenbank-Modell",
       "configure": "Modelle in Synaplan konfigurieren"
     },
     "preferences": "Einstellungen",
-    "defaultRagGroup": "Standard-RAG-Gruppe",
+    "defaultRagGroup": "Standard-Ordner der Wissensdatenbank",
     "language": "Sprache",
-    "autoDetectContactGroup": "Kontaktgruppe beim Speichern automatisch erkennen",
+    "autoDetectContactGroup": "Kontakt-Ordner beim Speichern automatisch erkennen",
     "advanced": "Erweitert",
     "routingRules": "Routing-Regeln für E-Mails",
-    "resetRoaming": "Roaming-Einstellungen zurücksetzen"
+    "resetRoaming": "Gespeicherte Einstellungen zurücksetzen"
   },
   "common": {
     "back": "Zurück",
@@ -163,6 +174,7 @@
     "fr": "Französisch",
     "es": "Spanisch",
     "it": "Italienisch",
+    "pt": "Portugiesisch",
     "zh": "Chinesisch",
     "ar": "Arabisch"
   }

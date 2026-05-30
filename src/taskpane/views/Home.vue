@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import ActionButton from '@/taskpane/components/ActionButton.vue'
 import ChatThread from '@/taskpane/components/ChatThread.vue'
 import type { ChatMessage } from '@/taskpane/components/ChatThread.vue'
 import MailSearchVectorizeDialog from '@/taskpane/components/MailSearchVectorizeDialog.vue'
@@ -8,6 +9,7 @@ import NewMailDialog from '@/taskpane/components/NewMailDialog.vue'
 import Toast from '@/taskpane/components/Toast.vue'
 import { useOutlookItem } from '@/taskpane/composables/useOutlookItem'
 import {
+  clearChatIdForConversation,
   getChatIdForConversation,
   getLastRagGroupId,
   setChatIdForConversation,
@@ -67,45 +69,58 @@ function onMailOpened(): void {
   showNewMail.value = false
   status.value = t('home.newMail.opened')
 }
+
+async function resetChat(): Promise<void> {
+  messages.value = []
+  error.value = null
+  // Start a fresh Synaplan chat on the next message.
+  try {
+    await clearChatIdForConversation(HOME_CONVERSATION)
+  } catch {
+    // Roaming write can fail offline/in tests; the in-memory reset still holds.
+  }
+}
 </script>
 
 <template>
   <section class="home">
-    <p class="syn-muted home__intro">{{ t('home.intro') }}</p>
-
-    <div v-if="emailLoaded" class="home__context">
-      <span class="home__context-text">
-        {{ t('home.emailLoaded', { subject: item.subject || '—' }) }}
-      </span>
-      <button
-        type="button"
-        class="home__context-link"
-        @click="go(item.mode === 'compose' ? 'compose' : 'read')"
-      >
-        {{ t('home.emailActions') }} →
-      </button>
+    <div v-if="emailLoaded" class="syn-card">
+      <h2 class="syn-card-title">{{ t('home.emailTitle') }}</h2>
+      <p class="syn-card-sub">{{ item.subject || '—' }}</p>
+      <ActionButton @click="go(item.mode === 'compose' ? 'compose' : 'read')">
+        {{ t('home.emailActions') }}
+      </ActionButton>
     </div>
 
-    <div class="home__commands">
-      <button type="button" class="home__cmd" @click="showSearch = true">
-        <span class="home__cmd-title">{{ t('home.commands.search') }}</span>
-        <span class="home__cmd-sub syn-muted">{{ t('home.commands.searchSub') }}</span>
-      </button>
-      <button type="button" class="home__cmd" @click="showNewMail = true">
-        <span class="home__cmd-title">{{ t('home.commands.newMail') }}</span>
-        <span class="home__cmd-sub syn-muted">{{ t('home.commands.newMailSub') }}</span>
-      </button>
+    <div class="syn-card">
+      <h2 class="syn-card-title">{{ t('home.commands.search') }}</h2>
+      <p class="syn-card-sub">{{ t('home.commands.searchSub') }}</p>
+      <ActionButton data-testid="cmd-search" @click="showSearch = true">
+        {{ t('home.commands.searchAction') }}
+      </ActionButton>
+    </div>
+
+    <div class="syn-card">
+      <h2 class="syn-card-title">{{ t('home.commands.newMail') }}</h2>
+      <p class="syn-card-sub">{{ t('home.commands.newMailSub') }}</p>
+      <ActionButton data-testid="cmd-newmail" @click="showNewMail = true">
+        {{ t('home.commands.newMailAction') }}
+      </ActionButton>
     </div>
 
     <Toast v-if="status" kind="success" :message="status" />
 
-    <h2 class="home__chat-title">{{ t('home.commands.chat') }}</h2>
-    <ChatThread
-      :messages="messages"
-      :loading="sending"
-      :empty-hint="t('home.chat.emptyHint')"
-      @send="send"
-    />
+    <div class="syn-card">
+      <h2 class="syn-card-title">{{ t('home.commands.chat') }}</h2>
+      <p class="syn-card-sub">{{ t('home.chat.emptyHint') }}</p>
+      <ChatThread
+        :messages="messages"
+        :loading="sending"
+        :initial-draft="t('home.chat.sample')"
+        @send="send"
+        @reset="resetChat"
+      />
+    </div>
 
     <Toast v-if="error" kind="error" :message="error" />
 
@@ -125,67 +140,5 @@ function onMailOpened(): void {
   display: flex;
   flex-direction: column;
   gap: var(--syn-space-3);
-}
-.home__intro {
-  margin: 0;
-  font-size: var(--syn-font-size-sm);
-}
-.home__context {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--syn-space-2);
-  padding: var(--syn-space-2) var(--syn-space-3);
-  background: var(--syn-surface);
-  border: 1px solid var(--syn-border);
-  border-radius: var(--syn-radius-md);
-  font-size: var(--syn-font-size-sm);
-}
-.home__context-text {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.home__context-link {
-  background: none;
-  border: 0;
-  color: var(--syn-brand-600);
-  text-decoration: underline;
-  cursor: pointer;
-  font-size: var(--syn-font-size-sm);
-  white-space: nowrap;
-}
-.home__commands {
-  display: flex;
-  flex-direction: column;
-  gap: var(--syn-space-2);
-}
-.home__cmd {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  text-align: left;
-  padding: var(--syn-space-3);
-  background: var(--syn-surface);
-  border: 1px solid var(--syn-border);
-  border-radius: var(--syn-radius-md);
-  cursor: pointer;
-  color: var(--syn-text);
-}
-.home__cmd:hover {
-  border-color: var(--syn-brand-300);
-}
-.home__cmd-title {
-  font-weight: 500;
-}
-.home__cmd-sub {
-  font-size: var(--syn-font-size-sm);
-}
-.home__chat-title {
-  margin: 0;
-  font-size: var(--syn-font-size-lg);
 }
 </style>

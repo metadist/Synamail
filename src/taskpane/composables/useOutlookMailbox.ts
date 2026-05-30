@@ -14,6 +14,7 @@
  */
 
 import type { MessageFile } from './useOutlookItem'
+import type { CreateSpamRuleResult, SenderHistoryItem, SenderHistoryResult } from '@shared/types'
 
 export interface MailboxHit {
   /** EWS ItemId, usable for GetItem. */

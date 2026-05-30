@@ -14,39 +14,82 @@ interface Props {
   loading?: boolean
   placeholder?: string
   emptyHint?: string
+  /** Seed the composer so Send is active and the user sees a concrete example. */
+  initialDraft?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
   loading: false,
   placeholder: '',
   emptyHint: '',
+  initialDraft: '',
 })
 
-const emit = defineEmits<{ (e: 'send', text: string): void }>()
+const emit = defineEmits<{ (e: 'send', text: string): void; (e: 'reset'): void }>()
 
 const { t } = useI18n()
-const draft = ref('')
-const scroller = ref<HTMLElement | null>(null)
+const draft = ref(props.initialDraft)
+const root = ref<HTMLElement | null>(null)
+
+// The composer is seeded with an example so Send is active and users see they
+// can type here. The first time they focus the still-untouched sample, clear it
+// so they don't have to delete it by hand. Once they've focused or edited it,
+// we never auto-clear again — so it's never annoying on later interactions.
+const sampleActive = ref(Boolean(props.initialDraft))
+
+function onFocus(): void {
+  if (sampleActive.value && draft.value === props.initialDraft) {
+    draft.value = ''
+  }
+  sampleActive.value = false
+}
+
+function onInput(): void {
+  sampleActive.value = false
+}
 
 function submit(): void {
   const text = draft.value.trim()
   if (!text || props.loading) return
   emit('send', text)
   draft.value = ''
+  sampleActive.value = false
+}
+
+function scrollToTop(): void {
+  root.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+
+// Keep the newest reply — and the sticky composer — in view as the thread grows.
+function scrollToLatest(): void {
+  try {
+    globalThis.scrollTo?.({ top: document.documentElement.scrollHeight, behavior: 'smooth' })
+  } catch {
+    /* jsdom / non-browser env has no real scrolling */
+  }
 }
 
 watch(
   () => props.messages.length,
   async () => {
     await nextTick()
-    if (scroller.value) scroller.value.scrollTop = scroller.value.scrollHeight
+    scrollToLatest()
   },
 )
 </script>
 
 <template>
-  <div class="chat">
-    <div ref="scroller" class="chat__scroll">
+  <div ref="root" class="chat">
+    <div v-if="messages.length" class="chat__toolbar">
+      <button type="button" class="chat__tool" @click="scrollToTop">
+        ↑ {{ t('home.chat.scrollTop') }}
+      </button>
+      <button type="button" class="chat__tool" @click="$emit('reset')">
+        {{ t('home.chat.reset') }}
+      </button>
+    </div>
+
+    <div class="chat__scroll">
       <p v-if="messages.length === 0 && emptyHint" class="syn-muted chat__empty">
         {{ emptyHint }}
       </p>
@@ -69,6 +112,8 @@ watch(
         rows="2"
         class="chat__input"
         :placeholder="placeholder || t('home.chat.placeholder')"
+        @focus="onFocus"
+        @input="onInput"
         @keydown.enter.exact.prevent="submit"
       />
       <ActionButton
@@ -90,12 +135,32 @@ watch(
   flex-direction: column;
   gap: var(--syn-space-2);
 }
+.chat__toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--syn-space-3);
+  padding-bottom: var(--syn-space-1);
+  background: var(--syn-surface);
+  border-bottom: 1px solid var(--syn-border);
+}
+.chat__tool {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--syn-brand-600);
+  font-size: var(--syn-font-size-sm);
+  font-weight: 500;
+}
+.chat__tool:hover {
+  text-decoration: underline;
+}
 .chat__scroll {
   display: flex;
   flex-direction: column;
   gap: var(--syn-space-2);
-  max-height: 320px;
-  overflow-y: auto;
   padding: var(--syn-space-1);
 }
 .chat__empty {
@@ -167,9 +232,15 @@ watch(
   margin-right: var(--syn-space-1);
 }
 .chat__composer {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
   display: flex;
   gap: var(--syn-space-2);
   align-items: flex-end;
+  padding-top: var(--syn-space-2);
+  background: var(--syn-surface);
+  border-top: 1px solid var(--syn-border);
 }
 .chat__input {
   flex: 1;

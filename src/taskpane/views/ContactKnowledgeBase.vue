@@ -7,9 +7,9 @@ const { t } = useI18n()
 
 <template>
   <section class="ckb">
-    <header class="syn-row">
-      <button type="button" class="ckb__back" @click="go('read')">← {{ t('common.back') }}</button>
-      <h2>Contact knowledge base</h2>
+    <header class="syn-view-header">
+      <button type="button" class="syn-back" @click="go('read')">← {{ t('common.back') }}</button>
+      <h2 class="syn-view-title">{{ t('read.contactKb') }}</h2>
     </header>
     <p class="syn-muted">
       {{ t('common.comingSoon') }} — per-contact RAG group search + "Save to contact" + "Ask about
@@ -24,11 +24,5 @@ const { t } = useI18n()
   display: flex;
   flex-direction: column;
   gap: var(--syn-space-3);
-}
-.ckb__back {
-  background: none;
-  border: 0;
-  color: var(--syn-brand-600);
-  padding: 0;
 }
 </style>

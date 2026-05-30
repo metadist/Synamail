@@ -12,8 +12,12 @@
 # the office-addin-dev-certs certificate that already fronts Synamail on :3000.
 #
 # Reusing that cert (instead of a throwaway self-signed one) means a SINGLE
-# trusted root in Windows covers BOTH origins, so desktop Outlook's WebView2 —
-# not just Outlook on the Web — accepts the dialog without cert errors.
+# trusted root in Windows / macOS covers BOTH origins, so desktop Outlook's
+# WebView2 (Windows) and Outlook for Mac — not just Outlook on the Web — accept
+# the dialog without cert errors.
+#
+# Cross-platform: works on macOS, native Linux, and WSL/Ubuntu. Port checks go
+# through `lsof` (universal) instead of `ss` (Linux-only).
 #
 # Usage:
 #   ./scripts/dev-bridge-proxy.sh            # 5174 → 5173, dev-certs cert
@@ -26,6 +30,21 @@ CERT_DIR="${CERT_DIR:-$HOME/.office-addin-dev-certs}"
 CERT="$CERT_DIR/localhost.crt"
 KEY="$CERT_DIR/localhost.key"
 
+# Cross-platform "is the port already in LISTEN state?" — see start-dev.sh for
+# the same helper applied to the orchestrator.
+listening() {
+  local port="$1"
+  if command -v lsof >/dev/null 2>&1; then
+    lsof -nP -iTCP:"$port" -sTCP:LISTEN >/dev/null 2>&1
+  elif command -v ss >/dev/null 2>&1; then
+    ss -ltn 2>/dev/null | grep -q ":$port\b"
+  elif command -v netstat >/dev/null 2>&1; then
+    netstat -an 2>/dev/null | grep -E "^tcp.*[\.:]$port[[:space:]].*LISTEN" >/dev/null
+  else
+    return 1
+  fi
+}
+
 if [[ ! -f "$CERT" || ! -f "$KEY" ]]; then
   echo "error: dev cert not found at $CERT_DIR" >&2
   echo "       run 'npx office-addin-dev-certs install' first (one-time)." >&2
@@ -33,7 +52,7 @@ if [[ ! -f "$CERT" || ! -f "$KEY" ]]; then
 fi
 
 # Already running? Don't crash with EADDRINUSE — one bridge is enough.
-if command -v ss >/dev/null 2>&1 && ss -ltn 2>/dev/null | grep -q ":$SOURCE\b"; then
+if listening "$SOURCE"; then
   echo "Bridge already listening on https://localhost:$SOURCE — nothing to do."
   echo "  (Stop it with:  pkill -f 'local-ssl-proxy.*$SOURCE' )"
   exit 0
@@ -42,7 +61,8 @@ fi
 # Sanity check: is the Synaplan frontend actually up on the target port?
 if ! curl -sf -o /dev/null "http://localhost:$TARGET/"; then
   echo "warning: nothing answering on http://localhost:$TARGET/" >&2
-  echo "         start Synaplan first:  (cd /wwwroot/synaplan && docker compose up -d)" >&2
+  echo "         start Synaplan first:  (cd \$SYNAPLAN_DIR && docker compose up -d)" >&2
+  echo "         or just run ./start-dev.sh from this repo to bring everything up." >&2
 fi
 
 echo "Synaplan HTTPS bridge:  https://localhost:$SOURCE  →  http://localhost:$TARGET"

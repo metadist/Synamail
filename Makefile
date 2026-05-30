@@ -1,5 +1,6 @@
 .PHONY: help bootstrap dev sideload lint format check-types test test-e2e validate \
-        build build-manifest generate-schemas ci-local clean deps doctor sync bridge
+        build build-manifest generate-schemas ci-local clean deps doctor sync bridge \
+        up down
 
 # Default target — print help.
 help: ## Show this help
@@ -62,6 +63,12 @@ sync: ## (WSL) Copy a bumped manifest to C:\addin-catalog — only when manifest
 
 bridge: ## HTTPS-terminate the local Synaplan frontend on :5174 for the dev sign-in loop
 	@scripts/dev-bridge-proxy.sh
+
+up: ## One-shot: bring up Synaplan Docker + Synamail taskpane + HTTPS sign-in bridge (Mac/Linux/WSL)
+	@./start-dev.sh
+
+down: ## Stop Synamail dev servers (Synaplan Docker is left running)
+	@./start-dev.sh stop
 
 ## ---------------------------------------------------------------------------
 ## Quality (mirrors CI)

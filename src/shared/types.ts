@@ -22,8 +22,13 @@ export interface RoamingSettings {
   chats?: Record<string, number>
   /** Last-used RAG group id, to pre-select in the group picker. */
   lastRagGroupId?: string
-  /** Per-user language override. */
-  language?: 'auto' | 'en' | 'de' | 'fr' | 'es' | 'it' | 'zh' | 'ar'
+  /**
+   * Per-user UI language override (taskpane chrome). `'auto'` follows the
+   * Outlook display language; any other value must be a shipped UI locale
+   * (see `SUPPORTED_LOCALES` in `src/i18n.ts`). This is NOT the translate
+   * target language — that lives in each view's local `targetLang`.
+   */
+  language?: 'auto' | 'en' | 'de' | 'fr' | 'es' | 'it' | 'pt'
 }
 
 export interface SummariseInput {

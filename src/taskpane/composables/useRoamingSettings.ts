@@ -129,6 +129,14 @@ export async function setChatIdForConversation(
   await saveSettings({ ...current, chats })
 }
 
+export async function clearChatIdForConversation(conversationId: string): Promise<void> {
+  const current = loadSettings()
+  if (!current?.chats?.[conversationId]) return
+  const chats = { ...current.chats }
+  delete chats[conversationId]
+  await saveSettings({ ...current, chats })
+}
+
 // ---------------------------------------------------------------------------
 // Last-used RAG group id (so the save-to-RAG picker pre-selects it).
 // ---------------------------------------------------------------------------

@@ -18,35 +18,41 @@
   },
   "home": {
     "title": "Home",
-    "intro": "Chat with Synaplan, search and vectorize your mail, or draft a new email — no message selection needed.",
+    "intro": "Chat with Synaplan, add your mail to your knowledge base, or draft a new email — no message selection needed.",
     "emailLoaded": "Email open: {subject}",
     "emailActions": "Email actions",
+    "emailTitle": "Open email",
     "commands": {
       "chat": "Chat",
-      "search": "Search & vectorize mail",
+      "search": "Filter emails for knowledge base",
       "searchSub": "Find messages about a topic and add them to your knowledge base",
+      "searchAction": "Search emails",
       "newMail": "New email",
-      "newMailSub": "Describe it and let AI draft the email"
+      "newMailSub": "Describe it and let AI draft the email",
+      "newMailAction": "Compose email"
     },
     "chat": {
       "placeholder": "Ask Synaplan anything…",
       "send": "Send",
       "thinking": "Thinking…",
-      "emptyHint": "Start a conversation — ask a question or paste some text."
+      "emptyHint": "Start a conversation — ask a question or paste some text.",
+      "sample": "What does 'efficiency' mean in German?",
+      "scrollTop": "To top",
+      "reset": "New chat"
     },
     "search": {
-      "title": "Search & vectorize mail",
+      "title": "Filter emails for knowledge base",
       "topic": "Topic",
       "topicPlaceholder": "e.g. supplier contract 2026",
-      "keyword": "Knowledge group (keyword)",
+      "keyword": "Knowledge base folder",
       "run": "Search",
       "mailboxResults": "From your mailbox",
       "mockBadge": "mock",
       "noMailboxHits": "No matching messages found.",
       "permissionNeeded": "Mailbox search needs a one-time permission update. Remove and re-add the Synamail add-in to grant mailbox access (knowledge-base results still work).",
       "kbResults": "Already in your knowledge base",
-      "vectorize": "Vectorize {n} into '{group}'",
-      "vectorized": "Vectorized {n} message(s) into {group}.",
+      "vectorize": "Add {n} to '{group}'",
+      "vectorized": "Added {n} message(s) to {group}.",
       "done": "Messages added to {group}."
     },
     "newMail": {
@@ -60,6 +66,11 @@
     }
   },
   "read": {
+    "title": "Email actions",
+    "from": "From",
+    "senderTitle": "Sender",
+    "contactKb": "Contact knowledge base",
+    "askTitle": "Ask about this email",
     "actions": {
       "summarise": "Summarise",
       "translate": "Translate",
@@ -75,19 +86,19 @@
     "contactPill": "Contact: {email}",
     "saveDialog": {
       "title": "Save to knowledge base",
-      "group": "Knowledge group",
-      "newGroup": "Or create a new group",
+      "group": "Knowledge base folder",
+      "newGroup": "Or create a new folder",
       "newGroupPlaceholder": "e.g. contact:alice@example.com",
-      "contactGroup": "Use contact group",
+      "contactGroup": "Use contact folder",
       "contactGroupHint": "suggested for this sender",
       "processLevel": "Processing",
       "processLevels": {
         "store": "Store only",
         "extract": "Extract text",
-        "vectorize": "Extract + vectorize for RAG",
+        "vectorize": "Make searchable by AI",
         "full": "Full analysis"
       },
-      "loadingGroups": "Loading groups…",
+      "loadingGroups": "Loading folders…",
       "savedTo": "Saved as file #{fileId} in {group}."
     },
     "senderHistory": {
@@ -129,16 +140,16 @@
       "loading": "Loading models…",
       "chat": "Chat Model",
       "imageGen": "Image Generation",
-      "vectorize": "Vectorization Model",
+      "vectorize": "Knowledge base model",
       "configure": "Configure models in Synaplan"
     },
     "preferences": "Preferences",
-    "defaultRagGroup": "Default RAG group",
+    "defaultRagGroup": "Default knowledge base folder",
     "language": "Language",
-    "autoDetectContactGroup": "Auto-detect contact group on save",
+    "autoDetectContactGroup": "Auto-detect contact folder on save",
     "advanced": "Advanced",
     "routingRules": "Email routing rules",
-    "resetRoaming": "Reset roaming settings"
+    "resetRoaming": "Reset saved settings"
   },
   "common": {
     "back": "Back",
@@ -163,6 +174,7 @@
     "fr": "Français",
     "es": "Español",
     "it": "Italiano",
+    "pt": "Portuguese",
     "zh": "中文",
     "ar": "العربية"
   }

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 interface Props {
-  variant?: 'primary' | 'secondary'
+  variant?: 'primary' | 'secondary' | 'danger'
   disabled?: boolean
   loading?: boolean
   block?: boolean
@@ -50,6 +50,15 @@ defineEmits<{ (e: 'click'): void }>()
 }
 .ab--primary:hover:not(:disabled) {
   background: var(--syn-brand-700);
+}
+.ab--danger {
+  color: var(--syn-danger);
+  border-color: var(--syn-danger);
+  background: var(--syn-surface);
+}
+.ab--danger:hover:not(:disabled) {
+  background: var(--syn-danger);
+  color: white;
 }
 .ab:disabled {
   opacity: 0.55;

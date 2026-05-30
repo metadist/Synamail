@@ -7,11 +7,11 @@ const { t } = useI18n()
 
 <template>
   <section class="rule">
-    <header class="syn-row">
-      <button type="button" class="rule__back" @click="go('settings')">
+    <header class="syn-view-header">
+      <button type="button" class="syn-back" @click="go('settings')">
         ← {{ t('common.back') }}
       </button>
-      <h2>{{ t('settings.routingRules') }}</h2>
+      <h2 class="syn-view-title">{{ t('settings.routingRules') }}</h2>
     </header>
     <p class="syn-muted">
       {{ t('common.comingSoon') }} — Synapse Routing rules (BSELECTION_RULES) edit + preview lands
@@ -26,11 +26,5 @@ const { t } = useI18n()
   display: flex;
   flex-direction: column;
   gap: var(--syn-space-3);
-}
-.rule__back {
-  background: none;
-  border: 0;
-  color: var(--syn-brand-600);
-  padding: 0;
 }
 </style>

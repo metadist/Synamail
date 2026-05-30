@@ -1,0 +1,181 @@
+{
+  "app": {
+    "name": "Synamail",
+    "tagline": "Tu espacio de trabajo de Synaplan en Outlook."
+  },
+  "signIn": {
+    "title": "Synamail",
+    "subtitle": "Conecta Synamail con tu espacio de trabajo de Synaplan.",
+    "button": "Iniciar sesión en Synaplan",
+    "selfHosted": "Usar una instancia autoalojada",
+    "errorTitle": "Error al iniciar sesión",
+    "loading": "Abriendo la ventana de inicio de sesión…",
+    "invalidUrl": "Esto no parece una URL válida. Incluye https:// — p. ej. https://web.synaplan.com",
+    "httpsRequired": "Outlook requiere una dirección HTTPS para iniciar sesión. Una URL http:// simple (incluido http://localhost) no funcionará: ejecuta el puente HTTPS local y usa https://localhost:5174 en su lugar.",
+    "instanceSaved": "Instancia guardada: {url}",
+    "devSettingsLabel": "Ajustes de desarrollo",
+    "localDevHint": "Desarrolladores: apunta Synamail a una instancia local mediante HTTPS, p. ej. https://localhost:5174 (ejecuta «make bridge»). Haz clic en Guardar para que el valor se conserve y no se pierda al cambiar algo."
+  },
+  "home": {
+    "title": "Inicio",
+    "intro": "Chatea con Synaplan, añade tu correo a tu base de conocimiento, o redacta un nuevo correo electrónico, sin necesidad de seleccionar ningún mensaje.",
+    "emailLoaded": "Correo abierto: {subject}",
+    "emailActions": "Acciones del correo",
+    "emailTitle": "Correo abierto",
+    "commands": {
+      "chat": "Chat",
+      "search": "Filtrar correos para la base de conocimiento",
+      "searchSub": "Encuentra mensajes sobre un tema y añádelos a tu base de conocimiento",
+      "searchAction": "Buscar correos",
+      "newMail": "Nuevo correo",
+      "newMailSub": "Descríbelo y deja que la IA redacte el correo",
+      "newMailAction": "Redactar correo"
+    },
+    "chat": {
+      "placeholder": "Pregúntale lo que quieras a Synaplan…",
+      "send": "Enviar",
+      "thinking": "Pensando…",
+      "emptyHint": "Inicia una conversación: haz una pregunta o pega un texto.",
+      "sample": "¿Cómo se dice «eficiencia» en inglés?",
+      "scrollTop": "Arriba",
+      "reset": "Nuevo chat"
+    },
+    "search": {
+      "title": "Filtrar correos para la base de conocimiento",
+      "topic": "Tema",
+      "topicPlaceholder": "p. ej. contrato de proveedor 2026",
+      "keyword": "Carpeta de la base de conocimiento",
+      "run": "Buscar",
+      "mailboxResults": "Desde tu buzón",
+      "mockBadge": "mock",
+      "noMailboxHits": "No se encontraron mensajes coincidentes.",
+      "permissionNeeded": "La búsqueda en el buzón necesita una actualización de permisos por única vez. Quita y vuelve a añadir el complemento Synamail para conceder acceso al buzón (los resultados de la base de conocimiento siguen funcionando).",
+      "kbResults": "Ya está en tu base de conocimiento",
+      "vectorize": "Añadir {n} a «{group}»",
+      "vectorized": "{n} mensaje(s) añadido(s) a {group}.",
+      "done": "Mensajes añadidos a {group}."
+    },
+    "newMail": {
+      "title": "Nuevo correo",
+      "description": "¿Qué debe decir el correo?",
+      "descriptionPlaceholder": "p. ej. Pedir al proveedor que confirme la fecha de entrega de mayo y poner en copia a contabilidad.",
+      "generate": "Redactar con IA",
+      "openInOutlook": "Abrir en Outlook",
+      "unsupportedHost": "Este host de Outlook no puede abrir una nueva ventana de mensaje desde un complemento.",
+      "opened": "Borrador abierto en una nueva ventana de Outlook."
+    }
+  },
+  "read": {
+    "title": "Acciones del correo",
+    "from": "De",
+    "senderTitle": "Remitente",
+    "contactKb": "Base de conocimiento del contacto",
+    "askTitle": "Preguntar sobre este correo",
+    "actions": {
+      "summarise": "Resumir",
+      "translate": "Traducir",
+      "draftReply": "Redactar respuesta",
+      "classify": "Clasificar",
+      "saveToRag": "Guardar en la base de conocimiento",
+      "ask": "Preguntar",
+      "moreFromSender": "Más de este remitente",
+      "blockSender": "Bloquear remitente"
+    },
+    "result": "Resultado",
+    "askPlaceholder": "Pregunta sobre este correo…",
+    "contactPill": "Contacto: {email}",
+    "saveDialog": {
+      "title": "Guardar en la base de conocimiento",
+      "group": "Carpeta de la base de conocimiento",
+      "newGroup": "O crear una nueva carpeta",
+      "newGroupPlaceholder": "p. ej. contact:alice@example.com",
+      "contactGroup": "Usar carpeta del contacto",
+      "contactGroupHint": "sugerido para este remitente",
+      "processLevel": "Procesamiento",
+      "processLevels": {
+        "store": "Solo almacenar",
+        "extract": "Extraer texto",
+        "vectorize": "Hacer consultable por la IA",
+        "full": "Análisis completo"
+      },
+      "loadingGroups": "Cargando carpetas…",
+      "savedTo": "Guardado como archivo n.º {fileId} en {group}."
+    },
+    "senderHistory": {
+      "title": "Mensajes de {email}",
+      "count": "{n} mensajes recientes",
+      "mockBadge": "mock",
+      "summariseAll": "Resumir estos mensajes",
+      "summarySubject": "Conversación reciente con {email} ({n} mensajes)"
+    },
+    "blockDialog": {
+      "title": "¿Bloquear este remitente?",
+      "body": "Los futuros mensajes de {email} se moverán a Correo no deseado y Synamail los omitirá.",
+      "alsoClean": "Mover también los mensajes existentes de este remitente a Correo no deseado",
+      "undoHint": "Puedes deshacer esto en cualquier momento en Outlook → Reglas.",
+      "confirm": "Bloquear remitente",
+      "successServer": "Regla creada. {moved} mensajes existentes movidos a Correo no deseado.",
+      "successMock": "Regla creada (mock de desarrollo) para {email}. La regla real llega en el Sprint 4."
+    }
+  },
+  "compose": {
+    "title": "Modo de redacción",
+    "intentLabel": "Intención",
+    "intentPlaceholder": "Describe lo que quieres escribir…",
+    "draft": "Redactar a partir de una indicación",
+    "improve": "Mejorar la selección",
+    "shorten": "Acortar la selección",
+    "translate": "Traducir la selección",
+    "insertFromRag": "Insertar desde la base de conocimiento",
+    "ragSearchPlaceholder": "Busca en tu base de conocimiento…"
+  },
+  "settings": {
+    "title": "Ajustes",
+    "signedInAs": "Sesión iniciada como",
+    "signOut": "Cerrar sesión",
+    "synaplanInstance": "Instancia de Synaplan",
+    "instanceHint": "Edítalo antes de iniciar sesión para usar un servidor autoalojado.",
+    "models": {
+      "title": "Modelos de IA",
+      "loading": "Cargando modelos…",
+      "chat": "Modelo de chat",
+      "imageGen": "Generación de imágenes",
+      "vectorize": "Modelo de la base de conocimiento",
+      "configure": "Configurar modelos en Synaplan"
+    },
+    "preferences": "Preferencias",
+    "defaultRagGroup": "Carpeta predeterminada de la base de conocimiento",
+    "language": "Idioma",
+    "autoDetectContactGroup": "Detectar automáticamente la carpeta del contacto al guardar",
+    "advanced": "Avanzado",
+    "routingRules": "Reglas de enrutamiento de correo",
+    "resetRoaming": "Restablecer ajustes guardados"
+  },
+  "common": {
+    "back": "Atrás",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "close": "Cerrar",
+    "loading": "Cargando…",
+    "error": "Algo salió mal",
+    "tryAgain": "Inténtalo de nuevo",
+    "comingSoon": "Disponible en un sprint posterior",
+    "mockMode": "Modo mock: el Sprint 3 lo conecta con web.synaplan.com"
+  },
+  "tone": {
+    "formal": "Formal",
+    "concise": "Conciso",
+    "friendly": "Cercano"
+  },
+  "language": {
+    "auto": "Detección automática",
+    "en": "Inglés",
+    "de": "Alemán",
+    "fr": "Francés",
+    "es": "Español",
+    "it": "Italiano",
+    "pt": "Portugués",
+    "zh": "Chino",
+    "ar": "Árabe"
+  }
+}

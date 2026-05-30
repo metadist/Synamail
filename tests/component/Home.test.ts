@@ -33,7 +33,15 @@ describe('Home.vue', () => {
   it('renders the chat composer and the two command launchers', () => {
     const wrapper = mountHome()
     expect(wrapper.find('textarea').exists()).toBe(true)
-    expect(wrapper.findAll('button.home__cmd')).toHaveLength(2)
+    expect(wrapper.find('[data-testid="cmd-search"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="cmd-newmail"]').exists()).toBe(true)
+  })
+
+  it('seeds the composer with a sample question so Send starts active', () => {
+    const wrapper = mountHome()
+    const textarea = wrapper.find('textarea').element as HTMLTextAreaElement
+    expect(textarea.value).toBe(en.home.chat.sample)
+    expect(wrapper.find('button.ab--primary').attributes('disabled')).toBeUndefined()
   })
 
   it('sends a chat message and shows the AI reply', async () => {
@@ -48,14 +56,14 @@ describe('Home.vue', () => {
   it('opens the search & vectorize dialog from the first command', async () => {
     const wrapper = mountHome()
     expect(wrapper.find('#sv-topic').exists()).toBe(false)
-    await wrapper.findAll('button.home__cmd')[0].trigger('click')
+    await wrapper.find('[data-testid="cmd-search"]').trigger('click')
     expect(wrapper.find('#sv-topic').exists()).toBe(true)
   })
 
   it('opens the new mail dialog from the second command', async () => {
     const wrapper = mountHome()
     expect(wrapper.find('#nm-desc').exists()).toBe(false)
-    await wrapper.findAll('button.home__cmd')[1].trigger('click')
+    await wrapper.find('[data-testid="cmd-newmail"]').trigger('click')
     expect(wrapper.find('#nm-desc').exists()).toBe(true)
   })
 })
