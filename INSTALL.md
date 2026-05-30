@@ -388,6 +388,35 @@ It auto-locates the Synaplan repo from `SYNAPLAN_DIR`, the sibling directory
 WSL convention `/wwwroot/synaplan`. Logs land in `.dev-logs/`. The script is
 idempotent — re-run after a reboot and it skips anything already up.
 
+### Testing against the REAL local Synaplan (not the mock)
+
+By default a dev sign-in uses an **offline mock relay** that hands back a
+`mock-key-…` key, so the taskpane runs `MockSynaplanClient` (canned AI replies).
+That's great for UI work, but to exercise the live AI / RAG / mailbox features
+against your **local Synaplan**, switch the dev loop to the real flow:
+
+```bash
+cp .env.example .env.local      # contains VITE_DEV_MOCK_AUTH=false
+./start-dev.sh                  # (re)start so Vite picks up .env.local
+```
+
+With `.env.local` in place:
+
+- **Sign-in** opens `https://localhost:5174/addin/connect` (your local Synaplan
+  behind the HTTPS bridge) instead of the mock relay. Log into your local
+  Synaplan, click **Connect**, and the taskpane stores a **real** API key.
+- The base URL defaults to `https://localhost:5174` in dev (overridable in
+  **Settings → Synaplan instance**), so you don't have to type it.
+- Every action then runs `RealSynaplanClient` against your local backend over
+  the bridge (`/api` → `:8000`). Mailbox features (More-from-sender, Block
+  sender) use EWS when your Outlook host supports it, mock data otherwise.
+
+Delete `.env.local` (or set the flag to anything but `false`) to return to the
+instant offline mock for backend-free UI iteration.
+
+> No `synaplan/` changes are needed: the `/addin/connect` page and `/api` are
+> served by your local Synaplan stack as-is; Synamail only points at them.
+
 ### WSL (Ubuntu / Debian on Windows)
 
 - Repo should live under `/wwwroot/...` or `~/...` — the **Linux** filesystem. Putting the repo under `/mnt/c/...` (Windows filesystem mounted into WSL) makes everything 10× slower due to filesystem translation overhead.

@@ -1,11 +1,13 @@
 #!/usr/bin/env -S env LC_ALL=C.UTF-8 LANG=C.UTF-8 bash
 # See pre-commit for the rationale on this shebang.
 #
-# Synamail — pre-push hook.
+# Synamail — pre-push hook. This is the LAST line of defence before code
+# reaches GitHub, so it runs the SAME gate CI runs ('make ci-local'). A commit
+# made through a tool that skipped pre-commit (IDE auto-commit, `--no-verify`)
+# is still caught here. It also reminds you to run E2E for auth/view changes.
 #
-# Reminds the contributor to run E2E locally when any auth / client / view
-# code is in the push range. Non-blocking by default — set
-# SYNAMAIL_PRE_PUSH_STRICT=1 to fail instead of warn.
+# Bypass only in a genuine emergency with `git push --no-verify`, and never to
+# main — see docs/COMMIT_PROCESS.md and AGENTS.md.
 
 set -e
 
@@ -20,6 +22,17 @@ info() {
 cd "$(git rev-parse --show-toplevel)"
 
 strict="${SYNAMAIL_PRE_PUSH_STRICT:-0}"
+
+# --- Hard gate: exactly what CI's build job runs --------------------------
+if [ -f package.json ]; then
+  if command -v make >/dev/null 2>&1; then
+    info "[pre-push] running 'make ci-local' (mirrors GitHub CI)"
+    make ci-local
+  else
+    echo "[pre-push] 'make' not found — cannot run the local gate; install make or fix CI may fail." >&2
+    exit 1
+  fi
+fi
 
 # git pushes pass refs on stdin: <local ref> <local sha> <remote ref> <remote sha>
 changed=""

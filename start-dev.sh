@@ -142,6 +142,11 @@ fi
 echo ""
 echo "Ready. In Outlook, open Synamail and (if needed) click Retry."
 echo "  taskpane : https://localhost:3000"
-echo "  sign-in  : https://localhost:5174   (enter this as the self-hosted instance)"
+echo "  sign-in  : https://localhost:5174   (local Synaplan, default in dev)"
 echo "  logs     : $LOG_DIR/{dev,bridge}.log"
 echo "  stop     : ./start-dev.sh stop"
+if [ -f "$REPO/.env.local" ] && grep -q '^VITE_DEV_MOCK_AUTH=false' "$REPO/.env.local" 2>/dev/null; then
+  echo "  auth     : REAL local sign-in (.env.local → VITE_DEV_MOCK_AUTH=false)"
+else
+  echo "  auth     : MOCK relay (offline). For real local sign-in: cp .env.example .env.local && restart"
+fi

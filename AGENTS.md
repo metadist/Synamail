@@ -56,6 +56,11 @@ make build
 make ci-local
 ```
 
+`make ci-local` is the **local CI** — it runs the exact same steps as the
+GitHub `build` job (lint → check-types → test → validate → build → bundle
+budget). If it's green locally, CI is green. If it's red locally, CI will be
+red — do not push.
+
 **Rules:**
 
 - Run the FULL test suite (`make test`), not just a subset.
@@ -63,6 +68,28 @@ make ci-local
 - E2E (Playwright + sideload) is **not** required on every commit — it runs nightly + before sprint review. But if you touched `useAuth.ts`, `synaplan-client.ts`, or any view, run `make test-e2e` locally before the PR.
 - After changing Synaplan's OpenAPI surface or pulling new schemas, run `make generate-schemas` then re-run `make check-types`.
 - **NEVER** commit with failing tests — this blocks the entire CI/CD pipeline and the AppSource release.
+
+### Hook enforcement — the local gate is not optional
+
+The local gate is wired so it **cannot be silently skipped**:
+
+- `npm install` runs a `prepare` script that sets `git config core.hooksPath .githooks`. Hooks are enabled automatically on every fresh clone — you never have to remember `make bootstrap`.
+- **`pre-commit`** runs `make ci-local` on any non-docs commit.
+- **`pre-push`** runs `make ci-local` again (the last line of defence before GitHub). A commit made by a tool that bypassed `pre-commit` — IDE auto-commit, `git commit --no-verify` — is still caught here.
+- **NEVER** use `--no-verify` to bypass the gate on a branch that will be pushed to `main`. If the gate is wrong, fix the gate, not the bypass.
+
+If you change anything here, run `git config core.hooksPath` and confirm it prints `.githooks`.
+
+### Tests MUST be deterministic and environment-independent
+
+The single most common cause of "green locally, red in CI" is a test that
+depends on ambient state. CI runs with a **clean checkout and no `.env*`
+files**, Node 22 **and** 24, in `mode: test` (where `import.meta.env.DEV` is
+`true`).
+
+- **NEVER** let a test's outcome depend on `.env.local` / `.env*` or any `import.meta.env.VITE_*` value. If a test needs a specific env, set it explicitly with `vi.stubEnv(...)` and restore it with `vi.unstubAllEnvs()`. (This is exactly what bit `buildDialogUrl` — the test asserted the real-flow URL while the code defaults to the mock relay in dev/test.)
+- Don't rely on machine locale, timezone, network, or wall-clock time. Inject or stub them.
+- A test that only passes because you have `.env.local` set is a broken test — it will fail in CI.
 
 ### Cross-repo PR coordination
 

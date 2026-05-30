@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   buildDialogUrl,
   generateStateNonce,
@@ -21,7 +21,11 @@ describe('generateStateNonce', () => {
 })
 
 describe('buildDialogUrl', () => {
-  it('appends state, label, and a same-origin relay redirect', () => {
+  afterEach(() => vi.unstubAllEnvs())
+
+  it('targets <baseUrl>/addin/connect with a same-origin relay redirect (real flow)', () => {
+    // Force the real flow regardless of the dev env / .env.local on the box.
+    vi.stubEnv('VITE_DEV_MOCK_AUTH', 'false')
     const u = new URL(buildDialogUrl('https://web.synaplan.com', 'abc'))
     expect(u.pathname).toBe('/addin/connect')
     expect(u.searchParams.get('state')).toBe('abc')
@@ -29,6 +33,14 @@ describe('buildDialogUrl', () => {
     const redirect = u.searchParams.get('redirect')
     expect(redirect).toBeTruthy()
     expect(redirect).toContain('/src/dialog/auth-relay.html')
+  })
+
+  it('uses the local mock relay in dev when mock auth is not disabled', () => {
+    vi.stubEnv('VITE_DEV_MOCK_AUTH', '')
+    const u = new URL(buildDialogUrl('https://localhost:5174', 'abc'))
+    expect(u.pathname).toContain('/src/dialog/auth-relay.html')
+    expect(u.searchParams.get('mock')).toBe('1')
+    expect(u.searchParams.get('state')).toBe('abc')
   })
 })
 

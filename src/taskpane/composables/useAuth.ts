@@ -236,6 +236,16 @@ export async function signOut(opts: { revokeRemote?: boolean } = {}): Promise<vo
 
 export const DEFAULT_BASE_URL = 'https://web.synaplan.com'
 
+/**
+ * Local-development default: the HTTPS bridge that fronts the local Synaplan
+ * stack (see scripts/dev-bridge-proxy.sh — `make bridge`). Only used in dev
+ * builds; production always defaults to DEFAULT_BASE_URL. Either way the user
+ * can override it at runtime via Settings → Synaplan instance.
+ */
+export const LOCAL_DEV_BASE_URL = 'https://localhost:5174'
+
 export function defaultBaseUrl(): string {
-  return loadSettings()?.baseUrl ?? getPreferredBaseUrl() ?? DEFAULT_BASE_URL
+  const saved = loadSettings()?.baseUrl ?? getPreferredBaseUrl()
+  if (saved) return saved
+  return import.meta.env.DEV ? LOCAL_DEV_BASE_URL : DEFAULT_BASE_URL
 }

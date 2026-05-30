@@ -1,6 +1,6 @@
 .PHONY: help bootstrap dev sideload lint format check-types test test-e2e validate \
         build build-manifest generate-schemas ci-local clean deps doctor sync bridge \
-        up down
+        up down budget
 
 # Default target — print help.
 help: ## Show this help
@@ -106,6 +106,9 @@ validate: ## Validate manifest.xml (and unified manifest if present)
 build: ## Vite production build (also gates bundle size)
 	@if [ -f package.json ]; then npm run build; else echo "skip: no package.json (Sprint 2.1)"; fi
 
+budget: ## Enforce the dist bundle-size budget (mirrors CI; cross-platform)
+	@node -e "const fs=require('fs'),p=require('path');if(!fs.existsSync('dist')){console.log('budget: no dist/ — run make build first');process.exit(0)}let t=0;const w=d=>{for(const e of fs.readdirSync(d,{withFileTypes:true})){const f=p.join(d,e.name);e.isDirectory()?w(f):t+=fs.statSync(f).size}};w('dist');const b=2*1024*1024;console.log('dist size: '+t+' bytes (budget: '+b+')');if(t>b){console.error('::error::Bundle exceeds budget');process.exit(1)}console.log('budget: within 2 MiB')"
+
 build-manifest: ## Generate manifest.unified.json from manifest.xml (Sprint 4)
 	npx --yes office-addin-manifest-converter manifest.xml -o manifest.unified.json
 
@@ -130,5 +133,7 @@ ci-local: ## Run the full pre-commit gate locally
 	@$(MAKE) validate
 	@echo "→ make build"
 	@$(MAKE) build
+	@echo "→ make budget"
+	@$(MAKE) budget
 	@echo ""
 	@echo "ci-local: all gates passed"
