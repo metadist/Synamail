@@ -15,6 +15,7 @@ import {
   setLastRagGroupId,
 } from '@/taskpane/composables/useRoamingSettings'
 import { getReadItemAsFile, useOutlookItem } from '@/taskpane/composables/useOutlookItem'
+import { useOutlookMailbox } from '@/taskpane/composables/useOutlookMailbox'
 import { useSynaplanClient } from '@/taskpane/composables/useSynaplanClient'
 import { go } from '@/taskpane/router'
 import type { SenderHistoryResult } from '@shared/types'
@@ -22,6 +23,7 @@ import type { SenderHistoryResult } from '@shared/types'
 const { t } = useI18n()
 const { item } = useOutlookItem()
 const { call } = useSynaplanClient()
+const mailbox = useOutlookMailbox()
 
 type ActionKey =
   | 'summarise'
@@ -163,7 +165,7 @@ async function loadSenderHistory(): Promise<void> {
   status.value = null
   senderHistory.value = null
   result.value = ''
-  const r = await run('senderHistory', () => call((c) => c.senderHistory({ email, limit: 12 })))
+  const r = await run('senderHistory', () => mailbox.senderHistory(email, 12))
   if (r) senderHistory.value = r
 }
 
@@ -200,11 +202,7 @@ async function handleBlockConfirm(payload: { alsoCleanExisting: boolean }): Prom
   showBlockDialog.value = false
   const email = senderEmail.value
   if (!email) return
-  const r = await run('block', () =>
-    call((c) =>
-      c.createSpamRule({ senderEmail: email, alsoCleanExisting: payload.alsoCleanExisting }),
-    ),
-  )
+  const r = await run('block', () => mailbox.blockSender(email, payload.alsoCleanExisting))
   if (r) {
     status.value = r.serverSide
       ? t('read.blockDialog.successServer', { email, moved: r.movedCount })

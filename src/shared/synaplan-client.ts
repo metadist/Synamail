@@ -40,8 +40,6 @@ import type {
   ClassifyResult,
   ComposeNewInput,
   ComposeNewResult,
-  CreateSpamRuleInput,
-  CreateSpamRuleResult,
   DraftReplyInput,
   DraftReplyResult,
   FileUploadInput,
@@ -50,8 +48,6 @@ import type {
   RagGroup,
   RagSearchHit,
   RagSearchInput,
-  SenderHistoryInput,
-  SenderHistoryResult,
   SummariseInput,
   SummariseResult,
   TranslateInput,
@@ -92,26 +88,11 @@ export interface SynaplanClient {
    * `GET /config/models/defaults` (ids) with `GET /config/models` (catalog).
    */
   getModelConfig(): Promise<ModelConfig>
-
-  /**
-   * List recent messages from a single sender. The data source depends on
-   * the implementation:
-   *   - Real client (Sprint 4): asks Synaplan's saved-email index AND,
-   *     when Outlook is reachable, fans out to EWS FindItem for live
-   *     mailbox results.
-   *   - Mock client: returns canned data shaped like a real inbox so the
-   *     UI can be designed end-to-end without a backend round-trip.
-   */
-  senderHistory(input: SenderHistoryInput): Promise<SenderHistoryResult>
-
-  /**
-   * Create a "block sender" inbox rule. The real client routes through
-   * Outlook (EWS CreateInboxRules / Graph messageRules) when available so
-   * the rule actually filters future mail; the mock returns a stable id
-   * for dev iteration.
-   */
-  createSpamRule(input: CreateSpamRuleInput): Promise<CreateSpamRuleResult>
 }
+
+// Sender history ("More from this sender") and block-sender are Outlook
+// mailbox operations, not Synaplan calls — they live in the plugin's
+// `useOutlookMailbox` composable (EWS) so this client stays pure-Synaplan.
 
 export interface ClientOptions {
   baseUrl: string
@@ -368,35 +349,6 @@ export class RealSynaplanClient implements SynaplanClient {
   }
 
   // -------------------------------------------------------------------------
-  // Sender-centric features (Sprint 4 — placeholder stubs)
-  //
-  // These hit two surfaces in the final implementation:
-  //   1. Synaplan's saved-email index, for context the user already chose
-  //      to remember (Save to knowledge base feeds it).
-  //   2. The user's live mailbox via EWS / Graph, for messages that never
-  //      reached Synaplan. The Outlook side belongs in a useOutlookMailbox
-  //      composable to keep this client pure-Synaplan; for now we throw a
-  //      typed error so the mock-key dev loop hits MockSynaplanClient and
-  //      the live path doesn't silently return empty.
-  // -------------------------------------------------------------------------
-
-  async senderHistory(_input: SenderHistoryInput): Promise<SenderHistoryResult> {
-    throw apiError(
-      501,
-      'NOT_IMPLEMENTED',
-      'senderHistory lands in Sprint 4 once the EWS bridge composable ships.',
-    )
-  }
-
-  async createSpamRule(_input: CreateSpamRuleInput): Promise<CreateSpamRuleResult> {
-    throw apiError(
-      501,
-      'NOT_IMPLEMENTED',
-      'createSpamRule lands in Sprint 4 once the EWS bridge composable ships.',
-    )
-  }
-
-  // -------------------------------------------------------------------------
   // Internal: AI chat round-trip
   // -------------------------------------------------------------------------
 
@@ -534,47 +486,6 @@ export class MockSynaplanClient implements SynaplanClient {
       chat: { id: 53, name: 'Llama 3.3 70B', service: 'Groq' },
       imageGen: { id: 21, name: 'FLUX.1 schnell', service: 'Replicate' },
       vectorize: { id: 3, name: 'nomic-embed-text', service: 'Ollama' },
-    })
-  }
-
-  senderHistory(input: SenderHistoryInput): Promise<SenderHistoryResult> {
-    const limit = Math.max(1, Math.min(input.limit ?? 25, 50))
-    const subjects = [
-      'Re: Q3 review prep',
-      'Lunch on Thursday?',
-      'Re: vendor onboarding docs',
-      'FYI: pricing changes effective May',
-      'Quick question about the brief',
-      'Re: photoshoot timeline',
-      'Calendar invite — sync next week',
-      'Updated proposal attached',
-    ]
-    const baseDate = Date.now()
-    // Synthesise a plausible-looking history so the UI exercises pagination,
-    // unread styling, and the multi-message summary action.
-    const items = Array.from({ length: limit }, (_, i) => {
-      const dayOffset = (i + 1) * 3
-      return {
-        date: new Date(baseDate - dayOffset * 86_400_000).toISOString(),
-        subject: subjects[i % subjects.length],
-        snippet: `(mock) Latest from ${input.email} — message #${i + 1} preview text…`,
-        unread: i < 2,
-        messageId: `mock-msg-${i + 1}`,
-      }
-    })
-    return this.wait({
-      email: input.email,
-      total: items.length,
-      items,
-      fromOutlook: false,
-    })
-  }
-
-  createSpamRule(input: CreateSpamRuleInput): Promise<CreateSpamRuleResult> {
-    return this.wait({
-      ruleId: `mock-rule-${Math.random().toString(36).slice(2, 8)}`,
-      movedCount: input.alsoCleanExisting ? Math.floor(Math.random() * 6) : 0,
-      serverSide: false,
     })
   }
 }

@@ -95,6 +95,78 @@ export function buildGetItemMimeRequest(id: string): string {
   )
 }
 
+// AQS participant search — "from:alice@example.com" matches the sender field.
+export function senderQuery(email: string): string {
+  return `from:${email}`
+}
+
+// FindItem variant that also pulls IsRead so the history can mark unread items.
+export function buildSenderFindRequest(email: string, limit: number): string {
+  return (
+    '<?xml version="1.0" encoding="utf-8"?>' +
+    '<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" ' +
+    'xmlns:t="http://schemas.microsoft.com/exchange/services/2006/types" ' +
+    'xmlns:m="http://schemas.microsoft.com/exchange/services/2006/messages">' +
+    '<soap:Header><t:RequestServerVersion Version="Exchange2013"/></soap:Header>' +
+    '<soap:Body>' +
+    '<m:FindItem Traversal="Shallow">' +
+    '<m:ItemShape><t:BaseShape>IdOnly</t:BaseShape>' +
+    '<t:AdditionalProperties>' +
+    '<t:FieldURI FieldURI="item:Subject"/>' +
+    '<t:FieldURI FieldURI="item:DateTimeReceived"/>' +
+    '<t:FieldURI FieldURI="message:From"/>' +
+    '<t:FieldURI FieldURI="message:IsRead"/>' +
+    '</t:AdditionalProperties></m:ItemShape>' +
+    `<m:IndexedPageItemView MaxEntriesReturned="${limit}" Offset="0" BasePoint="Beginning"/>` +
+    '<m:SortOrder><t:FieldOrder Order="Descending">' +
+    '<t:FieldURI FieldURI="item:DateTimeReceived"/></t:FieldOrder></m:SortOrder>' +
+    '<m:ParentFolderIds><t:DistinguishedFolderId Id="inbox"/></m:ParentFolderIds>' +
+    `<m:QueryString>${escapeXml(senderQuery(email))}</m:QueryString>` +
+    '</m:FindItem></soap:Body></soap:Envelope>'
+  )
+}
+
+// UpdateInboxRules — create a server-side rule that moves future mail from the
+// sender into Junk Email. Identified for the user by the display name.
+export function buildBlockRuleRequest(email: string, displayName: string): string {
+  return (
+    '<?xml version="1.0" encoding="utf-8"?>' +
+    '<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" ' +
+    'xmlns:t="http://schemas.microsoft.com/exchange/services/2006/types" ' +
+    'xmlns:m="http://schemas.microsoft.com/exchange/services/2006/messages">' +
+    '<soap:Header><t:RequestServerVersion Version="Exchange2013"/></soap:Header>' +
+    '<soap:Body><m:UpdateInboxRules>' +
+    '<m:RemoveOutlookRuleBlob>false</m:RemoveOutlookRuleBlob>' +
+    '<m:Operations><t:CreateRuleOperation><t:Rule>' +
+    `<t:DisplayName>${escapeXml(displayName)}</t:DisplayName>` +
+    '<t:Priority>1</t:Priority>' +
+    '<t:IsEnabled>true</t:IsEnabled>' +
+    '<t:Conditions><t:ContainsSenderStrings>' +
+    `<t:String>${escapeXml(email)}</t:String>` +
+    '</t:ContainsSenderStrings></t:Conditions>' +
+    '<t:Actions><t:MoveToFolder>' +
+    '<t:DistinguishedFolderId Id="junkemail"/>' +
+    '</t:MoveToFolder></t:Actions>' +
+    '</t:Rule></t:CreateRuleOperation></m:Operations>' +
+    '</m:UpdateInboxRules></soap:Body></soap:Envelope>'
+  )
+}
+
+export function buildMoveToJunkRequest(ids: string[]): string {
+  const itemIds = ids.map((id) => `<t:ItemId Id="${escapeXml(id)}"/>`).join('')
+  return (
+    '<?xml version="1.0" encoding="utf-8"?>' +
+    '<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" ' +
+    'xmlns:t="http://schemas.microsoft.com/exchange/services/2006/types" ' +
+    'xmlns:m="http://schemas.microsoft.com/exchange/services/2006/messages">' +
+    '<soap:Header><t:RequestServerVersion Version="Exchange2013"/></soap:Header>' +
+    '<soap:Body><m:MoveItem>' +
+    '<m:ToFolderId><t:DistinguishedFolderId Id="junkemail"/></m:ToFolderId>' +
+    `<m:ItemIds>${itemIds}</m:ItemIds>` +
+    '</m:MoveItem></soap:Body></soap:Envelope>'
+  )
+}
+
 function localName(tag: string): string {
   const i = tag.indexOf(':')
   return i === -1 ? tag : tag.slice(i + 1)
@@ -143,6 +215,44 @@ export function parseGetItemMime(xml: string): string {
   return firstByLocalName(doc, 'MimeContent')?.textContent ?? ''
 }
 
+export function parseSenderHistory(xml: string): SenderHistoryItem[] {
+  const doc = new DOMParser().parseFromString(xml, 'text/xml')
+  return allByLocalName(doc, 'Message').map((msg) => {
+    const idEl = firstByLocalName(msg, 'ItemId')
+    const subject = firstByLocalName(msg, 'Subject')?.textContent ?? ''
+    const date = firstByLocalName(msg, 'DateTimeReceived')?.textContent ?? ''
+    const isRead = firstByLocalName(msg, 'IsRead')?.textContent
+    return {
+      date,
+      subject,
+      snippet: '',
+      unread: isRead === 'false',
+      messageId: idEl?.getAttribute('Id') ?? undefined,
+    }
+  })
+}
+
+// Count how many MoveItem operations the server reported as successful.
+export function parseMovedCount(xml: string): number {
+  const doc = new DOMParser().parseFromString(xml, 'text/xml')
+  return allByLocalName(doc, 'MoveItemResponseMessage').filter(
+    (el) => el.getAttribute('ResponseClass') === 'Success',
+  ).length
+}
+
+// True when the SOAP body reports an overall success response class.
+export function isEwsSuccess(xml: string): boolean {
+  const doc = new DOMParser().parseFromString(xml, 'text/xml')
+  const all = doc.getElementsByTagName('*')
+  for (let i = 0; i < all.length; i++) {
+    const rc = all[i].getAttribute('ResponseClass')
+    if (rc === 'Success') return true
+    if (rc === 'Error') return false
+  }
+  // Fall back to the textual ResponseCode element.
+  return firstByLocalName(doc, 'ResponseCode')?.textContent === 'NoError'
+}
+
 function callEws(request: string): Promise<string> {
   const host = ewsHost()
   if (!host?.makeEwsRequestAsync) {
@@ -159,6 +269,25 @@ function callEws(request: string): Promise<string> {
 function sanitizeFilename(s: string): string {
   const cleaned = s.replace(/[^a-zA-Z0-9-_]+/g, '_').replace(/^_+|_+$/g, '')
   return cleaned.slice(0, 80) || 'message'
+}
+
+function mockSenderHistory(email: string, limit: number): SenderHistoryItem[] {
+  const subjects = [
+    'Re: Q3 review prep',
+    'Lunch on Thursday?',
+    'Re: vendor onboarding docs',
+    'FYI: pricing changes effective May',
+    'Quick question about the brief',
+    'Re: photoshoot timeline',
+  ]
+  const base = Date.now()
+  return Array.from({ length: Math.min(limit, subjects.length) }, (_, i) => ({
+    date: new Date(base - (i + 1) * 3 * 86_400_000).toISOString(),
+    subject: subjects[i % subjects.length],
+    snippet: `(mock) Latest from ${email} — message #${i + 1} preview…`,
+    unread: i < 2,
+    messageId: `mock-msg-${i + 1}`,
+  }))
 }
 
 function mockHits(query: string, limit: number): MailboxHit[] {
@@ -204,5 +333,48 @@ export function useOutlookMailbox() {
     return { filename, contentBase64: parseGetItemMime(xml), mimeType: 'message/rfc822' }
   }
 
-  return { searchMailbox, getMessageMime, ewsAvailable }
+  /** Recent messages from one sender, newest first (live mailbox via EWS). */
+  async function senderHistory(email: string, limit = 12): Promise<SenderHistoryResult> {
+    const cap = Math.max(1, Math.min(limit, 50))
+    if (!ewsAvailable()) {
+      const items = mockSenderHistory(email, cap)
+      return { email, total: items.length, items, fromOutlook: false }
+    }
+    const xml = await callEws(buildSenderFindRequest(email, cap))
+    const items = parseSenderHistory(xml)
+    return { email, total: items.length, items, fromOutlook: true }
+  }
+
+  /**
+   * Block a sender: create a server-side rule moving their future mail to Junk,
+   * and (optionally) move the messages they've already sent. When EWS isn't
+   * available the dev/mock loop still gets a deterministic result.
+   */
+  async function blockSender(email: string, alsoClean = false): Promise<CreateSpamRuleResult> {
+    const displayName = `Synamail: block ${email}`
+    if (!ewsAvailable()) {
+      return {
+        ruleId: `mock-rule-${Math.random().toString(36).slice(2, 8)}`,
+        movedCount: alsoClean ? Math.floor(Math.random() * 6) : 0,
+        serverSide: false,
+      }
+    }
+    const ruleXml = await callEws(buildBlockRuleRequest(email, displayName))
+    if (!isEwsSuccess(ruleXml)) {
+      throw new Error('Outlook rejected the block-sender rule.')
+    }
+    let movedCount = 0
+    if (alsoClean) {
+      const found = parseFindItemResponse(
+        await callEws(buildFindItemRequest(senderQuery(email), 50)),
+      )
+      const ids = found.map((h) => h.id).filter(Boolean)
+      if (ids.length > 0) {
+        movedCount = parseMovedCount(await callEws(buildMoveToJunkRequest(ids)))
+      }
+    }
+    return { ruleId: displayName, movedCount, serverSide: true }
+  }
+
+  return { searchMailbox, getMessageMime, senderHistory, blockSender, ewsAvailable }
 }
