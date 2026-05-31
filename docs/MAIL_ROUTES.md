@@ -13,6 +13,26 @@
 
 ---
 
+## Decisions locked (2026-05-31)
+
+1. **Naming.** The existing Synapse-Routing view (`RuleEditor.vue`) is renamed
+   **"Synaplan topics"** so "Routes" only ever means Mail Routes. (Done.)
+2. **Meeting agent.** Accept the **Graph / NAA** dependency to read the user's
+   **free/busy** and propose genuinely open slots. We do **not** auto-create or
+   override meetings — we suggest, the user confirms.
+3. **ICS is a must.** The meeting agent generates a standards-compliant **`.ics`
+   (VEVENT)** the user can attach to a reply to send the invite — alongside the
+   "add to my calendar" path. (Reverses the earlier ICS-out-of-scope call.)
+4. **Builder UX = hybrid.** Structured **Sender + keyword dropdowns** for the
+   deterministic match, **plus a free-text "AI clarify" prompt** that guides the
+   AI conditions/actions (e.g. _"only if it's really a meeting request, not just
+   mentioning a past meeting"_).
+5. **Phase 1 must-have = Categorize.** AI assigns the best-fitting **native
+   Outlook category** to the mail, using user-defined category→meaning mappings
+   (incl. repurposing the stock color names — see §4a).
+
+---
+
 ## 1. What a Mail Route is
 
 ```
@@ -68,21 +88,44 @@ from Oliver, not every mail.
 
 Each action is an "agent tool." Feasibility today:
 
-| Action                    | What it does                                                                                                       | Feasibility                                                                                                                                                                               | Reuses                                                           |
-| ------------------------- | ------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
-| **Add to knowledge**      | Upload body + attachments to a RAG group, vectorized                                                               | ✅ ready                                                                                                                                                                                  | `fileUpload`, `getReadItemAsFile`, `getImageAttachments`         |
-| **Translate & show**      | Translate body to a target language, render in pane                                                                | ✅ ready                                                                                                                                                                                  | `translate`                                                      |
-| **Summarise & show**      | Bulleted summary in pane                                                                                           | ✅ ready                                                                                                                                                                                  | `summarise`                                                      |
-| **Classify / label**      | Tag the mail (category), show a pill, optional notify                                                              | ✅ ready                                                                                                                                                                                  | `classify`                                                       |
-| **Draft reply**           | Generate a reply and open the compose form                                                                         | ✅ ready                                                                                                                                                                                  | `draftReply` + `displayReplyForm`                                |
-| **Suggest meeting times** | Extract requested times, **read calendar free/busy**, propose 3 slots, optionally create appointment / draft reply | ⚠️ **partial** — extraction + `displayNewAppointmentForm` exist; **reading calendar availability needs Graph (`Calendars.Read`) via an auth token / NAA** (see ARCHITECTURE §7.5 phase 2) | `extractMeetingTimes`, `displayNewAppointmentForm` (create only) |
-| **Forward / notify**      | Forward to an address or post a Synaplan note                                                                      | later                                                                                                                                                                                     | —                                                                |
+| Action                    | What it does                                                                                                                              | Feasibility                                                                                                                  | Reuses                                                                |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| **Add to knowledge**      | Upload body + attachments to a RAG group, vectorized                                                                                      | ✅ ready                                                                                                                     | `fileUpload`, `getReadItemAsFile`, `getImageAttachments`              |
+| **Translate & show**      | Translate body to a target language, render in pane                                                                                       | ✅ ready                                                                                                                     | `translate`                                                           |
+| **Summarise & show**      | Bulleted summary in pane                                                                                                                  | ✅ ready                                                                                                                     | `summarise`                                                           |
+| **Categorize (Outlook)**  | AI picks the best-fitting **native Outlook category** and applies it to the mail                                                          | ✅ ready (Mailbox 1.8)                                                                                                       | `classify`-style call + Office.js categories API (§4a)                |
+| **Classify / show**       | Show a category pill in the pane (no mailbox change)                                                                                      | ✅ ready                                                                                                                     | `classify`                                                            |
+| **Draft reply**           | Generate a reply and open the compose form                                                                                                | ✅ ready                                                                                                                     | `draftReply` + `displayReplyForm`                                     |
+| **Suggest meeting times** | Extract requested times, **read calendar free/busy**, propose open slots; user picks → create appointment and/or attach `.ics` to a reply | ⚠️ Graph dep accepted — free/busy via `Calendars.Read` (NAA, ARCHITECTURE §7.5). Suggest/confirm only — never auto-override. | `extractMeetingTimes`, `displayNewAppointmentForm`, ICS builder (§4b) |
+| **Forward / notify**      | Forward to an address or post a Synaplan note                                                                                             | later                                                                                                                        | —                                                                     |
 
-**The meeting agent is the one with a real capability gap:** we can already
-detect proposed times and _create_ an appointment, but **"look into the
-calendar and suggest 3 free times" requires reading the user's free/busy**,
-which the add-in cannot do today without a Graph token. That's a dedicated
-sub-project (Graph auth / Nested App Auth). Phase it separately.
+### 4a. Categorize action (Phase 1 detail)
+
+Outlook has native, color-coded **categories**. The stock "Red/Blue/Green…
+Category" names are meaningless, so users **repurpose them with meaning**:
+
+- The user maps a category to a description/example, e.g. **"Blue Category" →
+  _"about project XYZ AND from the `bmw.de` domain"_**.
+- Mappings live in roaming (shared across routes). The AI receives the mail plus
+  the candidate categories' descriptions and returns the best match + a
+  confidence; below a threshold it applies nothing.
+- Apply via Office.js: `Office.context.mailbox.masterCategories.getAsync`
+  (and `addAsync` to ensure the category/color exists), then
+  `item.categories.addAsync([name])`. Needs `ReadWriteMailbox` (have it) +
+  Mailbox 1.8. Reversible via `item.categories.removeAsync`.
+- Transparent: toast "Tagged **Blue** — project XYZ ✓ — Undo".
+
+### 4b. ICS builder (meeting agent)
+
+- Generate a minimal RFC-5545 **VEVENT** (uid, dtstart/dtend, summary, location,
+  organizer/attendee) client-side — no backend.
+- Attach to a reply via `displayReplyForm({ htmlBody, attachments: [{ type:
+'file', name: 'invite.ics', ... }] })` so the user sends a real invite to the
+  sender. Complements (doesn't replace) "add to my calendar"
+  (`displayNewAppointmentForm`).
+
+**The meeting agent's only true gap is reading free/busy** (Graph/NAA, accepted).
+Time extraction, appointment creation, and ICS generation are all in reach.
 
 ---
 
@@ -176,9 +219,8 @@ enum; reuse the existing JSON-mode parsing pattern.
 
 - **`RuleEditor.vue` + `listTopics`/`updateTopicRules`/`testRouting`** — that is
   **Synapse Routing** (system-prompt/topic selection), a _different_ feature
-  (`FEATURES.md §5`). It stays as-is. **Decision needed:** keep it visible,
-  rename it to "Synaplan topics" to avoid confusion with Mail Routes, or
-  deprioritise it.
+  (`FEATURES.md §5`). **Renamed to "Synaplan topics"** in the UI so "Routes" only
+  means Mail Routes. Functionality unchanged.
 - **Meeting-times + appointment** (`extractMeetingTimes`,
   `displayNewAppointmentForm`) — become the building blocks of the
   `suggestMeetingTimes` action (plus the calendar-read gap).
@@ -187,31 +229,51 @@ enum; reuse the existing JSON-mode parsing pattern.
 
 ---
 
+## Builder UX (locked = hybrid)
+
+A route is created with **structured dropdowns + a free-text AI prompt**:
+
+- **Match (structured):** Sender (address / `@domain`) and Keyword
+  (subject/body contains) dropdowns + has-attachment toggle — fast, deterministic.
+- **AI clarify (free text):** an optional prompt that refines the AI conditions
+  and actions in natural language, e.g. _"only if this is an actual meeting
+  request, not just referencing a past one"_ or _"categorize as the project it's
+  about"_. This text is passed to the AI step alongside the structured match.
+- **Action picker:** choose one or more actions (Categorize, Add to knowledge,
+  Translate & show, Summarise, Draft reply, Suggest meeting times) with their
+  params (group, target language, category map…).
+
+This keeps the common case point-and-click while letting power users express
+nuance the dropdowns can't.
+
+---
+
 ## 9. Phased plan
 
 - **Phase 0 — spike (0.5d):** pinning + `ItemChanged` support on target clients;
-  scope the Graph calendar-read path for the meeting agent.
-- **Phase 1 — Routes engine + simple actions:** data model + "Mail Routes"
-  Settings UI (builder: conditions + actions) + trigger + `addToKnowledge`,
-  `translateShow`, `summariseShow`, `classifyLabel`, `draftReply`. Deterministic
-  - `language`/`category`/`intent` AI conditions.
-- **Phase 2 — Meeting agent:** Graph free/busy read → `suggestMeetingTimes`
-  proposing 3 open slots; create appointment / draft reply from a pick.
+  scope the Graph free/busy path (NAA) for the meeting agent.
+- **Phase 1 — Routes engine + Categorize + core actions:** data model +
+  "Mail Routes" builder (hybrid: dropdowns + AI-clarify prompt) + trigger +
+  actions **`categorize` (Outlook native categories — the headline must-have)**,
+  `addToKnowledge`, `translateShow`, `summariseShow`, `draftReply`. Conditions:
+  deterministic + `language`/`category`/`intent` (AI). Includes the category→
+  meaning map UI (repurposing the stock color names).
+- **Phase 2 — Meeting agent:** Graph `Calendars.Read` (NAA) → propose open
+  slots; user picks → create appointment **and/or attach a generated `.ics`** to
+  the reply.
 - **Phase 3 — hands-off + server-side (optional):** event-based launch event;
   optional Synaplan `InboundEmailHandler` for 24/7 capture.
 
 ---
 
-## 10. Open questions
+## 10. Open questions (resolved 2026-05-31)
 
-1. **Naming** — call the existing Synapse Routing UI "Synaplan topics" so
-   "Routes" unambiguously means Mail Routes?
-2. **Calendar read** — accept the Graph/NAA dependency for the meeting agent, or
-   ship the meeting action as "propose times the sender suggested + create
-   appointment" first (no availability check) and add free/busy later?
-3. **Builder UX** — fixed condition/action dropdowns (v1) vs free-form natural
-   language ("if Oliver asks for a meeting…") parsed into a route by AI?
-4. Which 3–4 actions are the must-haves for Phase 1?
+1. ~~Naming~~ → **"Synaplan topics"** (done).
+2. ~~Calendar read~~ → **Graph/NAA accepted**; suggest-only, never override.
+3. ~~Builder UX~~ → **hybrid** (structured dropdowns + AI-clarify prompt).
+4. ~~Phase 1 must-haves~~ → **Categorize (headline)**, Add-to-knowledge,
+   Translate & show, Draft reply. (`.ics` lands with the meeting agent in
+   Phase 2.)
 
 ---
 

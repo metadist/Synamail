@@ -151,7 +151,7 @@
     "askPlaceholder": "Pregunta sobre {email}…"
   },
   "rules": {
-    "intro": "Define cómo enruta Synaplan tus correos entrantes. Las reglas de palabras clave Tier-0 ganan de inmediato sobre la clasificación por IA.",
+    "intro": "Gestiona los temas que Synaplan usa para enrutar y responder tus mensajes. Las reglas de palabras clave Tier-0 ganan de inmediato sobre la clasificación por IA.",
     "testTitle": "Vista previa del enrutamiento",
     "test": "Probar con el correo actual",
     "testEmpty": "Sin candidatos.",
@@ -186,7 +186,7 @@
     "language": "Idioma",
     "autoDetectContactGroup": "Detectar automáticamente la carpeta del contacto al guardar",
     "advanced": "Avanzado",
-    "routingRules": "Reglas de enrutamiento de correo",
+    "routingRules": "Temas de Synaplan",
     "resetRoaming": "Restablecer ajustes guardados"
   },
   "common": {

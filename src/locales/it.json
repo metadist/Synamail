@@ -151,7 +151,7 @@
     "askPlaceholder": "Domanda su {email}…"
   },
   "rules": {
-    "intro": "Definisci come Synaplan instrada le tue email in arrivo. Le regole per parole chiave Tier-0 prevalgono subito sulla classificazione IA.",
+    "intro": "Gestisci gli argomenti che Synaplan usa per instradare e rispondere ai tuoi messaggi. Le regole per parole chiave Tier-0 prevalgono subito sulla classificazione IA.",
     "testTitle": "Anteprima instradamento",
     "test": "Prova sull'email corrente",
     "testEmpty": "Nessun candidato.",
@@ -186,7 +186,7 @@
     "language": "Lingua",
     "autoDetectContactGroup": "Rileva automaticamente la cartella del contatto al salvataggio",
     "advanced": "Avanzate",
-    "routingRules": "Regole di instradamento e-mail",
+    "routingRules": "Argomenti Synaplan",
     "resetRoaming": "Reimposta impostazioni salvate"
   },
   "common": {

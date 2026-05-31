@@ -151,7 +151,7 @@
     "askPlaceholder": "Pergunta sobre {email}…"
   },
   "rules": {
-    "intro": "Defina como o Synaplan encaminha os seus e-mails recebidos. As regras de palavras-chave Tier-0 vencem imediatamente sobre a classificação por IA.",
+    "intro": "Faça a gestão dos tópicos que o Synaplan usa para encaminhar e responder às suas mensagens. As regras de palavras-chave Tier-0 vencem imediatamente sobre a classificação por IA.",
     "testTitle": "Pré-visualização do encaminhamento",
     "test": "Testar no e-mail atual",
     "testEmpty": "Sem candidatos.",
@@ -186,7 +186,7 @@
     "language": "Idioma",
     "autoDetectContactGroup": "Detetar automaticamente a pasta do contacto ao guardar",
     "advanced": "Avançado",
-    "routingRules": "Regras de encaminhamento de e-mail",
+    "routingRules": "Tópicos do Synaplan",
     "resetRoaming": "Repor definições guardadas"
   },
   "common": {

@@ -151,7 +151,7 @@
     "askPlaceholder": "Ask about {email}…"
   },
   "rules": {
-    "intro": "Shape how Synaplan routes your incoming email. Tier-0 keyword rules win immediately over AI classification.",
+    "intro": "Manage the topics Synaplan uses to route and answer your messages. Tier-0 keyword rules win immediately over AI classification.",
     "testTitle": "Routing preview",
     "test": "Test against current email",
     "testEmpty": "No candidates.",
@@ -186,7 +186,7 @@
     "language": "Language",
     "autoDetectContactGroup": "Auto-detect contact folder on save",
     "advanced": "Advanced",
-    "routingRules": "Email routing rules",
+    "routingRules": "Synaplan topics",
     "resetRoaming": "Reset saved settings"
   },
   "common": {

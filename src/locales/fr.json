@@ -151,7 +151,7 @@
     "askPlaceholder": "Question sur {email}…"
   },
   "rules": {
-    "intro": "Définissez comment Synaplan achemine vos e-mails entrants. Les règles de mots-clés Tier-0 priment immédiatement sur la classification IA.",
+    "intro": "Gérez les sujets que Synaplan utilise pour acheminer et répondre à vos messages. Les règles de mots-clés Tier-0 priment immédiatement sur la classification IA.",
     "testTitle": "Aperçu du routage",
     "test": "Tester sur l'e-mail actuel",
     "testEmpty": "Aucun candidat.",
@@ -186,7 +186,7 @@
     "language": "Langue",
     "autoDetectContactGroup": "Détecter automatiquement le dossier du contact à l'enregistrement",
     "advanced": "Avancé",
-    "routingRules": "Règles de routage des e-mails",
+    "routingRules": "Sujets Synaplan",
     "resetRoaming": "Réinitialiser les paramètres enregistrés"
   },
   "common": {

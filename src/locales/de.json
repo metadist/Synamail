@@ -151,7 +151,7 @@
     "askPlaceholder": "Frage zu {email}…"
   },
   "rules": {
-    "intro": "Lege fest, wie Synaplan deine eingehenden E-Mails routet. Tier-0-Schlüsselwortregeln gewinnen sofort gegenüber der KI-Klassifizierung.",
+    "intro": "Verwalte die Themen, die Synaplan zum Routing und Beantworten deiner Nachrichten nutzt. Tier-0-Schlüsselwortregeln gewinnen sofort gegenüber der KI-Klassifizierung.",
     "testTitle": "Routing-Vorschau",
     "test": "An aktueller E-Mail testen",
     "testEmpty": "Keine Kandidaten.",
@@ -186,7 +186,7 @@
     "language": "Sprache",
     "autoDetectContactGroup": "Kontakt-Ordner beim Speichern automatisch erkennen",
     "advanced": "Erweitert",
-    "routingRules": "Routing-Regeln für E-Mails",
+    "routingRules": "Synaplan-Themen",
     "resetRoaming": "Gespeicherte Einstellungen zurücksetzen"
   },
   "common": {
