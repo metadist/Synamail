@@ -236,7 +236,7 @@ The bridge **reuses the office-addin-dev-certs certificate** that already fronts
 
    In Windows: double-click `ca.crt` → **Install Certificate** → **Local Machine** → **Place all certificates in the following store** → **Trusted Root Certification Authorities** → Finish.
 
-3. **Real-auth toggle.** `.env.local` ships with `VITE_DEV_MOCK_AUTH=false`, which makes the sign-in dialog open the real `/addin/connect` bridge against the base URL you pick (instead of the in-repo mock relay that hands back a `mock-key-…`). Leave it `false` to talk to your Docker Synaplan; set it back to `true` (or delete the file) for pure offline UI work with `MockSynaplanClient`.
+3. **Pick the server at sign-in.** There is no mock mode and no env toggle. On the SignIn screen set the instance URL to `https://localhost:5174` (the HTTPS bridge in front of your Docker Synaplan) and sign in — the dialog opens the real `/addin/connect` bridge and stores a real API key. To talk to production instead, set the URL to `https://web.synaplan.com`. Switch any time via **Settings → Reset saved settings**.
 
 The taskpane's outbound connections are restricted by `<AppDomains>` in `manifest.xml`; `https://localhost:5174` is already listed. A different port needs a new `<AppDomain>` entry and a re-`make sideload`.
 

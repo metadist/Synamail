@@ -17,14 +17,9 @@ export function useSynaplanClient() {
     if (!isSignedIn.value) return null
     const settings = loadSettings()
     if (!settings) return null
-    const useMock =
-      settings.apiKey.startsWith('mock-key-') ||
-      (typeof window !== 'undefined' &&
-        new URL(window.location.href).searchParams.get('mock') === '1')
     return createSynaplanClient({
       baseUrl: settings.baseUrl,
       apiKey: settings.apiKey,
-      useMock,
     })
   })
 

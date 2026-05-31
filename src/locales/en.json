@@ -79,7 +79,15 @@
       "saveToRag": "Save to knowledge base",
       "ask": "Ask",
       "moreFromSender": "More from this sender",
-      "blockSender": "Block sender"
+      "blockSender": "Block sender",
+      "findMeetingTimes": "Find meeting times"
+    },
+    "meeting": {
+      "title": "Suggested meeting times",
+      "none": "No meeting times were proposed in this email.",
+      "unsupported": "This Outlook host can't open a new appointment form.",
+      "badDate": "Couldn't read that time. Try another slot.",
+      "bodyFrom": "Created from the email: {subject}"
     },
     "result": "Result",
     "askPlaceholder": "Ask about this email…",
@@ -127,7 +135,36 @@
     "shorten": "Shorten selection",
     "translate": "Translate selection",
     "insertFromRag": "Insert from knowledge base",
-    "ragSearchPlaceholder": "Search your knowledge base…"
+    "ragSearchPlaceholder": "Search your knowledge base…",
+    "ragNoResults": "No matching snippets in your knowledge base."
+  },
+  "contactKb": {
+    "noContact": "Open an email to pick a contact.",
+    "searchPlaceholder": "Search this contact's emails…",
+    "search": "Search",
+    "results": "Saved emails",
+    "noResults": "Nothing saved for this contact yet.",
+    "saveCurrent": "Save current email here",
+    "saved": "Saved to {group}.",
+    "ask": "Ask about this contact",
+    "askPlaceholder": "Ask about {email}…"
+  },
+  "rules": {
+    "intro": "Shape how Synaplan routes your incoming email. Tier-0 keyword rules win immediately over AI classification.",
+    "testTitle": "Routing preview",
+    "test": "Test against current email",
+    "testEmpty": "No candidates.",
+    "testNoEmail": "Open an email first to test routing.",
+    "loading": "Loading topics…",
+    "empty": "No routable topics yet.",
+    "keywords": "Keywords",
+    "keywordsHint": "Comma-separated keywords that route to this topic",
+    "selectionRules": "Rules (IF/THEN)",
+    "readonly": "System topic — read-only. Create a custom topic in Synaplan to edit its rules.",
+    "save": "Save rule",
+    "saved": "Rule saved for {topic}.",
+    "applyFromEmail": "Use current email",
+    "systemBadge": "system"
   },
   "settings": {
     "title": "Settings",

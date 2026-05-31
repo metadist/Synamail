@@ -80,3 +80,21 @@ export const outOfOffice = (lang: string): string =>
   `Generate a polite out-of-office reply in language code "${lang}". Include ` +
   `placeholders {{return_date}} and {{backup_contact}} the user can fill in. ` +
   `Return HTML body content only.`
+
+/**
+ * Extract proposed meeting / call times from an email. The reference "now"
+ * and IANA timezone let the model resolve relative phrases ("next Tuesday at
+ * 3pm"). Times are returned as LOCAL wall-clock ISO 8601 WITHOUT a timezone
+ * offset, so `new Date(start)` yields the intended local moment for Outlook's
+ * appointment form.
+ */
+export const meetingProposals = (nowIso: string, timezone: string): string =>
+  `You extract proposed meeting or call times from an email. The current date ` +
+  `and time is ${nowIso} in timezone "${timezone}". Resolve relative dates ` +
+  `("tomorrow", "next Tuesday", "this afternoon") against that reference. ` +
+  `Return a JSON array; each element is ` +
+  `{"title": "<short meeting title>", "start": "<ISO 8601 local datetime, no ` +
+  `offset, e.g. 2026-06-03T15:00:00>", "end": "<ISO 8601 local datetime>", ` +
+  `"location": "<optional, omit if none>"}. If no end time is given, assume a ` +
+  `30-minute slot. If the email proposes no specific time, return []. ` +
+  `Output the JSON array only — no prose, no markdown fences.`

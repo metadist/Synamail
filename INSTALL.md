@@ -290,20 +290,18 @@ Same as OWA. Toolbar **Apps** icon → **Add custom add-in**.
 
 1. Open any email in your sideloaded Outlook.
 2. Click **Open Synamail** in the ribbon.
-3. The taskpane should show the **Sign in** view.
-4. Click **Sign in to Synaplan** → a dialog flashes through (the local mock relay) → the view switches to **ReadMode**.
-5. Click **Summarise** → after ~250 ms you'll see canned bullets containing "This is a mock summary — Sprint 3 swaps in the real Synaplan call."
+3. The taskpane should show the **Sign in** view, with a **Synaplan instance** URL field.
+4. Pick the server you want to sign in to and click **Sign in to Synaplan**:
+   - **Local dev:** `https://localhost:5174` (the HTTPS bridge in front of your local Synaplan — run `./start-dev.sh`). Sign in as your local user (e.g. `admin@synaplan.com`).
+   - **Live:** `https://web.synaplan.com` (or your self-hosted host). Sign in with your real account.
+5. The Synaplan login opens in the Office dialog → log in → click **Connect** → the dialog closes and the view switches to **ReadMode** with a **real** API key stored.
+6. Click **Summarise** → you'll get a live AI summary from the server you signed in to.
 
-If you see all that: **you're done. Sprint 2 acceptance criterion #1 is met.** Welcome to the dev loop.
+If you see all that: **you're done.** The signed-in **email** (shown in Settings) tells you which environment you're in. To switch environments, use **Settings → Reset saved settings**, then sign in to a different server.
 
 To see Compose mode: click **New mail** → click **Open Synamail** in the compose ribbon.
 
-### Step 9 — Switch from mock to live API (later)
-
-Currently the auth flow uses a local mock relay (`src/dialog/auth-relay.html`) and the Synaplan client auto-selects `MockSynaplanClient` when the API key starts with `mock-key-`. Switching to the live `web.synaplan.com` flow requires:
-
-1. The `/addin/connect` Vue route to land in `synaplan/frontend/` (Sprint 2.8 cross-repo PR). See `docs/SYNAPLAN_INTEGRATION.md`.
-2. Once that ships and `synaplan-platform` rolls the new image, your sideloaded Synamail will automatically use the live flow on next sign-in — no code change in Synamail required.
+> **No mock mode.** Sign-in is always a real round-trip to the server URL you pick; there is no offline/canned-data path. For backend-free UI iteration, run the local Synaplan stack via `./start-dev.sh` and sign in to `https://localhost:5174`.
 
 ---
 
@@ -351,7 +349,7 @@ For genuine enterprise deployment of Synamail, the admin deploys via AppSource o
 | Ribbon button doesn't appear after install                          | OWA cache or new-Outlook lag                                                                      | Hard-refresh OWA (Ctrl+F5); for new Outlook, restart the app. Can take 1–2 minutes.                                                   |
 | Taskpane shows a white blank                                        | Vite died, port collision, or cert untrusted                                                      | Check the `make dev` terminal for errors. Confirm `https://localhost:3000/src/taskpane/taskpane.html` opens directly in your browser. |
 | Sign-in dialog opens and immediately closes with an error           | State-nonce mismatch (this is the _correct_ behaviour for a malformed payload — security feature) | Try again; if it's reproducible, capture the `messageParent` payload from devtools and report.                                        |
-| Clicking Summarise does nothing                                     | Mock client got mistaken for the real one                                                         | Check `localStorage` / roaming for an `apiKey` not starting with `mock-key-`. Sign out and back in.                                   |
+| Clicking Summarise does nothing or errors                           | Signed in to a server that's down, or the key was revoked                                         | Confirm the chosen server URL is reachable; **Settings → Reset saved settings** and sign in again.                                    |
 | `npm install` is extremely slow on WSL                              | Filesystem on the Windows side                                                                    | Make sure the repo is under `/wwwroot/...` (Linux side), **not** `/mnt/c/...` (Windows side mounted into WSL — 10× slower).           |
 
 ---
@@ -388,31 +386,24 @@ It auto-locates the Synaplan repo from `SYNAPLAN_DIR`, the sibling directory
 WSL convention `/wwwroot/synaplan`. Logs land in `.dev-logs/`. The script is
 idempotent — re-run after a reboot and it skips anything already up.
 
-### Testing against the REAL local Synaplan (not the mock)
+### Testing against the local Synaplan vs a live server
 
-By default a dev sign-in uses an **offline mock relay** that hands back a
-`mock-key-…` key, so the taskpane runs `MockSynaplanClient` (canned AI replies).
-That's great for UI work, but to exercise the live AI / RAG / mailbox features
-against your **local Synaplan**, switch the dev loop to the real flow:
+Sign-in is always a real round-trip — there is no mock mode. The **server URL**
+you pick on the SignIn screen decides which Synaplan you talk to, and the
+signed-in **email** tells you which environment you're in:
 
-```bash
-cp .env.example .env.local      # contains VITE_DEV_MOCK_AUTH=false
-./start-dev.sh                  # (re)start so Vite picks up .env.local
-```
+- **Local dev:** start the stack with `./start-dev.sh`, then on the SignIn
+  screen set the instance to `https://localhost:5174` (the HTTPS bridge in front
+  of your local Synaplan) and sign in (e.g. `admin@synaplan.com`). Every action
+  runs `RealSynaplanClient` against your local backend over the bridge
+  (`/api` → `:8000`). Mailbox features (More-from-sender, Block sender) use EWS
+  when your Outlook host supports it.
+- **Live:** set the instance to `https://web.synaplan.com` (or your self-hosted
+  host) and sign in with your real account.
 
-With `.env.local` in place:
-
-- **Sign-in** opens `https://localhost:5174/addin/connect` (your local Synaplan
-  behind the HTTPS bridge) instead of the mock relay. Log into your local
-  Synaplan, click **Connect**, and the taskpane stores a **real** API key.
-- The base URL defaults to `https://localhost:5174` in dev (overridable in
-  **Settings → Synaplan instance**), so you don't have to type it.
-- Every action then runs `RealSynaplanClient` against your local backend over
-  the bridge (`/api` → `:8000`). Mailbox features (More-from-sender, Block
-  sender) use EWS when your Outlook host supports it, mock data otherwise.
-
-Delete `.env.local` (or set the flag to anything but `false`) to return to the
-instant offline mock for backend-free UI iteration.
+To switch between them, use **Settings → Reset saved settings**, then sign in to
+the other server. The base URL defaults to `https://localhost:5174` in dev
+builds and `https://web.synaplan.com` in production builds.
 
 > No `synaplan/` changes are needed: the `/addin/connect` page and `/api` are
 > served by your local Synaplan stack as-is; Synamail only points at them.

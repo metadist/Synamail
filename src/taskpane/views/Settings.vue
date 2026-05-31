@@ -3,10 +3,20 @@ import { onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import ActionButton from '@/taskpane/components/ActionButton.vue'
 import Toast from '@/taskpane/components/Toast.vue'
-import { signOut, signedInEmail, signedInBaseUrl, isSignedIn } from '@/taskpane/composables/useAuth'
+import {
+  signOut,
+  signedInEmail,
+  signedInBaseUrl,
+  isSignedIn,
+  hydrateAuthState,
+} from '@/taskpane/composables/useAuth'
 import { useSynaplanClient } from '@/taskpane/composables/useSynaplanClient'
 import { go } from '@/taskpane/router'
-import { loadSettings, patchSettings } from '@/taskpane/composables/useRoamingSettings'
+import {
+  clearAllSettings,
+  loadSettings,
+  patchSettings,
+} from '@/taskpane/composables/useRoamingSettings'
 import { setLocale, detectLocale, SUPPORTED_LOCALES, type Locale } from '@/i18n'
 import type { ModelConfig } from '@shared/types'
 
@@ -59,6 +69,22 @@ async function handleSignOut(): Promise<void> {
   error.value = null
   try {
     await signOut({ revokeRemote: true })
+    go('sign-in')
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : String(err)
+  }
+}
+
+/**
+ * Wipe ALL local + roaming state and bounce to SignIn. Use this to switch
+ * between local dev (https://localhost:5174) and a live server
+ * (https://web.synaplan.com) without dragging a stale "demo" identity along.
+ */
+async function handleReset(): Promise<void> {
+  error.value = null
+  try {
+    await clearAllSettings()
+    hydrateAuthState()
     go('sign-in')
   } catch (err) {
     error.value = err instanceof Error ? err.message : String(err)
@@ -165,6 +191,7 @@ async function onLanguageChange(): Promise<void> {
     <div class="syn-card">
       <h3 class="syn-card-title">{{ t('settings.advanced') }}</h3>
       <ActionButton @click="go('rule-editor')"> {{ t('settings.routingRules') }} → </ActionButton>
+      <ActionButton @click="handleReset">{{ t('settings.resetRoaming') }}</ActionButton>
     </div>
 
     <Toast v-if="error" kind="error" :message="error" />

@@ -1,15 +1,14 @@
 /**
  * Sign-in / sign-out flow.
  *
- * Sign-in uses the Office Dialog API:
+ * Sign-in uses the Office Dialog API and is always a real round-trip to the
+ * Synaplan server the user picked (local bridge or remote):
  *   1. Open `<baseUrl>/addin/connect?state=<nonce>` in a popup.
- *   2. Receive a `messageParent` payload back containing `apiKey` + metadata.
- *   3. Validate the `state` nonce.
- *   4. Persist via useRoamingSettings.
- *
- * For local development (no live bridge page) Vite serves
- * `/src/dialog/auth-relay.html` which immediately echoes a mock key back —
- * see auth-relay.ts.
+ *   2. Synaplan logs the user in and redirects back to our same-origin relay
+ *      (`/src/dialog/auth-relay.html`) with the payload.
+ *   3. The relay echoes a `messageParent` payload containing `apiKey` + email.
+ *   4. Validate the `state` nonce.
+ *   5. Persist via useRoamingSettings.
  */
 
 import { ref } from 'vue'
@@ -69,19 +68,16 @@ export function relayUrl(): string {
   return `${origin}/src/dialog/auth-relay.html`
 }
 
+/**
+ * Build the Office-dialog URL that opens `<baseUrl>/addin/connect`.
+ *
+ * Sign-in is *always* a real round-trip to whatever Synaplan the user picked
+ * — local stack on `https://localhost:5174` (sign in as admin@synaplan.com),
+ * live `https://web.synaplan.com` (your real account), or a self-hosted
+ * instance. The signed-in **username** tells you which environment you're
+ * in; the URL just routes the request.
+ */
 export function buildDialogUrl(baseUrl: string, state: string): string {
-  // Dev shortcut: in Vite dev mode point at the local mock relay so the
-  // sign-in loop closes in <100 ms with no real Synaplan round-trip.
-  // Set VITE_DEV_MOCK_AUTH=false in .env.local to force the real flow.
-  if (import.meta.env.DEV && import.meta.env.VITE_DEV_MOCK_AUTH !== 'false') {
-    const u = new URL(relayUrl())
-    u.searchParams.set('state', state)
-    u.searchParams.set('baseUrl', baseUrl)
-    u.searchParams.set('mock', '1')
-    return u.toString()
-  }
-  // Real flow: open the Synaplan bridge directly (login happens on its origin),
-  // and tell it to redirect back to our same-origin relay with the payload.
   const u = new URL('/addin/connect', baseUrl)
   u.searchParams.set('state', state)
   u.searchParams.set('label', 'Outlook Add-in')

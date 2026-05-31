@@ -2,14 +2,11 @@
  * Synaplan API client.
  *
  * The interface (`SynaplanClient`) is shaped around the taskpane's
- * read-mode / compose-mode features. Two implementations:
- *
- *   - `RealSynaplanClient` — hits a live Synaplan instance.
- *   - `MockSynaplanClient` — returns canned data for offline dev / Vitest.
- *
- * Selection happens via `createSynaplanClient({ useMock })` and the auto-
- * detection of mock keys (prefix `mock-key-`). Sprint 3 swaps the default
- * to the real client.
+ * read-mode / compose-mode features. There is a single implementation,
+ * `RealSynaplanClient`, which hits whatever Synaplan instance the user
+ * signed in to — the local bridge (`https://localhost:5174`) or a remote
+ * server (`https://web.synaplan.com`, or a self-hosted host). There is no
+ * mock/offline mode.
  *
  * All AI features (summarise / translate / draftReply / classify / ask)
  * route through Synaplan's single `POST /api/v1/messages/send` chat
@@ -26,6 +23,7 @@
 import {
   ask as askPrompt,
   classify as classifyPrompt,
+  meetingProposals as meetingProposalsPrompt,
   newMail as newMailPrompt,
   reply as replyPrompt,
   simpleChat as simpleChatPrompt,
@@ -44,14 +42,19 @@ import type {
   DraftReplyResult,
   FileUploadInput,
   FileUploadResult,
+  MeetingExtractInput,
+  MeetingProposal,
   ModelConfig,
   RagGroup,
   RagSearchHit,
   RagSearchInput,
+  RoutingTestResult,
+  RoutingTopic,
   SummariseInput,
   SummariseResult,
   TranslateInput,
   TranslateResult,
+  UpdateTopicRulesInput,
 } from './types'
 
 export interface SynaplanClient {
@@ -70,6 +73,12 @@ export interface SynaplanClient {
   chat(input: ChatTurnInput): Promise<ChatTurnResult>
   /** Draft a brand-new email (subject + HTML body) from a description. */
   composeNew(input: ComposeNewInput): Promise<ComposeNewResult>
+  /**
+   * Extract proposed meeting / call times from an email body. Returns a
+   * (possibly empty) list of candidate slots the caller can turn into Outlook
+   * appointments. Pure AI extraction via `POST /messages/send`.
+   */
+  extractMeetingTimes(input: MeetingExtractInput): Promise<MeetingProposal[]>
   ragSearch(input: RagSearchInput): Promise<RagSearchHit[]>
   ragGroups(): Promise<RagGroup[]>
   /**
@@ -88,6 +97,25 @@ export interface SynaplanClient {
    * `GET /config/models/defaults` (ids) with `GET /config/models` (catalog).
    */
   getModelConfig(): Promise<ModelConfig>
+
+  // -------------------------------------------------------------------------
+  // Synapse Routing rules (RULE integration — docs/FEATURES.md §5)
+  // -------------------------------------------------------------------------
+
+  /** List the user's routable topics (system + custom) with their rules. */
+  listTopics(): Promise<RoutingTopic[]>
+  /**
+   * Update a topic's Tier-0 selection rules / keywords / enabled flag.
+   * Only user-owned topics are writable by non-admin users; updating a
+   * system topic (`isDefault`) yields a 403 the caller should surface.
+   */
+  updateTopicRules(id: number, input: UpdateTopicRulesInput): Promise<RoutingTopic>
+  /**
+   * Dry-run the Synapse Router for a message text and return the Top-K
+   * topic candidates with raw cosine scores. Available to any authenticated
+   * user; does not route or persist anything.
+   */
+  testRouting(text: string, limit?: number): Promise<RoutingTestResult>
 }
 
 // Sender history ("More from this sender") and block-sender are Outlook
@@ -263,6 +291,15 @@ export class RealSynaplanClient implements SynaplanClient {
     return parseComposeResponse(text, input.description)
   }
 
+  async extractMeetingTimes(input: MeetingExtractInput): Promise<MeetingProposal[]> {
+    const message = composeMessage(
+      meetingProposalsPrompt(input.nowIso, input.timezone),
+      buildEmailBlock({ subject: input.subject, body: input.body, from: input.from }),
+    )
+    const text = await this.sendChat(message)
+    return parseMeetingProposals(text)
+  }
+
   // -------------------------------------------------------------------------
   // RAG
   // -------------------------------------------------------------------------
@@ -349,6 +386,46 @@ export class RealSynaplanClient implements SynaplanClient {
   }
 
   // -------------------------------------------------------------------------
+  // Synapse Routing rules
+  // -------------------------------------------------------------------------
+
+  async listTopics(): Promise<RoutingTopic[]> {
+    const res = await this.request<PromptsListResponse>('/api/v1/prompts')
+    return (res?.prompts ?? []).map(mapTopic)
+  }
+
+  async updateTopicRules(id: number, input: UpdateTopicRulesInput): Promise<RoutingTopic> {
+    const body: Record<string, unknown> = {}
+    if (input.selectionRules !== undefined) body.selectionRules = input.selectionRules
+    if (input.keywords !== undefined) body.keywords = input.keywords
+    if (input.enabled !== undefined) body.enabled = input.enabled
+    const res = await this.request<PromptMutationResponse>(`/api/v1/prompts/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(body),
+    })
+    if (!res?.success || !res.prompt) {
+      throw apiError(0, 'RULE_UPDATE_FAILED', 'Synaplan did not confirm the rule update')
+    }
+    return mapTopic(res.prompt)
+  }
+
+  async testRouting(text: string, limit = 5): Promise<RoutingTestResult> {
+    const res = await this.request<RoutingTestResponse>('/api/v1/prompts/test', {
+      method: 'POST',
+      body: JSON.stringify({ text, limit }),
+    })
+    return {
+      query: res?.query ?? text,
+      candidates: (res?.candidates ?? []).map((c) => ({
+        topic: c.topic ?? '',
+        score: c.score ?? 0,
+        stale: c.stale ?? undefined,
+      })),
+      latencyMs: res?.latency_ms,
+    }
+  }
+
+  // -------------------------------------------------------------------------
   // Internal: AI chat round-trip
   // -------------------------------------------------------------------------
 
@@ -367,143 +444,15 @@ export class RealSynaplanClient implements SynaplanClient {
 }
 
 // ---------------------------------------------------------------------------
-// Mock client — used for offline-dev / Vitest. Returns canned, deterministic
-// shapes after a short simulated delay so the UI exercises loading + error
-// states properly.
-// ---------------------------------------------------------------------------
-
-export class MockSynaplanClient implements SynaplanClient {
-  private readonly delay: number
-
-  constructor(delay = 250) {
-    this.delay = delay
-  }
-
-  private async wait<T>(value: T): Promise<T> {
-    await sleep(this.delay)
-    return value
-  }
-
-  ping() {
-    return this.wait({ ok: true, email: 'demo@synaplan.test' })
-  }
-
-  summarise(input: SummariseInput): Promise<SummariseResult> {
-    const subject = input.subject || '(no subject)'
-    return this.wait({
-      summary: `(mock) Summary of "${subject}"`,
-      bullets: [
-        `Subject: ${subject}`,
-        `From: ${input.from ?? 'unknown'}`,
-        `Body length: ${input.body.length} chars`,
-        'This is a mock summary — Sprint 3 swaps in the real Synaplan call.',
-      ],
-      language: 'en',
-    })
-  }
-
-  translate(input: TranslateInput): Promise<TranslateResult> {
-    return this.wait({
-      translation: `(mock ${input.targetLanguage}) ${input.text}`,
-      detectedLanguage: 'en',
-    })
-  }
-
-  draftReply(input: DraftReplyInput): Promise<DraftReplyResult> {
-    return this.wait({
-      htmlBody:
-        `<p>(Mock ${input.tone} reply in ${input.language})</p>` +
-        `<p>Re: ${input.subject}</p>` +
-        `<p>Sprint 3 replaces this with the real Synaplan response.</p>`,
-    })
-  }
-
-  classify(input: ClassifyInput): Promise<ClassifyResult> {
-    return this.wait({
-      category: input.subject.toLowerCase().includes('invoice') ? 'billing' : 'general',
-      confidence: 0.82,
-      reasoning: '(mock) keyword heuristic',
-    })
-  }
-
-  ask(input: ChatTurnInput): Promise<ChatTurnResult> {
-    return this.wait({
-      chatId: input.chatId ?? hashToChatId(input.conversationId),
-      answer: `(mock answer) You asked: ${input.question}`,
-    })
-  }
-
-  chat(input: ChatTurnInput): Promise<ChatTurnResult> {
-    return this.wait({
-      chatId: input.chatId ?? hashToChatId(input.conversationId),
-      answer: `(mock chat) Re "${input.question}": this is a canned reply — sign in to a real Synaplan instance for live answers.`,
-    })
-  }
-
-  composeNew(input: ComposeNewInput): Promise<ComposeNewResult> {
-    const subject = input.description.split(/\r?\n/)[0]?.slice(0, 60) || 'New message'
-    return this.wait({
-      subject: `(mock) ${subject}`,
-      htmlBody:
-        `<p>(Mock draft for: ${subject})</p>` +
-        `<p>Sign in to a real Synaplan instance to generate a live draft from your description.</p>`,
-    })
-  }
-
-  ragSearch(input: RagSearchInput): Promise<RagSearchHit[]> {
-    return this.wait([
-      {
-        fileId: 1,
-        filename: 'mock-quarterly-report.pdf',
-        snippet: `(mock) "${input.query}" found in section 3.2 …`,
-        score: 0.84,
-        group: input.groups?.[0],
-      },
-    ])
-  }
-
-  ragGroups(): Promise<RagGroup[]> {
-    return this.wait([
-      { id: 'default', name: 'default' },
-      { id: 'work-notes', name: 'work-notes' },
-    ])
-  }
-
-  ragCreateGroup(name: string): Promise<RagGroup> {
-    return this.wait({ id: name, name })
-  }
-
-  fileUpload(_input: FileUploadInput): Promise<FileUploadResult> {
-    return this.wait({ fileId: Math.floor(Math.random() * 10_000) })
-  }
-
-  revokeApiKey(_keyId: number): Promise<void> {
-    return this.wait(undefined)
-  }
-
-  getModelConfig(): Promise<ModelConfig> {
-    return this.wait({
-      chat: { id: 53, name: 'Llama 3.3 70B', service: 'Groq' },
-      imageGen: { id: 21, name: 'FLUX.1 schnell', service: 'Replicate' },
-      vectorize: { id: 3, name: 'nomic-embed-text', service: 'Ollama' },
-    })
-  }
-}
-
-// ---------------------------------------------------------------------------
 // Factory
 // ---------------------------------------------------------------------------
 
 export interface CreateClientOptions {
   baseUrl: string
   apiKey: string
-  useMock?: boolean
 }
 
 export function createSynaplanClient(opts: CreateClientOptions): SynaplanClient {
-  if (opts.useMock || !opts.apiKey || opts.apiKey.startsWith('mock-key-')) {
-    return new MockSynaplanClient()
-  }
   return new RealSynaplanClient({ baseUrl: opts.baseUrl, apiKey: opts.apiKey })
 }
 
@@ -554,14 +503,6 @@ export function errorMessage(err: unknown): string {
   } catch {
     return String(err)
   }
-}
-
-function hashToChatId(s: string): number {
-  let h = 0
-  for (let i = 0; i < s.length; i++) {
-    h = (h * 31 + s.charCodeAt(i)) | 0
-  }
-  return Math.abs(h) || 1
 }
 
 function composeMessage(systemPrompt: string, userBlock: string): string {
@@ -665,6 +606,54 @@ function parseComposeResponse(text: string, description: string): ComposeNewResu
 
 function deriveSubject(description: string): string {
   return description.split(/\r?\n/)[0]?.slice(0, 80).trim() || 'New message'
+}
+
+function parseMeetingProposals(text: string): MeetingProposal[] {
+  // The meetingProposals prompt asks for a JSON array. Tolerate fenced output
+  // and surrounding prose; return [] on anything unparseable rather than throw
+  // (no proposals is a normal, expected outcome).
+  const cleaned = text
+    .replace(/```(?:json)?\s*/gi, '')
+    .replace(/```/g, '')
+    .trim()
+  const start = cleaned.indexOf('[')
+  const end = cleaned.lastIndexOf(']')
+  if (start === -1 || end === -1 || end <= start) return []
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(cleaned.slice(start, end + 1))
+  } catch {
+    return []
+  }
+  if (!Array.isArray(parsed)) return []
+  const out: MeetingProposal[] = []
+  for (const raw of parsed) {
+    if (!raw || typeof raw !== 'object') continue
+    const o = raw as Record<string, unknown>
+    const startIso = typeof o.start === 'string' ? o.start : ''
+    if (!startIso) continue
+    const endIso = typeof o.end === 'string' && o.end ? o.end : addMinutesIso(startIso, 30)
+    out.push({
+      title: typeof o.title === 'string' && o.title ? o.title : 'Meeting',
+      startIso,
+      endIso,
+      location: typeof o.location === 'string' && o.location ? o.location : undefined,
+    })
+  }
+  return out
+}
+
+/** Add minutes to a local ISO datetime, returning a local ISO datetime. */
+function addMinutesIso(iso: string, minutes: number): string {
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return iso
+  d.setMinutes(d.getMinutes() + minutes)
+  // Re-emit local wall-clock without the trailing Z/offset.
+  const pad = (n: number): string => String(n).padStart(2, '0')
+  return (
+    `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}` +
+    `T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
+  )
 }
 
 function escapeHtml(s: string): string {
@@ -778,4 +767,47 @@ interface RawCatalogModel {
 interface ConfigModelsResponse {
   success?: boolean
   models?: Record<string, RawCatalogModel[]>
+}
+
+interface RawPrompt {
+  id?: number
+  topic?: string
+  name?: string
+  shortDescription?: string
+  selectionRules?: string | null
+  keywords?: string | null
+  enabled?: boolean
+  isDefault?: boolean
+  isUserOverride?: boolean
+}
+
+interface PromptsListResponse {
+  success?: boolean
+  prompts?: RawPrompt[]
+}
+
+interface PromptMutationResponse {
+  success?: boolean
+  prompt?: RawPrompt
+}
+
+interface RoutingTestResponse {
+  success?: boolean
+  query?: string
+  candidates?: { topic?: string; score?: number; stale?: boolean }[]
+  latency_ms?: number
+}
+
+function mapTopic(p: RawPrompt): RoutingTopic {
+  return {
+    id: p.id ?? 0,
+    topic: p.topic ?? '',
+    name: p.name ?? p.topic ?? '',
+    shortDescription: p.shortDescription ?? '',
+    selectionRules: p.selectionRules ?? null,
+    keywords: p.keywords ?? null,
+    enabled: p.enabled ?? true,
+    isDefault: p.isDefault ?? false,
+    isUserOverride: p.isUserOverride ?? false,
+  }
 }

@@ -13,6 +13,7 @@ const intent = ref('')
 const targetLang = ref<'auto' | 'en' | 'de' | 'fr' | 'es' | 'it' | 'zh' | 'ar'>('en')
 const ragQuery = ref('')
 const ragHits = ref<{ filename: string; snippet: string; score: number }[]>([])
+const ragSearched = ref(false)
 const active = ref<string | null>(null)
 const error = ref<string | null>(null)
 
@@ -112,14 +113,17 @@ async function transformSelection(kind: 'improve' | 'shorten' | 'translate'): Pr
 async function searchRag(): Promise<void> {
   if (!ragQuery.value.trim()) return
   await run('rag-search', async () => {
-    const r = await call((c) => c.ragSearch({ query: ragQuery.value }))
+    const r = await call((c) => c.ragSearch({ query: ragQuery.value.trim(), limit: 15 }))
+    ragSearched.value = true
     if (r)
       ragHits.value = r.map((h) => ({ filename: h.filename, snippet: h.snippet, score: h.score }))
   })
 }
 
 async function insertHit(hit: { filename: string; snippet: string }): Promise<void> {
-  await setSelected(`\n[${hit.filename}] ${hit.snippet}\n`)
+  // Insert the snippet with a trailing citation line so the recipient (and the
+  // writer) can see where the text came from in their knowledge base.
+  await setSelected(`${hit.snippet.trim()}\n— ${hit.filename}\n`)
 }
 </script>
 
@@ -179,13 +183,18 @@ async function insertHit(hit: { filename: string; snippet: string }): Promise<vo
         :placeholder="t('compose.ragSearchPlaceholder')"
         @keyup.enter="searchRag"
       />
-      <ul class="compose__hits">
+      <ul v-if="ragHits.length" class="compose__hits">
         <li v-for="(h, i) in ragHits" :key="i">
           <button type="button" @click="insertHit(h)">
-            {{ h.filename }} — {{ h.snippet.slice(0, 60) }}…
+            <span class="compose__hit-name">{{ h.filename }}</span>
+            <span class="compose__hit-score">{{ Math.round(h.score * 100) }}%</span>
+            <span class="compose__hit-snippet">{{ h.snippet.slice(0, 80) }}…</span>
           </button>
         </li>
       </ul>
+      <p v-else-if="ragSearched && active !== 'rag-search'" class="syn-muted">
+        {{ t('compose.ragNoResults') }}
+      </p>
     </div>
 
     <Toast v-if="error" kind="error" :message="error" />
@@ -223,5 +232,17 @@ input {
   padding: var(--syn-space-2);
   border-radius: var(--syn-radius-sm);
   font-size: var(--syn-font-size-sm);
+}
+.compose__hit-name {
+  font-weight: 600;
+}
+.compose__hit-score {
+  float: right;
+  color: var(--syn-muted);
+}
+.compose__hit-snippet {
+  display: block;
+  color: var(--syn-muted);
+  margin-top: 2px;
 }
 </style>

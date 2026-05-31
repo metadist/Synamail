@@ -79,7 +79,15 @@
       "saveToRag": "In Wissensdatenbank speichern",
       "ask": "Fragen",
       "moreFromSender": "Mehr von diesem Absender",
-      "blockSender": "Absender blockieren"
+      "blockSender": "Absender blockieren",
+      "findMeetingTimes": "Termine finden"
+    },
+    "meeting": {
+      "title": "Vorgeschlagene Termine",
+      "none": "In dieser E-Mail wurden keine Termine vorgeschlagen.",
+      "unsupported": "Dieser Outlook-Host kann kein neues Terminformular öffnen.",
+      "badDate": "Diese Zeit konnte nicht gelesen werden. Versuche einen anderen Slot.",
+      "bodyFrom": "Erstellt aus der E-Mail: {subject}"
     },
     "result": "Ergebnis",
     "askPlaceholder": "Frage zu dieser E-Mail…",
@@ -127,7 +135,36 @@
     "shorten": "Auswahl kürzen",
     "translate": "Auswahl übersetzen",
     "insertFromRag": "Aus Wissensdatenbank einfügen",
-    "ragSearchPlaceholder": "Wissensdatenbank durchsuchen…"
+    "ragSearchPlaceholder": "Wissensdatenbank durchsuchen…",
+    "ragNoResults": "Keine passenden Ausschnitte in deiner Wissensdatenbank."
+  },
+  "contactKb": {
+    "noContact": "Öffne eine E-Mail, um einen Kontakt auszuwählen.",
+    "searchPlaceholder": "E-Mails dieses Kontakts durchsuchen…",
+    "search": "Suchen",
+    "results": "Gespeicherte E-Mails",
+    "noResults": "Für diesen Kontakt ist noch nichts gespeichert.",
+    "saveCurrent": "Aktuelle E-Mail hier speichern",
+    "saved": "In {group} gespeichert.",
+    "ask": "Über diesen Kontakt fragen",
+    "askPlaceholder": "Frage zu {email}…"
+  },
+  "rules": {
+    "intro": "Lege fest, wie Synaplan deine eingehenden E-Mails routet. Tier-0-Schlüsselwortregeln gewinnen sofort gegenüber der KI-Klassifizierung.",
+    "testTitle": "Routing-Vorschau",
+    "test": "An aktueller E-Mail testen",
+    "testEmpty": "Keine Kandidaten.",
+    "testNoEmail": "Öffne zuerst eine E-Mail, um das Routing zu testen.",
+    "loading": "Themen werden geladen…",
+    "empty": "Noch keine routebaren Themen.",
+    "keywords": "Schlüsselwörter",
+    "keywordsHint": "Kommagetrennte Schlüsselwörter, die zu diesem Thema routen",
+    "selectionRules": "Regeln (WENN/DANN)",
+    "readonly": "Systemthema — schreibgeschützt. Erstelle ein eigenes Thema in Synaplan, um Regeln zu bearbeiten.",
+    "save": "Regel speichern",
+    "saved": "Regel für {topic} gespeichert.",
+    "applyFromEmail": "Aktuelle E-Mail verwenden",
+    "systemBadge": "System"
   },
   "settings": {
     "title": "Einstellungen",

@@ -79,7 +79,15 @@
       "saveToRag": "Guardar en la base de conocimiento",
       "ask": "Preguntar",
       "moreFromSender": "Más de este remitente",
-      "blockSender": "Bloquear remitente"
+      "blockSender": "Bloquear remitente",
+      "findMeetingTimes": "Buscar horarios de reunión"
+    },
+    "meeting": {
+      "title": "Horarios propuestos",
+      "none": "No se propusieron horarios en este correo.",
+      "unsupported": "Este host de Outlook no puede abrir un formulario de cita.",
+      "badDate": "No se pudo leer esa hora. Prueba otro horario.",
+      "bodyFrom": "Creado a partir del correo: {subject}"
     },
     "result": "Resultado",
     "askPlaceholder": "Pregunta sobre este correo…",
@@ -127,7 +135,36 @@
     "shorten": "Acortar la selección",
     "translate": "Traducir la selección",
     "insertFromRag": "Insertar desde la base de conocimiento",
-    "ragSearchPlaceholder": "Busca en tu base de conocimiento…"
+    "ragSearchPlaceholder": "Busca en tu base de conocimiento…",
+    "ragNoResults": "No hay fragmentos coincidentes en tu base de conocimiento."
+  },
+  "contactKb": {
+    "noContact": "Abre un correo para elegir un contacto.",
+    "searchPlaceholder": "Buscar los correos de este contacto…",
+    "search": "Buscar",
+    "results": "Correos guardados",
+    "noResults": "Aún no hay nada guardado para este contacto.",
+    "saveCurrent": "Guardar el correo actual aquí",
+    "saved": "Guardado en {group}.",
+    "ask": "Preguntar sobre este contacto",
+    "askPlaceholder": "Pregunta sobre {email}…"
+  },
+  "rules": {
+    "intro": "Define cómo enruta Synaplan tus correos entrantes. Las reglas de palabras clave Tier-0 ganan de inmediato sobre la clasificación por IA.",
+    "testTitle": "Vista previa del enrutamiento",
+    "test": "Probar con el correo actual",
+    "testEmpty": "Sin candidatos.",
+    "testNoEmail": "Abre un correo primero para probar el enrutamiento.",
+    "loading": "Cargando temas…",
+    "empty": "Aún no hay temas enrutables.",
+    "keywords": "Palabras clave",
+    "keywordsHint": "Palabras clave separadas por comas que enrutan a este tema",
+    "selectionRules": "Reglas (SI/ENTONCES)",
+    "readonly": "Tema del sistema — solo lectura. Crea un tema personalizado en Synaplan para editar sus reglas.",
+    "save": "Guardar regla",
+    "saved": "Regla guardada para {topic}.",
+    "applyFromEmail": "Usar el correo actual",
+    "systemBadge": "sistema"
   },
   "settings": {
     "title": "Ajustes",

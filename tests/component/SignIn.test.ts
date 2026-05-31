@@ -12,16 +12,13 @@ describe('SignIn.vue', () => {
     expect(wrapper.text()).toContain('Sign in to Synaplan')
   })
 
-  it('toggles the self-hosted override input', async () => {
+  it('always shows the Synaplan server URL field so the user can pick the target', () => {
     const wrapper = mount(SignIn, { global: { plugins: [i18n] } })
-    expect(wrapper.find('input[type=url]').exists()).toBe(false)
-    await wrapper.find('button.signin__link').trigger('click')
     expect(wrapper.find('input[type=url]').exists()).toBe(true)
   })
 
-  it('shows a Save button only once the instance URL changes', async () => {
+  it('shows a Save button only once the server URL changes', async () => {
     const wrapper = mount(SignIn, { global: { plugins: [i18n] } })
-    await wrapper.find('button.signin__link').trigger('click')
     expect(wrapper.findAll('button').some((b) => b.text() === 'Save')).toBe(false)
     await wrapper.find('input[type=url]').setValue('https://my.synaplan.example')
     expect(wrapper.findAll('button').some((b) => b.text() === 'Save')).toBe(true)
@@ -29,7 +26,6 @@ describe('SignIn.vue', () => {
 
   it('rejects an http instance with an HTTPS hint instead of signing in', async () => {
     const wrapper = mount(SignIn, { global: { plugins: [i18n] } })
-    await wrapper.find('button.signin__link').trigger('click')
     await wrapper.find('input[type=url]').setValue('http://localhost/')
     await wrapper.find('button.ab--primary').trigger('click')
     expect(wrapper.find('.toast--error').text()).toMatch(/HTTPS/i)

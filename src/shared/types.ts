@@ -215,6 +215,72 @@ export interface CreateSpamRuleResult {
   serverSide: boolean
 }
 
+export interface MeetingExtractInput {
+  subject: string
+  body: string
+  from?: string
+  /** Current local time as ISO 8601, so the AI can resolve relative dates. */
+  nowIso: string
+  /** IANA timezone of the user (e.g. "Europe/Berlin") for disambiguation. */
+  timezone: string
+}
+
+export interface MeetingProposal {
+  title: string
+  /** ISO 8601 local datetime, no offset (e.g. "2026-06-03T15:00:00"). */
+  startIso: string
+  /** ISO 8601 local datetime, no offset. */
+  endIso: string
+  location?: string
+}
+
+// ---------------------------------------------------------------------------
+// Synapse Routing rules (RULE integration — docs/FEATURES.md §5).
+//
+// A "routing topic" is a Synaplan Prompt (`GET /api/v1/prompts`). Its
+// `selectionRules` (Tier-0 IF/THEN matchers) and `keywords` decide how
+// incoming email is routed before embedding / AI classification runs.
+// ---------------------------------------------------------------------------
+
+export interface RoutingTopic {
+  id: number
+  /** Stable topic key, e.g. `billing`, `support`. */
+  topic: string
+  /** Display label from the backend. */
+  name: string
+  shortDescription: string
+  /** Tier-0 IF/THEN matcher text. Null when none set. */
+  selectionRules: string | null
+  /** Comma-separated keyword matchers. Null when none set. */
+  keywords: string | null
+  enabled: boolean
+  /** True for system prompts (ownerId 0) — read-only for non-admin users. */
+  isDefault: boolean
+  /** True when the user has a personal override of a system topic. */
+  isUserOverride: boolean
+}
+
+export interface UpdateTopicRulesInput {
+  selectionRules?: string | null
+  keywords?: string | null
+  enabled?: boolean
+}
+
+export interface RoutingCandidate {
+  topic: string
+  /** Raw cosine score from the Synapse Router dry-run. */
+  score: number
+  /** True when the topic's embedding is stale vs its current text. */
+  stale?: boolean
+}
+
+export interface RoutingTestResult {
+  query: string
+  candidates: RoutingCandidate[]
+  /** Server-reported round-trip latency in ms, when present. */
+  latencyMs?: number
+}
+
 export interface ApiError {
   status: number
   code: string

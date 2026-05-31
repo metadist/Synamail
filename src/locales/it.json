@@ -79,7 +79,15 @@
       "saveToRag": "Salva nella base di conoscenza",
       "ask": "Chiedi",
       "moreFromSender": "Altro da questo mittente",
-      "blockSender": "Blocca mittente"
+      "blockSender": "Blocca mittente",
+      "findMeetingTimes": "Trova orari riunione"
+    },
+    "meeting": {
+      "title": "Orari proposti",
+      "none": "In questa email non sono stati proposti orari.",
+      "unsupported": "Questo host Outlook non può aprire un modulo appuntamento.",
+      "badDate": "Impossibile leggere quell'orario. Prova un altro slot.",
+      "bodyFrom": "Creato dall'email: {subject}"
     },
     "result": "Risultato",
     "askPlaceholder": "Fai una domanda su questa e-mail…",
@@ -127,7 +135,36 @@
     "shorten": "Accorcia la selezione",
     "translate": "Traduci la selezione",
     "insertFromRag": "Inserisci dalla base di conoscenza",
-    "ragSearchPlaceholder": "Cerca nella tua base di conoscenza…"
+    "ragSearchPlaceholder": "Cerca nella tua base di conoscenza…",
+    "ragNoResults": "Nessun estratto corrispondente nella tua base di conoscenza."
+  },
+  "contactKb": {
+    "noContact": "Apri un'email per scegliere un contatto.",
+    "searchPlaceholder": "Cerca le email di questo contatto…",
+    "search": "Cerca",
+    "results": "Email salvate",
+    "noResults": "Niente salvato per questo contatto finora.",
+    "saveCurrent": "Salva qui l'email corrente",
+    "saved": "Salvato in {group}.",
+    "ask": "Chiedi su questo contatto",
+    "askPlaceholder": "Domanda su {email}…"
+  },
+  "rules": {
+    "intro": "Definisci come Synaplan instrada le tue email in arrivo. Le regole per parole chiave Tier-0 prevalgono subito sulla classificazione IA.",
+    "testTitle": "Anteprima instradamento",
+    "test": "Prova sull'email corrente",
+    "testEmpty": "Nessun candidato.",
+    "testNoEmail": "Apri prima un'email per provare l'instradamento.",
+    "loading": "Caricamento argomenti…",
+    "empty": "Nessun argomento instradabile finora.",
+    "keywords": "Parole chiave",
+    "keywordsHint": "Parole chiave separate da virgole che instradano a questo argomento",
+    "selectionRules": "Regole (SE/ALLORA)",
+    "readonly": "Argomento di sistema — sola lettura. Crea un argomento personalizzato in Synaplan per modificarne le regole.",
+    "save": "Salva regola",
+    "saved": "Regola salvata per {topic}.",
+    "applyFromEmail": "Usa l'email corrente",
+    "systemBadge": "sistema"
   },
   "settings": {
     "title": "Impostazioni",

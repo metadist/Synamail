@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { MockSynaplanClient, RealSynaplanClient, errorMessage } from '@shared/synaplan-client'
+import { RealSynaplanClient, errorMessage } from '@shared/synaplan-client'
 
 describe('errorMessage', () => {
   it('renders ApiError objects (not "[object Object]")', () => {
@@ -131,21 +131,5 @@ describe('RealSynaplanClient.getModelConfig', () => {
     expect(r.imageGen).toBeNull()
     // id present but missing from catalog → falls back to a "#id" label.
     expect(r.vectorize).toEqual({ id: 3, name: '#3' })
-  })
-})
-
-describe('MockSynaplanClient chat/composeNew', () => {
-  it('chat returns a canned answer and echoes chatId', async () => {
-    const c = new MockSynaplanClient(0)
-    const r = await c.chat({ conversationId: 'home', question: 'hey', chatId: 3 })
-    expect(r.chatId).toBe(3)
-    expect(r.answer).toContain('hey')
-  })
-
-  it('composeNew returns a subject and html body', async () => {
-    const c = new MockSynaplanClient(0)
-    const r = await c.composeNew({ description: 'Invite the team to lunch' })
-    expect(r.subject).toContain('Invite the team to lunch')
-    expect(r.htmlBody).toContain('<p>')
   })
 })

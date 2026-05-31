@@ -1,10 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import {
-  MockSynaplanClient,
-  RealSynaplanClient,
-  createSynaplanClient,
-  isApiError,
-} from '@shared/synaplan-client'
+import { RealSynaplanClient, createSynaplanClient, isApiError } from '@shared/synaplan-client'
 
 // ---------------------------------------------------------------------------
 // Helpers — build typed fetch mocks that return canned JSON responses.
@@ -56,48 +51,11 @@ function lastCallBody(fetchImpl: ReturnType<typeof vi.fn>): unknown {
 }
 
 // ---------------------------------------------------------------------------
-// MockSynaplanClient — unchanged surface, smoke check the canned shapes
-// ---------------------------------------------------------------------------
-
-describe('MockSynaplanClient', () => {
-  it('returns canned summarise output with bullet points', async () => {
-    const c = new MockSynaplanClient(0)
-    const r = await c.summarise({ subject: 'Hello', body: 'World', from: 'a@b.test', to: [] })
-    expect(r.bullets.length).toBeGreaterThan(0)
-    expect(r.summary).toContain('Hello')
-  })
-
-  it('classify routes invoice subjects to billing', async () => {
-    const c = new MockSynaplanClient(0)
-    const r = await c.classify({ subject: 'Q3 invoice', body: '...', from: 'x@y.test' })
-    expect(r.category).toBe('billing')
-  })
-
-  it('reuses chatId across turns when caller supplies one', async () => {
-    const c = new MockSynaplanClient(0)
-    const a = await c.ask({ conversationId: 'abc', question: '?', chatId: 42 })
-    const b = await c.ask({ conversationId: 'abc', question: 'again?', chatId: 42 })
-    expect(a.chatId).toBe(42)
-    expect(b.chatId).toBe(42)
-  })
-})
-
-// ---------------------------------------------------------------------------
-// Factory selection
+// Factory
 // ---------------------------------------------------------------------------
 
 describe('createSynaplanClient factory', () => {
-  it('returns MockSynaplanClient when apiKey starts with mock-key-', () => {
-    const c = createSynaplanClient({ baseUrl: 'https://x', apiKey: 'mock-key-abc' })
-    expect(c).toBeInstanceOf(MockSynaplanClient)
-  })
-
-  it('returns MockSynaplanClient when useMock is true', () => {
-    const c = createSynaplanClient({ baseUrl: 'https://x', apiKey: 'real', useMock: true })
-    expect(c).toBeInstanceOf(MockSynaplanClient)
-  })
-
-  it('returns RealSynaplanClient otherwise', () => {
+  it('always returns a RealSynaplanClient (no mock mode)', () => {
     const c = createSynaplanClient({ baseUrl: 'https://x', apiKey: 'sk_real' })
     expect(c).toBeInstanceOf(RealSynaplanClient)
   })
@@ -407,6 +365,170 @@ describe('RealSynaplanClient — revokeApiKey', () => {
     expect(fetchImpl.mock.calls[0][0]).toBe('https://api.test/api/v1/apikeys/42')
     const init = fetchImpl.mock.calls[0][1] as RequestInit
     expect(init.method).toBe('DELETE')
+  })
+})
+
+describe('RealSynaplanClient — extractMeetingTimes', () => {
+  it('parses a JSON array of proposals and defaults a missing end to +30min', async () => {
+    const fetchImpl = mockFetchSequence([
+      {
+        body: {
+          success: true,
+          outgoingMessage: {
+            text: '[{"title":"Project call","start":"2026-06-03T15:00:00","end":"2026-06-03T15:30:00","location":"Teams"},{"title":"Sync","start":"2026-06-04T09:00:00"}]',
+          },
+        },
+      },
+    ])
+    const c = buildClient(fetchImpl as unknown as typeof fetch)
+    const r = await c.extractMeetingTimes({
+      subject: 'Can we meet?',
+      body: 'How about Wednesday 3pm or Thursday 9am?',
+      nowIso: '2026-06-01T09:00:00',
+      timezone: 'Europe/Berlin',
+    })
+    expect(fetchImpl.mock.calls[0][0]).toBe('https://api.test/api/v1/messages/send')
+    expect(r).toEqual([
+      {
+        title: 'Project call',
+        startIso: '2026-06-03T15:00:00',
+        endIso: '2026-06-03T15:30:00',
+        location: 'Teams',
+      },
+      {
+        title: 'Sync',
+        startIso: '2026-06-04T09:00:00',
+        endIso: '2026-06-04T09:30:00',
+        location: undefined,
+      },
+    ])
+  })
+
+  it('returns [] when the AI reports no proposals', async () => {
+    const fetchImpl = mockFetchSequence([
+      { body: { success: true, outgoingMessage: { text: '[]' } } },
+    ])
+    const c = buildClient(fetchImpl as unknown as typeof fetch)
+    const r = await c.extractMeetingTimes({
+      subject: 'FYI',
+      body: 'No times here.',
+      nowIso: '2026-06-01T09:00:00',
+      timezone: 'UTC',
+    })
+    expect(r).toEqual([])
+  })
+
+  it('returns [] on unparseable output rather than throwing', async () => {
+    const fetchImpl = mockFetchSequence([
+      { body: { success: true, outgoingMessage: { text: 'sorry, no idea' } } },
+    ])
+    const c = buildClient(fetchImpl as unknown as typeof fetch)
+    const r = await c.extractMeetingTimes({
+      subject: 'x',
+      body: 'y',
+      nowIso: '2026-06-01T09:00:00',
+      timezone: 'UTC',
+    })
+    expect(r).toEqual([])
+  })
+})
+
+describe('RealSynaplanClient — Synapse routing rules', () => {
+  it('listTopics maps prompts into routing topics', async () => {
+    const fetchImpl = mockFetchSequence([
+      {
+        body: {
+          success: true,
+          prompts: [
+            {
+              id: 7,
+              topic: 'billing',
+              name: '(default) billing',
+              shortDescription: 'Invoices',
+              selectionRules: 'IF subject contains "invoice" THEN topic=billing',
+              keywords: 'invoice,payment',
+              enabled: true,
+              isDefault: true,
+              isUserOverride: false,
+            },
+          ],
+        },
+      },
+    ])
+    const c = buildClient(fetchImpl as unknown as typeof fetch)
+    const topics = await c.listTopics()
+    expect(fetchImpl.mock.calls[0][0]).toBe('https://api.test/api/v1/prompts')
+    expect(topics).toEqual([
+      {
+        id: 7,
+        topic: 'billing',
+        name: '(default) billing',
+        shortDescription: 'Invoices',
+        selectionRules: 'IF subject contains "invoice" THEN topic=billing',
+        keywords: 'invoice,payment',
+        enabled: true,
+        isDefault: true,
+        isUserOverride: false,
+      },
+    ])
+  })
+
+  it('updateTopicRules PUTs only the provided fields', async () => {
+    const fetchImpl = mockFetchSequence([
+      {
+        body: {
+          success: true,
+          prompt: {
+            id: 9,
+            topic: 'support',
+            name: 'support',
+            shortDescription: '',
+            selectionRules: 'IF from contains "@acme.com" THEN topic=support',
+            keywords: null,
+            enabled: true,
+            isDefault: false,
+            isUserOverride: false,
+          },
+        },
+      },
+    ])
+    const c = buildClient(fetchImpl as unknown as typeof fetch)
+    const updated = await c.updateTopicRules(9, {
+      selectionRules: 'IF from contains "@acme.com" THEN topic=support',
+    })
+    expect(fetchImpl.mock.calls[0][0]).toBe('https://api.test/api/v1/prompts/9')
+    const init = fetchImpl.mock.calls[0][1] as RequestInit
+    expect(init.method).toBe('PUT')
+    const body = lastCallBody(fetchImpl) as Record<string, unknown>
+    expect(body).toEqual({ selectionRules: 'IF from contains "@acme.com" THEN topic=support' })
+    expect(updated.topic).toBe('support')
+  })
+
+  it('testRouting posts text+limit and maps candidates', async () => {
+    const fetchImpl = mockFetchSequence([
+      {
+        body: {
+          success: true,
+          query: 'invoice overdue',
+          candidates: [
+            { topic: 'billing', score: 0.91, stale: false },
+            { topic: 'support', score: 0.42, stale: true },
+          ],
+          latency_ms: 12.5,
+        },
+      },
+    ])
+    const c = buildClient(fetchImpl as unknown as typeof fetch)
+    const r = await c.testRouting('invoice overdue', 5)
+    expect(fetchImpl.mock.calls[0][0]).toBe('https://api.test/api/v1/prompts/test')
+    const body = lastCallBody(fetchImpl) as { text: string; limit: number }
+    expect(body).toEqual({ text: 'invoice overdue', limit: 5 })
+    expect(r.query).toBe('invoice overdue')
+    expect(r.latencyMs).toBe(12.5)
+    expect(r.candidates).toEqual([
+      { topic: 'billing', score: 0.91, stale: false },
+      { topic: 'support', score: 0.42, stale: true },
+    ])
   })
 })
 

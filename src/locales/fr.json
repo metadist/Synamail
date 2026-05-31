@@ -79,7 +79,15 @@
       "saveToRag": "Enregistrer dans la base de connaissances",
       "ask": "Demander",
       "moreFromSender": "Plus de cet expéditeur",
-      "blockSender": "Bloquer l'expéditeur"
+      "blockSender": "Bloquer l'expéditeur",
+      "findMeetingTimes": "Trouver des créneaux"
+    },
+    "meeting": {
+      "title": "Créneaux proposés",
+      "none": "Aucun créneau n'a été proposé dans cet e-mail.",
+      "unsupported": "Cet hôte Outlook ne peut pas ouvrir de formulaire de rendez-vous.",
+      "badDate": "Impossible de lire cette heure. Essayez un autre créneau.",
+      "bodyFrom": "Créé à partir de l'e-mail : {subject}"
     },
     "result": "Résultat",
     "askPlaceholder": "Posez une question sur cet e-mail…",
@@ -127,7 +135,36 @@
     "shorten": "Raccourcir la sélection",
     "translate": "Traduire la sélection",
     "insertFromRag": "Insérer depuis la base de connaissances",
-    "ragSearchPlaceholder": "Rechercher dans votre base de connaissances…"
+    "ragSearchPlaceholder": "Rechercher dans votre base de connaissances…",
+    "ragNoResults": "Aucun extrait correspondant dans votre base de connaissances."
+  },
+  "contactKb": {
+    "noContact": "Ouvrez un e-mail pour choisir un contact.",
+    "searchPlaceholder": "Rechercher les e-mails de ce contact…",
+    "search": "Rechercher",
+    "results": "E-mails enregistrés",
+    "noResults": "Rien d'enregistré pour ce contact pour l'instant.",
+    "saveCurrent": "Enregistrer l'e-mail actuel ici",
+    "saved": "Enregistré dans {group}.",
+    "ask": "Poser une question sur ce contact",
+    "askPlaceholder": "Question sur {email}…"
+  },
+  "rules": {
+    "intro": "Définissez comment Synaplan achemine vos e-mails entrants. Les règles de mots-clés Tier-0 priment immédiatement sur la classification IA.",
+    "testTitle": "Aperçu du routage",
+    "test": "Tester sur l'e-mail actuel",
+    "testEmpty": "Aucun candidat.",
+    "testNoEmail": "Ouvrez d'abord un e-mail pour tester le routage.",
+    "loading": "Chargement des sujets…",
+    "empty": "Aucun sujet routable pour l'instant.",
+    "keywords": "Mots-clés",
+    "keywordsHint": "Mots-clés séparés par des virgules acheminant vers ce sujet",
+    "selectionRules": "Règles (SI/ALORS)",
+    "readonly": "Sujet système — en lecture seule. Créez un sujet personnalisé dans Synaplan pour modifier ses règles.",
+    "save": "Enregistrer la règle",
+    "saved": "Règle enregistrée pour {topic}.",
+    "applyFromEmail": "Utiliser l'e-mail actuel",
+    "systemBadge": "système"
   },
   "settings": {
     "title": "Paramètres",

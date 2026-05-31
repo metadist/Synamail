@@ -79,7 +79,15 @@
       "saveToRag": "Guardar na base de conhecimento",
       "ask": "Perguntar",
       "moreFromSender": "Mais deste remetente",
-      "blockSender": "Bloquear remetente"
+      "blockSender": "Bloquear remetente",
+      "findMeetingTimes": "Encontrar horários"
+    },
+    "meeting": {
+      "title": "Horários propostos",
+      "none": "Nenhum horário foi proposto neste e-mail.",
+      "unsupported": "Este host do Outlook não pode abrir um formulário de compromisso.",
+      "badDate": "Não foi possível ler esse horário. Tente outro horário.",
+      "bodyFrom": "Criado a partir do e-mail: {subject}"
     },
     "result": "Resultado",
     "askPlaceholder": "Faça uma pergunta sobre este e-mail…",
@@ -127,7 +135,36 @@
     "shorten": "Encurtar a seleção",
     "translate": "Traduzir a seleção",
     "insertFromRag": "Inserir da base de conhecimento",
-    "ragSearchPlaceholder": "Pesquise na sua base de conhecimento…"
+    "ragSearchPlaceholder": "Pesquise na sua base de conhecimento…",
+    "ragNoResults": "Nenhum trecho correspondente na sua base de conhecimento."
+  },
+  "contactKb": {
+    "noContact": "Abra um e-mail para escolher um contacto.",
+    "searchPlaceholder": "Pesquisar os e-mails deste contacto…",
+    "search": "Pesquisar",
+    "results": "E-mails guardados",
+    "noResults": "Ainda nada guardado para este contacto.",
+    "saveCurrent": "Guardar o e-mail atual aqui",
+    "saved": "Guardado em {group}.",
+    "ask": "Perguntar sobre este contacto",
+    "askPlaceholder": "Pergunta sobre {email}…"
+  },
+  "rules": {
+    "intro": "Defina como o Synaplan encaminha os seus e-mails recebidos. As regras de palavras-chave Tier-0 vencem imediatamente sobre a classificação por IA.",
+    "testTitle": "Pré-visualização do encaminhamento",
+    "test": "Testar no e-mail atual",
+    "testEmpty": "Sem candidatos.",
+    "testNoEmail": "Abra primeiro um e-mail para testar o encaminhamento.",
+    "loading": "A carregar tópicos…",
+    "empty": "Ainda não há tópicos encaminháveis.",
+    "keywords": "Palavras-chave",
+    "keywordsHint": "Palavras-chave separadas por vírgulas que encaminham para este tópico",
+    "selectionRules": "Regras (SE/ENTÃO)",
+    "readonly": "Tópico do sistema — só leitura. Crie um tópico personalizado no Synaplan para editar as suas regras.",
+    "save": "Guardar regra",
+    "saved": "Regra guardada para {topic}.",
+    "applyFromEmail": "Usar o e-mail atual",
+    "systemBadge": "sistema"
   },
   "settings": {
     "title": "Definições",

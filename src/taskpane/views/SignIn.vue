@@ -13,7 +13,6 @@ const error = ref<string | null>(null)
 const status = ref<string | null>(null)
 const savedUrl = ref<string>(defaultBaseUrl())
 const baseUrlOverride = ref<string>(savedUrl.value)
-const showOverride = ref(false)
 
 function normalize(url: string): string {
   return url.trim().replace(/\/+$/, '')
@@ -62,7 +61,6 @@ async function handleClick(): Promise<void> {
   const invalid = validate(baseUrlOverride.value)
   if (invalid) {
     error.value = invalid
-    showOverride.value = true
     return
   }
   loading.value = true
@@ -92,15 +90,7 @@ async function handleClick(): Promise<void> {
       {{ t('signIn.subtitle') }}
     </p>
 
-    <ActionButton variant="primary" :loading="loading" @click="handleClick">
-      {{ loading ? t('signIn.loading') : t('signIn.button') }}
-    </ActionButton>
-
-    <button class="signin__link" type="button" @click="showOverride = !showOverride">
-      {{ t('signIn.selfHosted') }} →
-    </button>
-
-    <div v-if="showOverride" class="signin__override">
+    <div class="signin__override">
       <label for="baseUrl" class="syn-muted">{{ t('settings.synaplanInstance') }}</label>
       <input
         id="baseUrl"
@@ -114,10 +104,13 @@ async function handleClick(): Promise<void> {
         <ActionButton v-if="dirty" :block="false" @click="saveInstance">
           {{ t('common.save') }}
         </ActionButton>
-        <span class="signin__dev-badge">{{ t('signIn.devSettingsLabel') }}</span>
       </div>
       <p class="syn-muted signin__hint">{{ t('signIn.localDevHint') }}</p>
     </div>
+
+    <ActionButton variant="primary" :loading="loading" @click="handleClick">
+      {{ loading ? t('signIn.loading') : t('signIn.button') }}
+    </ActionButton>
 
     <Toast v-if="status" kind="success" :message="status" />
     <Toast v-if="error" kind="error" :message="error" />
@@ -144,14 +137,6 @@ async function handleClick(): Promise<void> {
   margin: 0 0 var(--syn-space-3);
   text-align: center;
 }
-.signin__link {
-  background: none;
-  border: 0;
-  color: var(--syn-brand-600);
-  text-decoration: underline;
-  padding: var(--syn-space-1);
-  align-self: center;
-}
 .signin__override {
   display: flex;
   flex-direction: column;
@@ -167,14 +152,6 @@ async function handleClick(): Promise<void> {
   display: flex;
   align-items: center;
   gap: var(--syn-space-2);
-}
-.signin__dev-badge {
-  font-size: var(--syn-font-size-sm);
-  font-weight: 600;
-  color: var(--syn-muted);
-  border: 1px solid var(--syn-border);
-  border-radius: 999px;
-  padding: 2px var(--syn-space-2);
 }
 .signin__hint {
   margin: 0;

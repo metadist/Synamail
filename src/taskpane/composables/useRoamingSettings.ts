@@ -98,6 +98,37 @@ export function clearSettings(): Promise<void> {
   })
 }
 
+/**
+ * Wipe ALL Synamail-owned roaming + local state. Removes the auth payload,
+ * the preferred base URL, and any `synamail.*` keys in localStorage. Used by
+ * the Settings → "Reset saved settings" button so a developer can switch
+ * cleanly between dev/live servers without leftover identity baggage.
+ */
+export function clearAllSettings(): Promise<void> {
+  const s = store()
+  s.remove(KEY)
+  s.remove(BASE_URL_KEY)
+  try {
+    const ls = globalThis.localStorage
+    if (ls) {
+      const stale: string[] = []
+      for (let i = 0; i < ls.length; i += 1) {
+        const k = ls.key(i)
+        if (k && k.startsWith('synamail.')) stale.push(k)
+      }
+      for (const k of stale) ls.removeItem(k)
+    }
+  } catch {
+    // localStorage may be unavailable inside the Office sandbox — ignore.
+  }
+  return new Promise((resolve, reject) => {
+    s.saveAsync((res?: Office.AsyncResult<void>) => {
+      if (res && res.status === Office.AsyncResultStatus.Succeeded) resolve()
+      else reject(res?.error ?? new Error('saveAsync failed'))
+    })
+  })
+}
+
 export function patchSettings(patch: Partial<RoamingSettings>): Promise<void> {
   const current = loadSettings()
   if (!current) {

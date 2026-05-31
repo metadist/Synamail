@@ -91,6 +91,35 @@ files**, Node 22 **and** 24, in `mode: test` (where `import.meta.env.DEV` is
 - Don't rely on machine locale, timezone, network, or wall-clock time. Inject or stub them.
 - A test that only passes because you have `.env.local` set is a broken test — it will fail in CI.
 
+### Authentication / Sign-in flow — read the doc FIRST
+
+The sign-in / sign-out flow spans **two repos** (this add-in + `synaplan/frontend`),
+is subtle, and has regressed repeatedly (most painfully: "Connect says success but
+the dialog never closes"). **Before changing anything in the auth path, read and
+follow [`docs/AUTH_FLOW.md`](docs/AUTH_FLOW.md)** — it is the authoritative,
+field-tested reference.
+
+Non-negotiable invariants (full list + rationale in the doc):
+
+- **No mock mode.** Sign-in is always a real round-trip to the server URL the user
+  picks. Never reintroduce a mock relay, `mock-key-` auto-selection, or a
+  `MockSynaplanClient`.
+- **The login round-trip MUST preserve the `redirect` (relay) param.** In
+  `synaplan/frontend/src/views/AddinConnectView.vue`, the unauthenticated branch
+  must use `route.fullPath` — reconstructing a subset drops `redirect` and breaks
+  the desktop dialog close.
+- **`buildDialogUrl` must send `redirect=relayUrl()`**, and the relay
+  (`src/dialog/auth-relay.html`) must be same-origin as the taskpane **and load
+  Office.js**.
+- The `state` nonce must round-trip and is re-validated — a mismatch is a correct
+  rejection, not a bug to remove.
+- Switching local ↔ live is **Settings → Reset saved settings**, then sign in to a
+  different server URL. Local bridge = `https://localhost:5174`, live =
+  `https://web.synaplan.com`.
+
+If you change any file in the flow, re-verify every step in `docs/AUTH_FLOW.md`
+and update that doc in the same change.
+
 ### Cross-repo PR coordination
 
 Sprint 2 includes one **cross-repo change**: the `/addin/connect` Vue route added inside `@/wwwroot/synaplan/frontend/` (router entry + view). It is **not** a separate "synaplan-website" repo — that doesn't exist. The bridge page builds into the same Docker image as the rest of the app; production picks it up via `synaplan-platform` pulling the new `ghcr.io/metadist/synaplan:latest`. See `docs/SYNAPLAN_INTEGRATION.md`.
@@ -206,6 +235,7 @@ make generate-schemas  # Regenerate Zod schemas from Synaplan OpenAPI spec
 - [`planning/STEPS.md`](planning/STEPS.md) — step-by-step execution.
 - [`planning/GUI_DEFINITIONS.md`](planning/GUI_DEFINITIONS.md) — UI spec + assets.
 - [`planning/APPSOURCE_CHECKLIST.md`](planning/APPSOURCE_CHECKLIST.md) — Microsoft submission gate.
+- [`docs/AUTH_FLOW.md`](docs/AUTH_FLOW.md) — **authoritative sign-in / sign-out flow** (read before touching auth).
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — auth, API surface, security.
 - [`docs/FEATURES.md`](docs/FEATURES.md) — feature contract.
 - [`docs/GLOSSARY.md`](docs/GLOSSARY.md) — canonical terminology.

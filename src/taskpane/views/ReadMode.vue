@@ -17,8 +17,8 @@ import {
 import { getReadItemAsFile, useOutlookItem } from '@/taskpane/composables/useOutlookItem'
 import { useOutlookMailbox } from '@/taskpane/composables/useOutlookMailbox'
 import { useSynaplanClient } from '@/taskpane/composables/useSynaplanClient'
-import { go } from '@/taskpane/router'
-import type { SenderHistoryResult } from '@shared/types'
+import { go, openContactKb } from '@/taskpane/router'
+import type { MeetingProposal, SenderHistoryResult } from '@shared/types'
 
 const { t } = useI18n()
 const { item } = useOutlookItem()
@@ -35,8 +35,10 @@ type ActionKey =
   | 'senderHistory'
   | 'senderSummary'
   | 'block'
+  | 'meeting'
   | null
 const active = ref<ActionKey>(null)
+const meetingProposals = ref<MeetingProposal[] | null>(null)
 const result = ref<string>('')
 const error = ref<string | null>(null)
 const status = ref<string | null>(null)
@@ -238,6 +240,87 @@ async function ask(): Promise<void> {
     question.value = ''
   }
 }
+
+function userTimezone(): string {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
+  } catch {
+    return 'UTC'
+  }
+}
+
+/** Local wall-clock ISO 8601 (no offset) — the reference "now" for the AI. */
+function localNowIso(): string {
+  const d = new Date()
+  const pad = (n: number): string => String(n).padStart(2, '0')
+  return (
+    `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}` +
+    `T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
+  )
+}
+
+async function findMeetingTimes(): Promise<void> {
+  status.value = null
+  meetingProposals.value = null
+  const r = await run('meeting', () =>
+    call((c) =>
+      c.extractMeetingTimes({
+        subject: item.value.subject,
+        body: item.value.bodyText,
+        from: item.value.from,
+        nowIso: localNowIso(),
+        timezone: userTimezone(),
+      }),
+    ),
+  )
+  if (r) meetingProposals.value = r
+}
+
+function appointmentSupported(): boolean {
+  const mb = (typeof Office !== 'undefined' ? Office.context?.mailbox : undefined) as
+    | { displayNewAppointmentForm?: unknown }
+    | undefined
+  return !!mb && typeof mb.displayNewAppointmentForm === 'function'
+}
+
+function formatSlot(p: MeetingProposal): string {
+  const start = new Date(p.startIso)
+  if (Number.isNaN(start.getTime())) return p.title
+  const when = start.toLocaleString(undefined, {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+  return `${p.title} — ${when}`
+}
+
+function addToCalendar(p: MeetingProposal): void {
+  error.value = null
+  if (!appointmentSupported()) {
+    error.value = t('read.meeting.unsupported')
+    return
+  }
+  const start = new Date(p.startIso)
+  const end = new Date(p.endIso)
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+    error.value = t('read.meeting.badDate')
+    return
+  }
+  try {
+    Office.context.mailbox.displayNewAppointmentForm({
+      requiredAttendees: senderEmail.value ? [senderEmail.value] : [],
+      start,
+      end,
+      subject: p.title,
+      location: p.location,
+      body: t('read.meeting.bodyFrom', { subject: item.value.subject }),
+    })
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : String(err)
+  }
+}
 </script>
 
 <template>
@@ -276,7 +359,24 @@ async function ask(): Promise<void> {
         <ActionButton :loading="active === 'save'" @click="openSaveDialog">
           {{ t('read.actions.saveToRag') }}
         </ActionButton>
+
+        <ActionButton :loading="active === 'meeting'" @click="findMeetingTimes">
+          {{ t('read.actions.findMeetingTimes') }}
+        </ActionButton>
       </div>
+    </div>
+
+    <div v-if="meetingProposals" class="syn-card">
+      <h3 class="syn-card-title">{{ t('read.meeting.title') }}</h3>
+      <ul v-if="meetingProposals.length" class="read__slots">
+        <li v-for="(p, i) in meetingProposals" :key="i">
+          <button type="button" class="read__slot" @click="addToCalendar(p)">
+            <span>{{ formatSlot(p) }}</span>
+            <span v-if="p.location" class="syn-card-sub">{{ p.location }}</span>
+          </button>
+        </li>
+      </ul>
+      <p v-else class="syn-muted">{{ t('read.meeting.none') }}</p>
     </div>
 
     <pre v-if="result" class="read__result">{{ result }}</pre>
@@ -287,7 +387,7 @@ async function ask(): Promise<void> {
       <h3 class="syn-card-title">{{ t('read.senderTitle') }}</h3>
       <p class="syn-card-sub">{{ senderEmail }}</p>
       <div class="syn-stack">
-        <ActionButton @click="go('contact-kb')">{{ t('read.contactKb') }}</ActionButton>
+        <ActionButton @click="openContactKb(senderEmail)">{{ t('read.contactKb') }}</ActionButton>
         <ActionButton :loading="active === 'senderHistory'" @click="loadSenderHistory">
           {{ t('read.actions.moreFromSender') }}
         </ActionButton>
@@ -367,5 +467,27 @@ async function ask(): Promise<void> {
   border: 1px solid var(--syn-border);
   border-radius: var(--syn-radius-sm);
   font-family: inherit;
+}
+.read__slots {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--syn-space-2);
+}
+.read__slot {
+  width: 100%;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--syn-surface);
+  border: 1px solid var(--syn-border);
+  padding: var(--syn-space-2);
+  border-radius: var(--syn-radius-sm);
+  font-family: inherit;
+  font-size: var(--syn-font-size-sm);
+  cursor: pointer;
 }
 </style>

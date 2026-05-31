@@ -17,6 +17,18 @@ export type ViewName =
 export const currentView = ref<ViewName>('sign-in')
 const history: ViewName[] = []
 
+/**
+ * The contact email the ContactKnowledgeBase view is scoped to. Set via
+ * `openContactKb(email)` before navigating, so the view knows which
+ * `contact:<email>` RAG group to search / save into. Null = no contact picked.
+ */
+export const selectedContactEmail = ref<string | null>(null)
+
+export function openContactKb(email: string): void {
+  selectedContactEmail.value = email.trim().toLowerCase() || null
+  go('contact-kb')
+}
+
 export function go(view: ViewName): void {
   if (currentView.value !== view) {
     history.push(currentView.value)
