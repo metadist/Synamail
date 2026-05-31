@@ -244,6 +244,33 @@ describe('RealSynaplanClient — ask (chat round-trip)', () => {
     expect(fetchImpl.mock.calls[0][0]).toBe('https://api.test/api/v1/messages/send')
   })
 
+  it('forwards attached fileIds (email images) to /messages/send', async () => {
+    const fetchImpl = mockFetchSequence([
+      { body: { success: true, outgoingMessage: { text: 'I see wines in a basket' } } },
+    ])
+    const c = buildClient(fetchImpl as unknown as typeof fetch)
+    const r = await c.ask({
+      conversationId: 'thread-img',
+      question: 'what is in this screenshot?',
+      chatId: 5,
+      fileIds: [101, 102],
+    })
+    expect(r.answer).toBe('I see wines in a basket')
+    const body = lastCallBody(fetchImpl) as { trackId: number; fileIds: number[] }
+    expect(body.trackId).toBe(5)
+    expect(body.fileIds).toEqual([101, 102])
+  })
+
+  it('omits fileIds from the body when none are attached', async () => {
+    const fetchImpl = mockFetchSequence([
+      { body: { success: true, outgoingMessage: { text: 'ok' } } },
+    ])
+    const c = buildClient(fetchImpl as unknown as typeof fetch)
+    await c.ask({ conversationId: 't', question: 'q', chatId: 1 })
+    const body = lastCallBody(fetchImpl) as Record<string, unknown>
+    expect('fileIds' in body).toBe(false)
+  })
+
   it('embeds emailContext into the prompt when provided', async () => {
     const fetchImpl = mockFetchSequence([
       { body: { success: true, outgoingMessage: { text: 'answer' } } },

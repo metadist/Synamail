@@ -90,6 +90,13 @@ export interface ChatTurnInput {
    * persisted by the caller for subsequent turns.
    */
   chatId?: number
+  /**
+   * Synaplan file ids to attach to this turn (already uploaded via
+   * `fileUpload`). Used to give the AI vision over email images/screenshots —
+   * each file's extracted text/vision description is injected as context by
+   * `POST /messages/send`.
+   */
+  fileIds?: number[]
 }
 
 export interface ChatTurnResult {

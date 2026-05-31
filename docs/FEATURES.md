@@ -205,3 +205,28 @@ Note: in the user's brief this was called "RULE integration". Synaplan's actual 
 | Self-hosted instance override         | 2      | n/a (client-side)                                             | Settings → "Use a self-hosted…" | Live                        |
 
 Anything not in this table is either deferred to a future phase (Smart Alerts, `OnNewMessageCompose` autoload, mobile) or out of scope for v1.
+
+## 7. Mail Routes — per-email AI agent triggers (design / RFC)
+
+> **Not** Synaplan's Synapse Routing (§5, which selects a system-prompt/topic).
+> A **Mail Route** is a Synamail automation: **WHEN** a mail matches conditions
+> **THEN** run one or more AI/agent actions on it.
+
+**User value:** define rules like _"from Oliver AND requests a meeting → suggest
+3 free times"_, _"from `a@b.c` AND English → translate & show"_, or _"always →
+add to knowledge group `contracts`"_. Conditions can be deterministic (sender,
+keyword, attachment) or AI-evaluated (language, intent, category); actions can be
+silent/auto (add to KB) or interactive (show translation, pick a meeting slot).
+
+**Constraint:** an Outlook add-in is not a background service — routes fire when
+the user is in Outlook and the matching mail surfaces (pinned taskpane +
+`ItemChanged`), opt-in per route, transparent + undoable. A 24/7 server-side
+path (Synaplan `InboundEmailHandler`) is an optional later phase.
+
+**Endpoints:** reuses existing actions — `messages/send` (translate / summarise /
+classify / intent / draft reply), `files/upload` (add to knowledge), plus a
+future Graph `Calendars.Read` for the meeting agent's free/busy lookup.
+
+Full model, action catalog (with feasibility), data model, trust checklist, and
+phased plan live in [`MAIL_ROUTES.md`](MAIL_ROUTES.md). **Not yet implemented** —
+design-first per the 2026-05-31 decision.

@@ -265,7 +265,7 @@ export class RealSynaplanClient implements SynaplanClient {
     const prefix = input.emailContext
       ? `${askPrompt()}\n\n[email context]\n${input.emailContext}\n\n[question]\n`
       : `${askPrompt()}\n\n`
-    const answer = await this.sendChat(`${prefix}${input.question}`, chatId)
+    const answer = await this.sendChat(`${prefix}${input.question}`, chatId, input.fileIds)
     return { chatId, answer }
   }
 
@@ -281,7 +281,11 @@ export class RealSynaplanClient implements SynaplanClient {
       }
       chatId = created.chat.id
     }
-    const answer = await this.sendChat(`${simpleChatPrompt()}\n\n${input.question}`, chatId)
+    const answer = await this.sendChat(
+      `${simpleChatPrompt()}\n\n${input.question}`,
+      chatId,
+      input.fileIds,
+    )
     return { chatId, answer }
   }
 
@@ -429,9 +433,10 @@ export class RealSynaplanClient implements SynaplanClient {
   // Internal: AI chat round-trip
   // -------------------------------------------------------------------------
 
-  private async sendChat(message: string, trackId?: number): Promise<string> {
+  private async sendChat(message: string, trackId?: number, fileIds?: number[]): Promise<string> {
     const body: Record<string, unknown> = { message }
     if (trackId !== undefined) body.trackId = trackId
+    if (fileIds && fileIds.length > 0) body.fileIds = fileIds
     const res = await this.request<MessagesSendResponse>('/api/v1/messages/send', {
       method: 'POST',
       body: JSON.stringify(body),

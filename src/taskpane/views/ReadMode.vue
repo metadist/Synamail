@@ -14,7 +14,12 @@ import {
   setChatIdForConversation,
   setLastRagGroupId,
 } from '@/taskpane/composables/useRoamingSettings'
-import { getReadItemAsFile, useOutlookItem } from '@/taskpane/composables/useOutlookItem'
+import {
+  countImageAttachments,
+  getImageAttachments,
+  getReadItemAsFile,
+  useOutlookItem,
+} from '@/taskpane/composables/useOutlookItem'
 import { useOutlookMailbox } from '@/taskpane/composables/useOutlookMailbox'
 import { useSynaplanClient } from '@/taskpane/composables/useSynaplanClient'
 import { go, openContactKb } from '@/taskpane/router'
@@ -54,6 +59,10 @@ const senderEmail = computed(() => item.value.from ?? '')
 const conversationKey = computed(
   () => item.value.conversationId ?? `synamail:${item.value.subject}`,
 )
+const imageCount = computed(() => countImageAttachments(item.value))
+// Cache the uploaded image file ids so follow-up questions in the same email
+// re-reference them (cheap) instead of re-uploading + re-running Vision AI.
+const imageFileIds = ref<number[]>([])
 
 async function run<T>(key: NonNullable<ActionKey>, fn: () => Promise<T | null>): Promise<T | null> {
   active.value = key
@@ -212,21 +221,48 @@ async function handleBlockConfirm(payload: { alsoCleanExisting: boolean }): Prom
   }
 }
 
+/**
+ * Upload the email's images to Synaplan (once) so the AI can "see" them.
+ * Synaplan's Vision AI extracts text/description on upload; we then attach the
+ * resulting file ids to the chat turn. Cached so follow-ups don't re-upload.
+ */
+async function ensureImageFileIds(): Promise<number[]> {
+  if (imageFileIds.value.length > 0 || imageCount.value === 0) return imageFileIds.value
+  const images = await getImageAttachments(item.value)
+  const ids: number[] = []
+  for (const img of images) {
+    const r = await call((c) =>
+      c.fileUpload({
+        filename: img.filename,
+        contentBase64: img.contentBase64,
+        mimeType: img.mimeType,
+        processLevel: 'extract',
+        metadata: { source: 'outlook-email-image', subject: item.value.subject },
+      }),
+    )
+    if (r?.fileId) ids.push(r.fileId)
+  }
+  imageFileIds.value = ids
+  return ids
+}
+
 async function ask(): Promise<void> {
   const q = question.value.trim()
   if (!q) return
   const conversationId = conversationKey.value
   const chatId = getChatIdForConversation(conversationId)
-  const r = await run('ask', () =>
-    call((c) =>
+  const r = await run('ask', async () => {
+    const fileIds = await ensureImageFileIds()
+    return call((c) =>
       c.ask({
         conversationId,
         question: q,
         emailContext: item.value.bodyText,
         chatId,
+        fileIds: fileIds.length ? fileIds : undefined,
       }),
-    ),
-  )
+    )
+  })
   if (r) {
     if (!chatId && r.chatId) {
       try {
@@ -404,6 +440,9 @@ function addToCalendar(p: MeetingProposal): void {
 
     <div class="syn-card">
       <h3 class="syn-card-title">{{ t('read.askTitle') }}</h3>
+      <p v-if="imageCount > 0" class="syn-card-sub read__image-hint">
+        {{ t('read.askImageHint', { n: imageCount }) }}
+      </p>
       <div v-for="(turn, i) in askHistory" :key="i" class="read__turn">
         <p><strong>You:</strong> {{ turn.q }}</p>
         <p><strong>Synaplan:</strong> {{ turn.a }}</p>

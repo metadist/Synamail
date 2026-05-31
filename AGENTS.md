@@ -192,15 +192,41 @@ make generate-schemas  # Regenerate Zod schemas from Synaplan OpenAPI spec
 - All UI text through `vue-i18n`.
 - **Always update BOTH** `src/locales/en.json` AND `src/locales/de.json`.
 
+### Styling & form readability (MANDATORY — must be consistent + dark-mode safe)
+
+Every UI surface must be readable and visually consistent with the existing
+views in **both light and dark mode**. The recurring bug is form fields that
+render as a white box with black text on the dark pane because they never set a
+background/color.
+
+- **Use ONLY the `--syn-*` design tokens** (`tokens.css`) for color, background,
+  border, spacing, radius, and font. Never hardcode hex colors, and never use a
+  raw/browser-default color that isn't a token.
+- **Form controls inherit the shared baseline in `app.css`** (`input` /
+  `textarea` / `select` → `--syn-bg` background, `--syn-text` color, tokenized
+  border, `--syn-muted` placeholder, brand focus ring, `--syn-surface` disabled).
+  In a component you may tweak **layout only** (width, rows, flex). **NEVER**
+  set `background`/`color` on a field to anything other than a `--syn-*` token,
+  and don't leave them unset expecting a default — the global rule already
+  handles it.
+- **Match existing patterns**: reuse `.syn-card`, `.syn-card-title`,
+  `.syn-card-sub`, `.syn-view-header`, `.syn-row`, `.syn-stack`, `.syn-muted`,
+  and `ActionButton`/`Toast` rather than re-inventing per view.
+- **Verify dark mode** for any new view/field (DevTools → emulate
+  `prefers-color-scheme: dark`) before considering UI work done. Placeholder and
+  disabled text must stay legible (use `--syn-muted`, never a faint custom grey).
+- If a token is missing for a need, **add it to `tokens.css` (light + dark)** —
+  don't inline a one-off color.
+
 ## Code Style Quick Reference
 
-| Area       | Standard                                                                  |
-| ---------- | ------------------------------------------------------------------------- |
-| TypeScript | Strict mode, no `any`, single quotes, **no semicolons**.                  |
-| Vue        | Composition API, `<script setup lang="ts">`, TypeScript.                  |
-| CSS        | Fluent UI design tokens via CSS variables (no Tailwind, no Fluent React). |
-| Imports    | Sorted by `eslint-plugin-import` + organize-imports.                      |
-| HTTP       | `fetch` + Zod-validated schemas, generated from Synaplan OpenAPI.         |
+| Area       | Standard                                                                                                                                                          |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| TypeScript | Strict mode, no `any`, single quotes, **no semicolons**.                                                                                                          |
+| Vue        | Composition API, `<script setup lang="ts">`, TypeScript.                                                                                                          |
+| CSS        | Fluent UI design tokens via CSS variables (no Tailwind, no Fluent React). Form controls inherit the shared `app.css` baseline — see "Styling & form readability". |
+| Imports    | Sorted by `eslint-plugin-import` + organize-imports.                                                                                                              |
+| HTTP       | `fetch` + Zod-validated schemas, generated from Synaplan OpenAPI.                                                                                                 |
 
 ## Architecture Patterns
 

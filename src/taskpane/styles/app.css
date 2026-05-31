@@ -56,6 +56,44 @@ a {
   font-size: var(--syn-font-size-sm);
 }
 
+/* Shared form controls — ONE consistent, readable treatment for every text
+   input / textarea / select across all views, in BOTH light and dark mode.
+   This is the baseline so no field ever falls back to the browser default
+   (a white box with black text on the dark pane — the contrast bug). Views
+   may tweak layout (width, rows) but MUST NOT override color/background with
+   anything other than the --syn-* tokens. See AGENTS.md "Styling & form
+   readability". */
+input:not([type='checkbox']):not([type='radio']):not([type='range']),
+textarea,
+select {
+  font-family: inherit;
+  font-size: var(--syn-font-size-md);
+  color: var(--syn-text);
+  background: var(--syn-bg);
+  border: 1px solid var(--syn-border);
+  border-radius: var(--syn-radius-sm);
+  padding: var(--syn-space-2);
+}
+input::placeholder,
+textarea::placeholder {
+  color: var(--syn-muted);
+  opacity: 1; /* Firefox dims placeholders by default — keep them legible. */
+}
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--syn-brand-500);
+  outline-offset: 1px;
+  border-color: var(--syn-brand-500);
+}
+input:disabled,
+textarea:disabled,
+select:disabled {
+  background: var(--syn-surface);
+  color: var(--syn-muted);
+  cursor: not-allowed;
+}
+
 /* Shared section card — one consistent box style across every view:
    headline → optional one-line description → content/action. */
 .syn-card {

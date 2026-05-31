@@ -91,6 +91,7 @@
     },
     "result": "Ergebnis",
     "askPlaceholder": "Frage zu dieser E-Mail…",
+    "askImageHint": "{n} Bild(er) aus dieser E-Mail werden mit deiner Frage an Synaplan gesendet.",
     "contactPill": "Kontakt: {email}",
     "saveDialog": {
       "title": "In Wissensdatenbank speichern",
