@@ -5,6 +5,8 @@
  * we generate them from Synaplan's OpenAPI spec (see docs/FEATURES.md §6).
  */
 
+import type { MailRoutesState } from './mail-routes/types'
+
 export interface SignInPayload {
   state: string
   apiKey: string
@@ -29,6 +31,12 @@ export interface RoamingSettings {
    * target language — that lives in each view's local `targetLang`.
    */
   language?: 'auto' | 'en' | 'de' | 'fr' | 'es' | 'it' | 'pt'
+  /**
+   * Mail Routes — the user's per-email AI automations (see
+   * `src/shared/mail-routes/types.ts` and docs/MAIL_ROUTES.md). Absent until
+   * the user creates their first route.
+   */
+  routes?: MailRoutesState
 }
 
 export interface SummariseInput {
