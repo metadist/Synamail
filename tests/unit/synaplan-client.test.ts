@@ -460,102 +460,59 @@ describe('RealSynaplanClient — extractMeetingTimes', () => {
   })
 })
 
-describe('RealSynaplanClient — Synapse routing rules', () => {
-  it('listTopics maps prompts into routing topics', async () => {
-    const fetchImpl = mockFetchSequence([
-      {
-        body: {
-          success: true,
-          prompts: [
-            {
-              id: 7,
-              topic: 'billing',
-              name: '(default) billing',
-              shortDescription: 'Invoices',
-              selectionRules: 'IF subject contains "invoice" THEN topic=billing',
-              keywords: 'invoice,payment',
-              enabled: true,
-              isDefault: true,
-              isUserOverride: false,
-            },
-          ],
-        },
-      },
-    ])
-    const c = buildClient(fetchImpl as unknown as typeof fetch)
-    const topics = await c.listTopics()
-    expect(fetchImpl.mock.calls[0][0]).toBe('https://api.test/api/v1/prompts')
-    expect(topics).toEqual([
-      {
-        id: 7,
-        topic: 'billing',
-        name: '(default) billing',
-        shortDescription: 'Invoices',
-        selectionRules: 'IF subject contains "invoice" THEN topic=billing',
-        keywords: 'invoice,payment',
-        enabled: true,
-        isDefault: true,
-        isUserOverride: false,
-      },
-    ])
-  })
+describe('RealSynaplanClient — categorize', () => {
+  const cats = [
+    { name: 'Blue Category', meaning: 'project XYZ from @bmw.de' },
+    { name: 'Green Category', meaning: 'invoices and billing' },
+  ]
 
-  it('updateTopicRules PUTs only the provided fields', async () => {
+  it('returns the matched category from a JSON reply', async () => {
     const fetchImpl = mockFetchSequence([
       {
         body: {
           success: true,
-          prompt: {
-            id: 9,
-            topic: 'support',
-            name: 'support',
-            shortDescription: '',
-            selectionRules: 'IF from contains "@acme.com" THEN topic=support',
-            keywords: null,
-            enabled: true,
-            isDefault: false,
-            isUserOverride: false,
+          outgoingMessage: {
+            text: '{"category":"Blue Category","confidence":0.88,"reasoning":"mentions XYZ + bmw.de"}',
           },
         },
       },
     ])
     const c = buildClient(fetchImpl as unknown as typeof fetch)
-    const updated = await c.updateTopicRules(9, {
-      selectionRules: 'IF from contains "@acme.com" THEN topic=support',
+    const r = await c.categorize({
+      subject: 'XYZ update',
+      body: 'from the bmw team',
+      from: 'a@bmw.de',
+      categories: cats,
     })
-    expect(fetchImpl.mock.calls[0][0]).toBe('https://api.test/api/v1/prompts/9')
-    const init = fetchImpl.mock.calls[0][1] as RequestInit
-    expect(init.method).toBe('PUT')
-    const body = lastCallBody(fetchImpl) as Record<string, unknown>
-    expect(body).toEqual({ selectionRules: 'IF from contains "@acme.com" THEN topic=support' })
-    expect(updated.topic).toBe('support')
+    expect(fetchImpl.mock.calls[0][0]).toBe('https://api.test/api/v1/messages/send')
+    expect(r).toEqual({
+      category: 'Blue Category',
+      confidence: 0.88,
+      reasoning: 'mentions XYZ + bmw.de',
+    })
   })
 
-  it('testRouting posts text+limit and maps candidates', async () => {
+  it('returns null when the AI says none', async () => {
+    const fetchImpl = mockFetchSequence([
+      { body: { success: true, outgoingMessage: { text: '{"category":"none","confidence":0}' } } },
+    ])
+    const c = buildClient(fetchImpl as unknown as typeof fetch)
+    const r = await c.categorize({ subject: 's', body: 'b', categories: cats })
+    expect(r).toBeNull()
+  })
+
+  it('returns null for a hallucinated category not in the candidate list', async () => {
     const fetchImpl = mockFetchSequence([
       {
         body: {
           success: true,
-          query: 'invoice overdue',
-          candidates: [
-            { topic: 'billing', score: 0.91, stale: false },
-            { topic: 'support', score: 0.42, stale: true },
-          ],
-          latency_ms: 12.5,
+          outgoingMessage: { text: '{"category":"Purple Category","confidence":0.9}' },
         },
       },
     ])
     const c = buildClient(fetchImpl as unknown as typeof fetch)
-    const r = await c.testRouting('invoice overdue', 5)
-    expect(fetchImpl.mock.calls[0][0]).toBe('https://api.test/api/v1/prompts/test')
-    const body = lastCallBody(fetchImpl) as { text: string; limit: number }
-    expect(body).toEqual({ text: 'invoice overdue', limit: 5 })
-    expect(r.query).toBe('invoice overdue')
-    expect(r.latencyMs).toBe(12.5)
-    expect(r.candidates).toEqual([
-      { topic: 'billing', score: 0.91, stale: false },
-      { topic: 'support', score: 0.42, stale: true },
-    ])
+    const r = await c.categorize({ subject: 's', body: 'b', categories: cats })
+    expect(r).toBeNull()
   })
 })
 

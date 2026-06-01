@@ -6,7 +6,6 @@ import Home from './views/Home.vue'
 import ReadMode from './views/ReadMode.vue'
 import ComposeMode from './views/ComposeMode.vue'
 import Settings from './views/Settings.vue'
-import RuleEditor from './views/RuleEditor.vue'
 import MailRoutes from './views/MailRoutes.vue'
 import ContactKnowledgeBase from './views/ContactKnowledgeBase.vue'
 import { currentView, go } from './router'
@@ -21,7 +20,6 @@ const components = {
   read: ReadMode,
   compose: ComposeMode,
   settings: Settings,
-  'rule-editor': RuleEditor,
   'mail-routes': MailRoutes,
   'contact-kb': ContactKnowledgeBase,
 } as const

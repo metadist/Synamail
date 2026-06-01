@@ -11,7 +11,6 @@ export type ViewName =
   | 'read'
   | 'compose'
   | 'settings'
-  | 'rule-editor'
   | 'mail-routes'
   | 'contact-kb'
 
