@@ -1,7 +1,13 @@
 # Synamail Mail Routes — Design (per-email AI agent triggers)
 
-**Status:** Design / RFC. Not yet implemented. Owner: Synamail. Companion to
-[`FEATURES.md`](FEATURES.md) and [`ARCHITECTURE.md`](ARCHITECTURE.md).
+**Status:** Phase 1 in progress. The **foundation has landed** — the route
+data model, roaming persistence, the pure-logic core (ICS builder, sender
+matcher, calendar-conflict detection, translate-before-ingest planner) with
+unit tests, and the **"Mail Routes" config view** (three route kinds: meeting /
+date helper, add-to-project, newsletter knowledge base). The **runtime engine**
+(trigger wiring on `ItemChanged`, calendar read, attachment fetch, AI intent
+evaluation, and the action outputs) is the next increment. Owner: Synamail.
+Companion to [`FEATURES.md`](FEATURES.md) and [`ARCHITECTURE.md`](ARCHITECTURE.md).
 
 > **Read this first — terminology.** A "**Mail Route**" here is a Synamail
 > automation: **WHEN** a mail matches conditions **THEN** run one or more
@@ -17,9 +23,16 @@
 
 1. **Naming.** The existing Synapse-Routing view (`RuleEditor.vue`) is renamed
    **"Synaplan topics"** so "Routes" only ever means Mail Routes. (Done.)
-2. **Meeting agent.** Accept the **Graph / NAA** dependency to read the user's
-   **free/busy** and propose genuinely open slots. We do **not** auto-create or
-   override meetings — we suggest, the user confirms.
+2. **Meeting agent.** Read the calendar to detect conflicts and propose open
+   slots. We do **not** auto-create or override meetings — we suggest, the user
+   confirms. **Calendar-read path (revised 2026-06-01): EWS first.** The
+   existing-meeting check uses an EWS `CalendarView` lookup (`useOutlookMailbox`
+   already uses EWS heavily), which ships **without an Azure app registration
+   or admin consent** but is limited to classic Outlook desktop + Outlook on the
+   Web. The conflict-detection logic (`findConflict` in
+   `shared/mail-routes/match.ts`) is pure and host-agnostic, so a Graph / NAA
+   provider can be swapped in later for "new Outlook for Windows" without
+   touching the engine.
 3. **ICS is a must.** The meeting agent generates a standards-compliant **`.ics`
    (VEVENT)** the user can attach to a reply to send the invite — alongside the
    "add to my calendar" path. (Reverses the earlier ICS-out-of-scope call.)

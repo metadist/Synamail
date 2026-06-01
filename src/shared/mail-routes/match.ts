@@ -52,9 +52,7 @@ export function senderMatches(from: string | undefined, patterns: string[]): boo
  * senders would match everything, which is never the intent for v1).
  */
 export function routesForSender(routes: MailRoute[], from: string | undefined): MailRoute[] {
-  return routes.filter(
-    (r) => r.enabled && r.senders.length > 0 && senderMatches(from, r.senders),
-  )
+  return routes.filter((r) => r.enabled && r.senders.length > 0 && senderMatches(from, r.senders))
 }
 
 // ---------------------------------------------------------------------------
@@ -89,10 +87,7 @@ export function slotsOverlap(a: TimeSlot, b: TimeSlot): boolean {
  * Find the first existing calendar event that conflicts with `proposed`.
  * Returns `null` when the slot is free.
  */
-export function findConflict(
-  proposed: TimeSlot,
-  events: CalendarEvent[],
-): CalendarEvent | null {
+export function findConflict(proposed: TimeSlot, events: CalendarEvent[]): CalendarEvent | null {
   for (const ev of events) {
     if (slotsOverlap(proposed, ev)) return ev
   }

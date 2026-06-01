@@ -81,10 +81,10 @@ describe('planIngest', () => {
   })
 
   it('honours includeAttachments=false', () => {
-    const plan = planIngest(
-      source({ bodyText: 'short', attachments: [{ name: 'spec.pdf' }] }),
-      { ...route, includeAttachments: false },
-    )
+    const plan = planIngest(source({ bodyText: 'short', attachments: [{ name: 'spec.pdf' }] }), {
+      ...route,
+      includeAttachments: false,
+    })
     expect(plan.artifacts).toHaveLength(0)
   })
 })

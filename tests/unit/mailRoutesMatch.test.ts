@@ -44,7 +44,14 @@ describe('routesForSender', () => {
   const routes: MailRoute[] = [
     { ...base, id: '1', kind: 'meeting', enabled: true },
     { ...base, id: '2', kind: 'meeting', enabled: false },
-    { id: '3', kind: 'meeting', enabled: true, name: 'no-senders', senders: [], durationMinutes: 30 },
+    {
+      id: '3',
+      kind: 'meeting',
+      enabled: true,
+      name: 'no-senders',
+      senders: [],
+      durationMinutes: 30,
+    },
   ]
 
   it('keeps only enabled routes with a matching, non-empty sender list', () => {

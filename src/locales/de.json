@@ -167,6 +167,56 @@
     "applyFromEmail": "Aktuelle E-Mail verwenden",
     "systemBadge": "System"
   },
+  "mailRoutes": {
+    "title": "Mail-Routen",
+    "intro": "Automatisierungen, die KI-Aktionen auf eingehende Mails bestimmter Absender anwenden — wie Outlook-Regeln, aber mit Synaplan.",
+    "pauseTitle": "Alle Routen",
+    "pausedOn": "Pausiert — es läuft keine Route, bis du fortsetzt.",
+    "pausedOff": "Aktiv — Routen laufen bei passenden Mails.",
+    "pause": "Alle pausieren",
+    "resume": "Fortsetzen",
+    "newTitle": "Neue Route",
+    "editTitle": "Route bearbeiten",
+    "empty": "Noch keine Routen. Füge unten eine hinzu.",
+    "addTitle": "Route hinzufügen",
+    "addHint": "Wähle die Art der Automatisierung.",
+    "disable": "Deaktivieren",
+    "enable": "Aktivieren",
+    "edit": "Bearbeiten",
+    "remove": "Entfernen",
+    "saved": "„{name}“ gespeichert.",
+    "removed": "„{name}“ entfernt.",
+    "kind": {
+      "meeting": "Termin-/Datums-Helfer",
+      "projectIngest": "Zum Projekt hinzufügen",
+      "newsletterKb": "Newsletter-Wissensdatenbank"
+    },
+    "summary": {
+      "meeting": "Prüft den Kalender; schlägt eine Bestätigung mit {mins}-Min-Einladung vor.",
+      "ingest": "Fügt zu „{group}“ hinzu, übersetzt nach {lang}."
+    },
+    "fields": {
+      "name": "Name",
+      "namePlaceholder": "z. B. Oliver — Termine",
+      "senders": "Absender",
+      "sendersPlaceholder": "oliver@acme.com, @partner.com",
+      "sendersHint": "Vollständige Adressen oder @Domain, kommagetrennt.",
+      "duration": "Standard-Termindauer (Minuten)",
+      "group": "Projekt-/Wissensdatenbank-Ordner",
+      "groupPlaceholder": "z. B. project:helios",
+      "tag": "Tag",
+      "tagPlaceholder": "Standard ist der Ordnername",
+      "workingLanguage": "Arbeitssprache",
+      "workingLanguageHint": "Inhalte werden vor dem Hinzufügen in diese Sprache übersetzt; das Original bleibt erhalten, damit die Suche die Originalsprache zeigt.",
+      "minBodyChars": "Mindestlänge des Texts zum Erfassen (Zeichen)",
+      "includeAttachments": "Auch Dokument-Anhänge erfassen",
+      "enabled": "Aktiviert"
+    },
+    "validation": {
+      "nameAndSenders": "Gib der Route einen Namen und mindestens einen Absender.",
+      "group": "Gib einen Projekt-/Wissensdatenbank-Ordner ein."
+    }
+  },
   "settings": {
     "title": "Einstellungen",
     "signedInAs": "Angemeldet als",
@@ -186,6 +236,7 @@
     "language": "Sprache",
     "autoDetectContactGroup": "Kontakt-Ordner beim Speichern automatisch erkennen",
     "advanced": "Erweitert",
+    "mailRoutes": "Mail-Routen",
     "routingRules": "Synaplan-Themen",
     "resetRoaming": "Gespeicherte Einstellungen zurücksetzen"
   },

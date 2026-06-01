@@ -12,6 +12,7 @@ export type ViewName =
   | 'compose'
   | 'settings'
   | 'rule-editor'
+  | 'mail-routes'
   | 'contact-kb'
 
 export const currentView = ref<ViewName>('sign-in')

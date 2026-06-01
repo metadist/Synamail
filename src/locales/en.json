@@ -167,6 +167,56 @@
     "applyFromEmail": "Use current email",
     "systemBadge": "system"
   },
+  "mailRoutes": {
+    "title": "Mail Routes",
+    "intro": "Automations that run AI actions on incoming mail from specific senders — like Outlook rules, but powered by Synaplan.",
+    "pauseTitle": "All routes",
+    "pausedOn": "Paused — no route runs until you resume.",
+    "pausedOff": "Active — routes run on matching mail.",
+    "pause": "Pause all",
+    "resume": "Resume",
+    "newTitle": "New route",
+    "editTitle": "Edit route",
+    "empty": "No routes yet. Add one below.",
+    "addTitle": "Add a route",
+    "addHint": "Pick the kind of automation to create.",
+    "disable": "Disable",
+    "enable": "Enable",
+    "edit": "Edit",
+    "remove": "Remove",
+    "saved": "Saved \"{name}\".",
+    "removed": "Removed \"{name}\".",
+    "kind": {
+      "meeting": "Meeting / date helper",
+      "projectIngest": "Add to project",
+      "newsletterKb": "Newsletter knowledge base"
+    },
+    "summary": {
+      "meeting": "Checks the calendar; suggests confirming with a {mins}-min invite.",
+      "ingest": "Adds to \"{group}\", translated to {lang}."
+    },
+    "fields": {
+      "name": "Name",
+      "namePlaceholder": "e.g. Oliver — meetings",
+      "senders": "Senders",
+      "sendersPlaceholder": "oliver@acme.com, @partner.com",
+      "sendersHint": "Full addresses or @domain, comma-separated.",
+      "duration": "Default meeting length (minutes)",
+      "group": "Project / knowledge base folder",
+      "groupPlaceholder": "e.g. project:helios",
+      "tag": "Tag",
+      "tagPlaceholder": "defaults to the folder name",
+      "workingLanguage": "Working language",
+      "workingLanguageHint": "Content is translated to this language before adding; the original is kept so search reveals the source language.",
+      "minBodyChars": "Minimum body length to capture (characters)",
+      "includeAttachments": "Also capture document attachments",
+      "enabled": "Enabled"
+    },
+    "validation": {
+      "nameAndSenders": "Give the route a name and at least one sender.",
+      "group": "Enter a project / knowledge base folder."
+    }
+  },
   "settings": {
     "title": "Settings",
     "signedInAs": "Signed in as",
@@ -186,6 +236,7 @@
     "language": "Language",
     "autoDetectContactGroup": "Auto-detect contact folder on save",
     "advanced": "Advanced",
+    "mailRoutes": "Mail Routes",
     "routingRules": "Synaplan topics",
     "resetRoaming": "Reset saved settings"
   },

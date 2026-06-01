@@ -167,6 +167,56 @@
     "applyFromEmail": "Utiliser l'e-mail actuel",
     "systemBadge": "système"
   },
+  "mailRoutes": {
+    "title": "Routes de courrier",
+    "intro": "Des automatisations qui exécutent des actions IA sur les courriers entrants d'expéditeurs précis — comme les règles Outlook, propulsées par Synaplan.",
+    "pauseTitle": "Toutes les routes",
+    "pausedOn": "En pause — aucune route ne s'exécute jusqu'à la reprise.",
+    "pausedOff": "Actives — les routes s'exécutent sur les courriers correspondants.",
+    "pause": "Tout mettre en pause",
+    "resume": "Reprendre",
+    "newTitle": "Nouvelle route",
+    "editTitle": "Modifier la route",
+    "empty": "Aucune route. Ajoutez-en une ci-dessous.",
+    "addTitle": "Ajouter une route",
+    "addHint": "Choisissez le type d'automatisation à créer.",
+    "disable": "Désactiver",
+    "enable": "Activer",
+    "edit": "Modifier",
+    "remove": "Supprimer",
+    "saved": "« {name} » enregistré.",
+    "removed": "« {name} » supprimé.",
+    "kind": {
+      "meeting": "Assistant réunion / date",
+      "projectIngest": "Ajouter au projet",
+      "newsletterKb": "Base de connaissances newsletter"
+    },
+    "summary": {
+      "meeting": "Vérifie l'agenda ; propose de confirmer avec une invitation de {mins} min.",
+      "ingest": "Ajoute à « {group} », traduit en {lang}."
+    },
+    "fields": {
+      "name": "Nom",
+      "namePlaceholder": "ex. Oliver — réunions",
+      "senders": "Expéditeurs",
+      "sendersPlaceholder": "oliver@acme.com, @partner.com",
+      "sendersHint": "Adresses complètes ou @domaine, séparées par des virgules.",
+      "duration": "Durée de réunion par défaut (minutes)",
+      "group": "Dossier projet / base de connaissances",
+      "groupPlaceholder": "ex. project:helios",
+      "tag": "Étiquette",
+      "tagPlaceholder": "par défaut, le nom du dossier",
+      "workingLanguage": "Langue de travail",
+      "workingLanguageHint": "Le contenu est traduit dans cette langue avant l'ajout ; l'original est conservé pour que la recherche révèle la langue d'origine.",
+      "minBodyChars": "Longueur minimale du texte à capturer (caractères)",
+      "includeAttachments": "Capturer aussi les pièces jointes (documents)",
+      "enabled": "Activée"
+    },
+    "validation": {
+      "nameAndSenders": "Donnez un nom à la route et au moins un expéditeur.",
+      "group": "Saisissez un dossier projet / base de connaissances."
+    }
+  },
   "settings": {
     "title": "Paramètres",
     "signedInAs": "Connecté en tant que",
@@ -186,6 +236,7 @@
     "language": "Langue",
     "autoDetectContactGroup": "Détecter automatiquement le dossier du contact à l'enregistrement",
     "advanced": "Avancé",
+    "mailRoutes": "Routes de courrier",
     "routingRules": "Sujets Synaplan",
     "resetRoaming": "Réinitialiser les paramètres enregistrés"
   },

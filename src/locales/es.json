@@ -167,6 +167,56 @@
     "applyFromEmail": "Usar el correo actual",
     "systemBadge": "sistema"
   },
+  "mailRoutes": {
+    "title": "Rutas de correo",
+    "intro": "Automatizaciones que ejecutan acciones de IA sobre el correo entrante de remitentes concretos — como las reglas de Outlook, con la potencia de Synaplan.",
+    "pauseTitle": "Todas las rutas",
+    "pausedOn": "En pausa — no se ejecuta ninguna ruta hasta reanudar.",
+    "pausedOff": "Activas — las rutas se ejecutan en correos coincidentes.",
+    "pause": "Pausar todo",
+    "resume": "Reanudar",
+    "newTitle": "Nueva ruta",
+    "editTitle": "Editar ruta",
+    "empty": "Aún no hay rutas. Añade una abajo.",
+    "addTitle": "Añadir una ruta",
+    "addHint": "Elige el tipo de automatización a crear.",
+    "disable": "Desactivar",
+    "enable": "Activar",
+    "edit": "Editar",
+    "remove": "Eliminar",
+    "saved": "«{name}» guardada.",
+    "removed": "«{name}» eliminada.",
+    "kind": {
+      "meeting": "Asistente de reunión / fecha",
+      "projectIngest": "Añadir al proyecto",
+      "newsletterKb": "Base de conocimiento de boletines"
+    },
+    "summary": {
+      "meeting": "Revisa el calendario; sugiere confirmar con una invitación de {mins} min.",
+      "ingest": "Añade a «{group}», traducido a {lang}."
+    },
+    "fields": {
+      "name": "Nombre",
+      "namePlaceholder": "p. ej. Oliver — reuniones",
+      "senders": "Remitentes",
+      "sendersPlaceholder": "oliver@acme.com, @partner.com",
+      "sendersHint": "Direcciones completas o @dominio, separadas por comas.",
+      "duration": "Duración de reunión por defecto (minutos)",
+      "group": "Carpeta de proyecto / base de conocimiento",
+      "groupPlaceholder": "p. ej. project:helios",
+      "tag": "Etiqueta",
+      "tagPlaceholder": "por defecto, el nombre de la carpeta",
+      "workingLanguage": "Idioma de trabajo",
+      "workingLanguageHint": "El contenido se traduce a este idioma antes de añadirlo; se conserva el original para que la búsqueda revele el idioma de origen.",
+      "minBodyChars": "Longitud mínima del texto a capturar (caracteres)",
+      "includeAttachments": "Capturar también los adjuntos (documentos)",
+      "enabled": "Activada"
+    },
+    "validation": {
+      "nameAndSenders": "Da un nombre a la ruta y al menos un remitente.",
+      "group": "Introduce una carpeta de proyecto / base de conocimiento."
+    }
+  },
   "settings": {
     "title": "Ajustes",
     "signedInAs": "Sesión iniciada como",
@@ -186,6 +236,7 @@
     "language": "Idioma",
     "autoDetectContactGroup": "Detectar automáticamente la carpeta del contacto al guardar",
     "advanced": "Avanzado",
+    "mailRoutes": "Rutas de correo",
     "routingRules": "Temas de Synaplan",
     "resetRoaming": "Restablecer ajustes guardados"
   },

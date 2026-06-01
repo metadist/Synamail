@@ -103,9 +103,7 @@ export function buildIcsEvent(input: IcsEventInput): string {
   if (input.description) lines.push(`DESCRIPTION:${escapeIcsText(input.description)}`)
   if (input.organizerEmail) lines.push(`ORGANIZER:mailto:${input.organizerEmail}`)
   if (input.attendeeEmail) {
-    lines.push(
-      `ATTENDEE;ROLE=REQ-PARTICIPANT;RSVP=TRUE:mailto:${input.attendeeEmail}`,
-    )
+    lines.push(`ATTENDEE;ROLE=REQ-PARTICIPANT;RSVP=TRUE:mailto:${input.attendeeEmail}`)
   }
   lines.push('STATUS:CONFIRMED', 'SEQUENCE:0', 'END:VEVENT', 'END:VCALENDAR')
   return lines.map(foldLine).join('\r\n')

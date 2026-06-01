@@ -167,6 +167,56 @@
     "applyFromEmail": "Usar o e-mail atual",
     "systemBadge": "sistema"
   },
+  "mailRoutes": {
+    "title": "Rotas de e-mail",
+    "intro": "Automações que executam ações de IA em e-mails recebidos de remetentes específicos — como regras do Outlook, mas com Synaplan.",
+    "pauseTitle": "Todas as rotas",
+    "pausedOn": "Em pausa — nenhuma rota é executada até retomar.",
+    "pausedOff": "Ativas — as rotas são executadas em e-mails correspondentes.",
+    "pause": "Pausar tudo",
+    "resume": "Retomar",
+    "newTitle": "Nova rota",
+    "editTitle": "Editar rota",
+    "empty": "Ainda sem rotas. Adicione uma abaixo.",
+    "addTitle": "Adicionar uma rota",
+    "addHint": "Escolha o tipo de automação a criar.",
+    "disable": "Desativar",
+    "enable": "Ativar",
+    "edit": "Editar",
+    "remove": "Remover",
+    "saved": "«{name}» guardada.",
+    "removed": "«{name}» removida.",
+    "kind": {
+      "meeting": "Assistente de reunião / data",
+      "projectIngest": "Adicionar ao projeto",
+      "newsletterKb": "Base de conhecimento de newsletters"
+    },
+    "summary": {
+      "meeting": "Verifica o calendário; sugere confirmar com um convite de {mins} min.",
+      "ingest": "Adiciona a «{group}», traduzido para {lang}."
+    },
+    "fields": {
+      "name": "Nome",
+      "namePlaceholder": "ex. Oliver — reuniões",
+      "senders": "Remetentes",
+      "sendersPlaceholder": "oliver@acme.com, @partner.com",
+      "sendersHint": "Endereços completos ou @domínio, separados por vírgulas.",
+      "duration": "Duração de reunião predefinida (minutos)",
+      "group": "Pasta de projeto / base de conhecimento",
+      "groupPlaceholder": "ex. project:helios",
+      "tag": "Etiqueta",
+      "tagPlaceholder": "predefinição: o nome da pasta",
+      "workingLanguage": "Idioma de trabalho",
+      "workingLanguageHint": "O conteúdo é traduzido para este idioma antes de ser adicionado; o original é mantido para que a pesquisa revele o idioma de origem.",
+      "minBodyChars": "Comprimento mínimo do texto a capturar (caracteres)",
+      "includeAttachments": "Capturar também anexos (documentos)",
+      "enabled": "Ativada"
+    },
+    "validation": {
+      "nameAndSenders": "Dê um nome à rota e pelo menos um remetente.",
+      "group": "Introduza uma pasta de projeto / base de conhecimento."
+    }
+  },
   "settings": {
     "title": "Definições",
     "signedInAs": "Sessão iniciada como",
@@ -186,6 +236,7 @@
     "language": "Idioma",
     "autoDetectContactGroup": "Detetar automaticamente a pasta do contacto ao guardar",
     "advanced": "Avançado",
+    "mailRoutes": "Rotas de e-mail",
     "routingRules": "Tópicos do Synaplan",
     "resetRoaming": "Repor definições guardadas"
   },
