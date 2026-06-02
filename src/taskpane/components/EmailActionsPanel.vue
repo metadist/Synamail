@@ -140,7 +140,7 @@ async function handleSaveConfirm(payload: {
 }): Promise<void> {
   showSaveDialog.value = false
   await run('save', async () => {
-    const file = await getReadItemAsFile(item.value)
+    const file = getReadItemAsFile(item.value)
     const r = await call((c) =>
       c.fileUpload({
         filename: file.filename,
@@ -329,6 +329,11 @@ function addToCalendar(p: MeetingProposal): void {
     <p v-if="!emailOpen" class="syn-muted">{{ t('read.noEmail') }}</p>
 
     <template v-else>
+      <!-- Feedback sits at the top, right where the action buttons are, so the
+           result of a click is visible without scrolling to the bottom. -->
+      <Toast v-if="status" kind="success" :message="status" />
+      <Toast v-if="error" kind="error" :message="error" />
+
       <div class="syn-stack">
         <ActionButton :loading="active === 'summarise'" @click="summarise">
           {{ t('read.actions.summarise') }}
@@ -415,9 +420,6 @@ function addToCalendar(p: MeetingProposal): void {
         </div>
       </div>
     </template>
-
-    <Toast v-if="status" kind="success" :message="status" />
-    <Toast v-if="error" kind="error" :message="error" />
 
     <SaveToRagDialog
       v-if="showSaveDialog"

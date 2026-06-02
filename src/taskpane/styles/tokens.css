@@ -19,8 +19,16 @@
   --syn-border: #e3e3e3;
   --syn-text: #1f1f1f;
   --syn-muted: #6b6b6b;
+
+  /* Semantic colors: accent (borders/icons), bg (tint), fg (readable text). */
   --syn-danger: #b91c1c;
+  --syn-danger-bg: #fef2f2;
+  --syn-danger-fg: #991b1b;
   --syn-success: #15803d;
+  --syn-success-bg: #ecfdf5;
+  --syn-success-fg: #166534;
+  --syn-info-bg: #eff6ff;
+  --syn-info-fg: #1d4ed8;
 
   --syn-radius-sm: 4px;
   --syn-radius-md: 6px;
@@ -52,5 +60,15 @@
     --syn-border: #3a3a3a;
     --syn-text: #f1f1f1;
     --syn-muted: #a1a1a1;
+
+    /* Brighter, accessible semantic colors on dark surfaces. */
+    --syn-danger: #f87171;
+    --syn-danger-bg: rgba(239, 68, 68, 0.14);
+    --syn-danger-fg: #fca5a5;
+    --syn-success: #4ade80;
+    --syn-success-bg: rgba(34, 197, 94, 0.14);
+    --syn-success-fg: #86efac;
+    --syn-info-bg: rgba(59, 130, 246, 0.14);
+    --syn-info-fg: #93c5fd;
   }
 }

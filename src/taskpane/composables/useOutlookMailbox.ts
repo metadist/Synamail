@@ -80,7 +80,11 @@ export function buildFindItemRequest(query: string, limit: number): string {
   )
 }
 
-export function buildGetItemMimeRequest(id: string): string {
+// Fetch the message's TEXT body (plus subject/from) — not the raw MIME. We
+// upload a `.txt` to Synaplan because its ingestion rejects `message/rfc822`,
+// and the body text is what RAG actually needs. `BodyType=Text` makes Exchange
+// down-convert HTML bodies server-side, so we never ship markup.
+export function buildGetItemTextRequest(id: string): string {
   return (
     '<?xml version="1.0" encoding="utf-8"?>' +
     '<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" ' +
@@ -89,7 +93,12 @@ export function buildGetItemMimeRequest(id: string): string {
     '<soap:Header><t:RequestServerVersion Version="Exchange2013"/></soap:Header>' +
     '<soap:Body><m:GetItem>' +
     '<m:ItemShape><t:BaseShape>IdOnly</t:BaseShape>' +
-    '<t:IncludeMimeContent>true</t:IncludeMimeContent></m:ItemShape>' +
+    '<t:BodyType>Text</t:BodyType>' +
+    '<t:AdditionalProperties>' +
+    '<t:FieldURI FieldURI="item:Subject"/>' +
+    '<t:FieldURI FieldURI="message:From"/>' +
+    '<t:FieldURI FieldURI="item:Body"/>' +
+    '</t:AdditionalProperties></m:ItemShape>' +
     `<m:ItemIds><t:ItemId Id="${escapeXml(id)}"/></m:ItemIds>` +
     '</m:GetItem></soap:Body></soap:Envelope>'
   )
@@ -210,9 +219,35 @@ export function parseFindItemResponse(xml: string): MailboxHit[] {
   })
 }
 
-export function parseGetItemMime(xml: string): string {
+export interface GetItemText {
+  subject: string
+  from: string
+  body: string
+}
+
+export function parseGetItemText(xml: string): GetItemText {
   const doc = new DOMParser().parseFromString(xml, 'text/xml')
-  return firstByLocalName(doc, 'MimeContent')?.textContent ?? ''
+  // Scope to the <t:Message> element. The SOAP envelope's <s:Body> shares the
+  // local name "Body", so a document-wide search would match it first and
+  // return the whole response text.
+  const msg = firstByLocalName(doc, 'Message') ?? doc
+  const subject = firstByLocalName(msg, 'Subject')?.textContent ?? ''
+  const fromEl = firstByLocalName(msg, 'From')
+  const from = fromEl ? (firstByLocalName(fromEl, 'EmailAddress')?.textContent ?? '') : ''
+  const body = firstByLocalName(msg, 'Body')?.textContent ?? ''
+  return { subject, from, body }
+}
+
+/** Build the plain-text export from EWS-fetched fields (header + body). */
+function emailTextFrom(subject: string, from: string, body: string): string {
+  const header: string[] = []
+  if (subject) header.push(`Subject: ${subject}`)
+  if (from) header.push(`From: ${from}`)
+  return header.length ? `${header.join('\n')}\n\n${body}` : body
+}
+
+function toBase64Utf8(s: string): string {
+  return globalThis.btoa(unescape(encodeURIComponent(s)))
 }
 
 export function parseSenderHistory(xml: string): SenderHistoryItem[] {
@@ -319,18 +354,16 @@ export function useOutlookMailbox() {
     return { hits: parseFindItemResponse(xml), fromOutlook: true }
   }
 
-  async function getMessageMime(hit: MailboxHit): Promise<MessageFile> {
-    const filename = `${sanitizeFilename(hit.subject || 'message')}.eml`
+  async function getMessageText(hit: MailboxHit): Promise<MessageFile> {
+    const filename = `${sanitizeFilename(hit.subject || 'message')}.txt`
     if (!ewsAvailable() || hit.id.startsWith('mock-ews-')) {
-      const fake = `Subject: ${hit.subject}\r\nFrom: ${hit.from}\r\n\r\n(mock body for "${hit.subject}")`
-      return {
-        filename,
-        contentBase64: globalThis.btoa(unescape(encodeURIComponent(fake))),
-        mimeType: 'message/rfc822',
-      }
+      const fake = emailTextFrom(hit.subject, hit.from, `(mock body for "${hit.subject}")`)
+      return { filename, contentBase64: toBase64Utf8(fake), mimeType: 'text/plain' }
     }
-    const xml = await callEws(buildGetItemMimeRequest(hit.id))
-    return { filename, contentBase64: parseGetItemMime(xml), mimeType: 'message/rfc822' }
+    const xml = await callEws(buildGetItemTextRequest(hit.id))
+    const { subject, from, body } = parseGetItemText(xml)
+    const text = emailTextFrom(subject || hit.subject, from || hit.from, body)
+    return { filename, contentBase64: toBase64Utf8(text), mimeType: 'text/plain' }
   }
 
   /** Recent messages from one sender, newest first (live mailbox via EWS). */
@@ -376,5 +409,5 @@ export function useOutlookMailbox() {
     return { ruleId: displayName, movedCount, serverSide: true }
   }
 
-  return { searchMailbox, getMessageMime, senderHistory, blockSender, ewsAvailable }
+  return { searchMailbox, getMessageText, senderHistory, blockSender, ewsAvailable }
 }

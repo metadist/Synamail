@@ -93,11 +93,11 @@ async function vectorize(): Promise<void> {
   vectorizing.value = true
   error.value = null
   status.value = null
-  const { getMessageMime } = useOutlookMailbox()
+  const { getMessageText } = useOutlookMailbox()
   let ok = 0
   try {
     for (const hit of picks) {
-      const file = await getMessageMime(hit)
+      const file = await getMessageText(hit)
       const r = await call((c) =>
         c.fileUpload({
           filename: file.filename,

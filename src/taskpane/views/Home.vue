@@ -93,11 +93,7 @@ async function resetChat(): Promise<void> {
     <Toast v-if="status" kind="success" :message="status" />
 
     <!-- 2. Email actions for the active email. -->
-    <AccordionItem
-      :title="t('home.sections.emailActions')"
-      :subtitle="emailActionsSubtitle"
-      :open="emailOpen"
-    >
+    <AccordionItem :title="t('home.sections.emailActions')" :subtitle="emailActionsSubtitle">
       <EmailActionsPanel />
     </AccordionItem>
 

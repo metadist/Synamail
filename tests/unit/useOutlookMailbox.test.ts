@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import {
   buildFindItemRequest,
-  buildGetItemMimeRequest,
+  buildGetItemTextRequest,
   ewsAvailable,
   parseFindItemResponse,
-  parseGetItemMime,
+  parseGetItemText,
   useOutlookMailbox,
 } from '@/taskpane/composables/useOutlookMailbox'
 
@@ -48,7 +48,9 @@ const GET_ITEM_XML = `<?xml version="1.0"?>
         <m:GetItemResponseMessage ResponseClass="Success">
           <m:Items>
             <t:Message>
-              <t:MimeContent CharacterSet="UTF-8">QkFTRTY0RU1M</t:MimeContent>
+              <t:Subject>Contract 2026</t:Subject>
+              <t:Body BodyType="Text">This is the body text.</t:Body>
+              <t:From><t:Mailbox><t:EmailAddress>alice@example.test</t:EmailAddress></t:Mailbox></t:From>
             </t:Message>
           </m:Items>
         </m:GetItemResponseMessage>
@@ -65,10 +67,11 @@ describe('EWS request builders', () => {
     expect(req).toContain('DistinguishedFolderId Id="inbox"')
   })
 
-  it('includes the item id and requests MIME content in GetItem', () => {
-    const req = buildGetItemMimeRequest('AAA111')
+  it('includes the item id and requests the text body in GetItem', () => {
+    const req = buildGetItemTextRequest('AAA111')
     expect(req).toContain('ItemId Id="AAA111"')
-    expect(req).toContain('<t:IncludeMimeContent>true</t:IncludeMimeContent>')
+    expect(req).toContain('<t:BodyType>Text</t:BodyType>')
+    expect(req).toContain('FieldURI="item:Body"')
   })
 })
 
@@ -86,8 +89,12 @@ describe('EWS response parsers', () => {
     expect(hits[1].from).toBe('bob@example.test')
   })
 
-  it('extracts the MIME content from GetItem', () => {
-    expect(parseGetItemMime(GET_ITEM_XML)).toBe('QkFTRTY0RU1M')
+  it('extracts subject, from and text body from GetItem', () => {
+    expect(parseGetItemText(GET_ITEM_XML)).toEqual({
+      subject: 'Contract 2026',
+      from: 'alice@example.test',
+      body: 'This is the body text.',
+    })
   })
 })
 
@@ -110,17 +117,17 @@ describe('useOutlookMailbox mock fallback', () => {
     expect(r.hits).toEqual([])
   })
 
-  it('builds a base64 eml for a mock hit', async () => {
-    const { getMessageMime } = useOutlookMailbox()
-    const file = await getMessageMime({
+  it('builds a base64 txt for a mock hit', async () => {
+    const { getMessageText } = useOutlookMailbox()
+    const file = await getMessageText({
       id: 'mock-ews-1',
       subject: 'Topic!',
       from: 'x@y.test',
       date: '2026-05-01T00:00:00Z',
       source: 'mailbox',
     })
-    expect(file.filename).toBe('Topic.eml')
-    expect(file.mimeType).toBe('message/rfc822')
+    expect(file.filename).toBe('Topic.txt')
+    expect(file.mimeType).toBe('text/plain')
     expect(atob(file.contentBase64)).toContain('Subject: Topic!')
   })
 })

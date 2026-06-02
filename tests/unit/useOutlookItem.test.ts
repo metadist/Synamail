@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { getReadItemAsFile } from '@/taskpane/composables/useOutlookItem'
+import { buildEmailText, getReadItemAsFile } from '@/taskpane/composables/useOutlookItem'
 import type { OutlookItemSnapshot } from '@/taskpane/composables/useOutlookItem'
 
 function snapshot(overrides: Partial<OutlookItemSnapshot> = {}): OutlookItemSnapshot {
   return {
     mode: 'read',
     subject: 'Q3 plan',
+    from: 'alice@example.test',
     to: ['team@example.test'],
     cc: [],
     bodyText: 'Hello world',
@@ -15,53 +16,35 @@ function snapshot(overrides: Partial<OutlookItemSnapshot> = {}): OutlookItemSnap
 }
 
 describe('getReadItemAsFile', () => {
-  it('uses getAsFileAsync when the host exposes it (Mailbox 1.8+)', async () => {
-    ;(globalThis as unknown as { Office: { context: { mailbox: { item: unknown } } } }).Office =
-      Object.assign({}, (globalThis as unknown as { Office: object }).Office, {
-        context: {
-          ...((globalThis as unknown as { Office: { context: object } }).Office.context as object),
-          mailbox: {
-            item: {
-              getAsFileAsync: (cb: (r: { status: string; value: string }) => void) =>
-                cb({ status: 'succeeded', value: 'BASE64EMLDATA' }),
-            },
-          },
-        },
-      })
-
-    const file = await getReadItemAsFile(snapshot({ subject: 'Q3 plan!' }))
-    expect(file.mimeType).toBe('message/rfc822')
-    expect(file.filename).toBe('Q3_plan.eml')
-    expect(file.contentBase64).toBe('BASE64EMLDATA')
+  it('exports the message as a .txt with a header block + body (never .eml)', () => {
+    const file = getReadItemAsFile(snapshot({ subject: 'Q3 plan' }))
+    expect(file.filename).toBe('Q3_plan.txt')
+    expect(file.mimeType).toBe('text/plain')
+    const text = atob(file.contentBase64)
+    expect(text).toContain('Subject: Q3 plan')
+    expect(text).toContain('From: alice@example.test')
+    expect(text).toContain('To: team@example.test')
+    expect(text).toContain('Hello world')
   })
 
-  it('falls back to plain-text export when getAsFileAsync is missing', async () => {
-    // The default setup.ts stub has no getAsFileAsync — use it as-is.
-    const file = await getReadItemAsFile(snapshot({ subject: '', bodyText: 'hello' }))
+  it('uses body-only and message.txt when there are no headers', () => {
+    const file = getReadItemAsFile(
+      snapshot({ subject: '', from: undefined, to: [], cc: [], bodyText: 'hello' }),
+    )
     expect(file.filename).toBe('message.txt')
     expect(file.mimeType).toBe('text/plain')
     expect(atob(file.contentBase64)).toBe('hello')
   })
 
-  it('surfaces getAsFileAsync errors as rejections', async () => {
-    ;(globalThis as unknown as { Office: { context: { mailbox: { item: unknown } } } }).Office =
-      Object.assign({}, (globalThis as unknown as { Office: object }).Office, {
-        context: {
-          ...((globalThis as unknown as { Office: { context: object } }).Office.context as object),
-          mailbox: {
-            item: {
-              getAsFileAsync: (cb: (r: { status: string; error?: { message: string } }) => void) =>
-                cb({ status: 'failed', error: { message: 'permission denied' } }),
-            },
-          },
-        },
-      })
-
-    await expect(getReadItemAsFile(snapshot())).rejects.toThrow(/permission denied/)
-  })
-
-  it('sanitises the subject when building the filename', async () => {
-    const file = await getReadItemAsFile(snapshot({ subject: 'Hello / World? *!' }))
+  it('sanitises the subject when building the filename', () => {
+    const file = getReadItemAsFile(snapshot({ subject: 'Hello / World? *!' }))
     expect(file.filename).toBe('Hello_World.txt')
+  })
+})
+
+describe('buildEmailText', () => {
+  it('puts headers before a blank line and the body', () => {
+    const text = buildEmailText(snapshot({ subject: 'Hi', from: 'a@b.test', to: [], cc: [] }))
+    expect(text).toBe('Subject: Hi\nFrom: a@b.test\n\nHello world')
   })
 })
