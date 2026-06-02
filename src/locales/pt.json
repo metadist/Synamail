@@ -22,6 +22,12 @@
     "emailLoaded": "E-mail aberto: {subject}",
     "emailActions": "Ações de e-mail",
     "emailTitle": "E-mail aberto",
+    "sections": {
+      "emailActions": "Ações de e-mail",
+      "filterKb": "Filtrar para base de conhecimento",
+      "composeAnswer": "Redigir resposta",
+      "mailActions": "Ações de correio"
+    },
     "commands": {
       "chat": "Conversa",
       "search": "Filtrar e-mails para a base de conhecimento",
@@ -66,6 +72,7 @@
     }
   },
   "read": {
+    "noEmail": "Abra um e-mail para usar estas ações.",
     "title": "Ações de e-mail",
     "from": "De",
     "senderTitle": "Remetente",
@@ -216,6 +223,17 @@
       "nameAndSenders": "Dê um nome à rota e pelo menos um remetente.",
       "group": "Introduza uma pasta de projeto / base de conhecimento."
     }
+  },
+  "composeAnswer": {
+    "subtitle": "Responder ao remetente ou redigir um novo e-mail",
+    "replyHint": "Responder a {email}. Deixe em branco para uma resposta padrão ou adicione instruções.",
+    "newHint": "Nenhum e-mail aberto — descreva o e-mail a escrever.",
+    "replyPlaceholder": "Como respondemos? (opcional)",
+    "newPlaceholder": "ex. Pedir ao fornecedor para confirmar a data de entrega de maio.",
+    "draftReply": "Rascunhar resposta",
+    "draftNew": "Rascunhar e-mail",
+    "replyOpened": "Resposta aberta no Outlook.",
+    "needPrompt": "Descreva primeiro o e-mail a escrever."
   },
   "settings": {
     "title": "Definições",

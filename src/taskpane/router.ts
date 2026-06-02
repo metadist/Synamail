@@ -5,15 +5,7 @@
 
 import { ref } from 'vue'
 
-export type ViewName =
-  | 'sign-in'
-  | 'home'
-  | 'read'
-  | 'compose'
-  | 'settings'
-  | 'rule-editor'
-  | 'mail-routes'
-  | 'contact-kb'
+export type ViewName = 'sign-in' | 'home' | 'read' | 'compose' | 'settings' | 'contact-kb'
 
 export const currentView = ref<ViewName>('sign-in')
 const history: ViewName[] = []

@@ -1,22 +1,22 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import ActionButton from '@/taskpane/components/ActionButton.vue'
+import AccordionItem from '@/taskpane/components/AccordionItem.vue'
 import ChatThread from '@/taskpane/components/ChatThread.vue'
 import type { ChatMessage } from '@/taskpane/components/ChatThread.vue'
-import MailSearchVectorizeDialog from '@/taskpane/components/MailSearchVectorizeDialog.vue'
-import NewMailDialog from '@/taskpane/components/NewMailDialog.vue'
+import ComposeAnswerPanel from '@/taskpane/components/ComposeAnswerPanel.vue'
+import EmailActionsPanel from '@/taskpane/components/EmailActionsPanel.vue'
+import KnowledgeFilterPanel from '@/taskpane/components/KnowledgeFilterPanel.vue'
+import MailRoutesPanel from '@/taskpane/components/MailRoutesPanel.vue'
 import Toast from '@/taskpane/components/Toast.vue'
 import { useOutlookItem } from '@/taskpane/composables/useOutlookItem'
 import {
   clearChatIdForConversation,
   getChatIdForConversation,
-  getLastRagGroupId,
   setChatIdForConversation,
 } from '@/taskpane/composables/useRoamingSettings'
 import { useSynaplanClient } from '@/taskpane/composables/useSynaplanClient'
 import { errorMessage } from '@shared/synaplan-client'
-import { go } from '@/taskpane/router'
 
 const HOME_CONVERSATION = 'home'
 
@@ -28,10 +28,11 @@ const messages = ref<ChatMessage[]>([])
 const sending = ref(false)
 const error = ref<string | null>(null)
 const status = ref<string | null>(null)
-const showSearch = ref(false)
-const showNewMail = ref(false)
 
-const emailLoaded = computed(() => item.value.mode === 'read' || item.value.mode === 'compose')
+const emailOpen = computed(() => item.value.mode === 'read')
+const emailActionsSubtitle = computed(() =>
+  emailOpen.value ? item.value.subject || t('home.emailTitle') : t('read.noEmail'),
+)
 
 async function send(text: string): Promise<void> {
   messages.value.push({ role: 'user', text })
@@ -48,8 +49,7 @@ async function send(text: string): Promise<void> {
         try {
           await setChatIdForConversation(HOME_CONVERSATION, r.chatId)
         } catch {
-          // Roaming write may fail offline/in tests; the in-memory thread
-          // still works for the rest of this session.
+          // Roaming write may fail offline/in tests; the in-memory thread still works.
         }
       }
     }
@@ -61,19 +61,12 @@ async function send(text: string): Promise<void> {
 }
 
 function onVectorizeDone(group: string): void {
-  showSearch.value = false
   status.value = t('home.search.done', { group })
-}
-
-function onMailOpened(): void {
-  showNewMail.value = false
-  status.value = t('home.newMail.opened')
 }
 
 async function resetChat(): Promise<void> {
   messages.value = []
   error.value = null
-  // Start a fresh Synaplan chat on the next message.
   try {
     await clearChatIdForConversation(HOME_CONVERSATION)
   } catch {
@@ -84,35 +77,9 @@ async function resetChat(): Promise<void> {
 
 <template>
   <section class="home">
-    <div v-if="emailLoaded" class="syn-card">
-      <h2 class="syn-card-title">{{ t('home.emailTitle') }}</h2>
-      <p class="syn-card-sub">{{ item.subject || '—' }}</p>
-      <ActionButton @click="go(item.mode === 'compose' ? 'compose' : 'read')">
-        {{ t('home.emailActions') }}
-      </ActionButton>
-    </div>
-
-    <div class="syn-card">
-      <h2 class="syn-card-title">{{ t('home.commands.search') }}</h2>
-      <p class="syn-card-sub">{{ t('home.commands.searchSub') }}</p>
-      <ActionButton data-testid="cmd-search" @click="showSearch = true">
-        {{ t('home.commands.searchAction') }}
-      </ActionButton>
-    </div>
-
-    <div class="syn-card">
-      <h2 class="syn-card-title">{{ t('home.commands.newMail') }}</h2>
-      <p class="syn-card-sub">{{ t('home.commands.newMailSub') }}</p>
-      <ActionButton data-testid="cmd-newmail" @click="showNewMail = true">
-        {{ t('home.commands.newMailAction') }}
-      </ActionButton>
-    </div>
-
-    <Toast v-if="status" kind="success" :message="status" />
-
+    <!-- 1. Chat — always open, above the flaps. -->
     <div class="syn-card">
       <h2 class="syn-card-title">{{ t('home.commands.chat') }}</h2>
-      <p class="syn-card-sub">{{ t('home.chat.emptyHint') }}</p>
       <ChatThread
         :messages="messages"
         :loading="sending"
@@ -123,14 +90,34 @@ async function resetChat(): Promise<void> {
     </div>
 
     <Toast v-if="error" kind="error" :message="error" />
+    <Toast v-if="status" kind="success" :message="status" />
 
-    <MailSearchVectorizeDialog
-      v-if="showSearch"
-      :last-used-group-id="getLastRagGroupId()"
-      @cancel="showSearch = false"
-      @done="onVectorizeDone"
-    />
-    <NewMailDialog v-if="showNewMail" @cancel="showNewMail = false" @opened="onMailOpened" />
+    <!-- 2. Email actions for the active email. -->
+    <AccordionItem
+      :title="t('home.sections.emailActions')"
+      :subtitle="emailActionsSubtitle"
+      :open="emailOpen"
+    >
+      <EmailActionsPanel />
+    </AccordionItem>
+
+    <!-- 3. Filter the mailbox into a knowledge base. -->
+    <AccordionItem :title="t('home.sections.filterKb')" :subtitle="t('home.commands.searchSub')">
+      <KnowledgeFilterPanel @done="onVectorizeDone" />
+    </AccordionItem>
+
+    <!-- 4. Compose an answer to the sender. -->
+    <AccordionItem
+      :title="t('home.sections.composeAnswer')"
+      :subtitle="t('composeAnswer.subtitle')"
+    >
+      <ComposeAnswerPanel />
+    </AccordionItem>
+
+    <!-- 5. Mail Actions — the automation routes. -->
+    <AccordionItem :title="t('home.sections.mailActions')" :subtitle="t('mailRoutes.intro')">
+      <MailRoutesPanel />
+    </AccordionItem>
   </section>
 </template>
 
