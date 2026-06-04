@@ -3,7 +3,7 @@
  *
  * Intercepts every `/api/v1/**` request the real `RealSynaplanClient` makes
  * and answers with the exact wire shapes verified against a live local
- * Synaplan on 2026-06-04 (see planning/STATUS.md). The app's real client code
+ * Synaplan on 2026-06-04 (see docs/PROJECT_PLAN.md). The app's real client code
  * path runs unchanged — real `fetch`, real header/body building, real response
  * parsing — only the network boundary is stubbed, so these specs catch
  * client/UI regressions without needing a backend (and run in CI).

@@ -2,7 +2,7 @@
 
 Concrete feature specs for the Outlook add-in. Every section names: the user value, the Synaplan endpoint(s) used, the UI surface, the data model (where new), and edge cases.
 
-This is the integration-ready feature contract. If anything here contradicts `planning/PLAN.md` or `docs/ARCHITECTURE.md`, this file wins for _what the feature does_; the other documents win for _when/where it's built_.
+This is the integration-ready feature contract. If anything here contradicts `docs/PROJECT_PLAN.md` or `docs/ARCHITECTURE.md`, this file wins for _what the feature does_; the other documents win for _when/where it's built_.
 
 ## 1. Read-mode AI actions
 
@@ -183,7 +183,7 @@ Note: in the user's brief this was called "RULE integration". Synaplan's actual 
 - Settings → "Email routing rules" tab opens `RuleEditor.vue`.
 - ReadMode → "···" overflow menu → "Use this email to create a routing rule".
 
-## 6. Feature coverage matrix (cross-check with planning/PLAN.md)
+## 6. Feature coverage matrix (cross-check with docs/PROJECT_PLAN.md)
 
 | Feature                               | Sprint | Endpoint(s)                                                   | View                            | Status target               |
 | ------------------------------------- | ------ | ------------------------------------------------------------- | ------------------------------- | --------------------------- |

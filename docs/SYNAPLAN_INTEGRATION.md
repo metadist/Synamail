@@ -273,4 +273,4 @@ Nothing on the production / `synaplan-platform` side changes.
 
 - **Desktop Outlook needs the trusted CA** (step 7.1.2). With it imported, new Outlook for Windows and classic Outlook 2024 accept the `:5174` dialog. Without it, you're limited to Outlook on the Web (accept the cert warning once per browser profile at `https://localhost:5174/addin/connect`).
 - **Cert lifetime.** `office-addin-dev-certs` certs are valid ~30 days; re-run the install command when the bridge or `:3000` starts failing TLS.
-- **AppSource submissions.** Strip the `<AppDomain>https://localhost:5174</AppDomain>` line from `manifest.xml` before the certification build (`planning/APPSOURCE_CHECKLIST.md` calls this out). It's harmless in dev sideloads, but Microsoft's validator flags localhost domains in store submissions.
+- **AppSource submissions.** Strip the `<AppDomain>https://localhost:5174</AppDomain>` line from `manifest.xml` before the certification build (`docs/PROJECT_PLAN.md` calls this out). It's harmless in dev sideloads, but Microsoft's validator flags localhost domains in store submissions.

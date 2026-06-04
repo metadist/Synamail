@@ -76,17 +76,17 @@ Synamail/
 
 ## Reading order for new contributors
 
-1. [`planning/PLAN.md`](planning/PLAN.md) — what the four sprints deliver and when.
-   - [`planning/RELEASE_PLAN.md`](planning/RELEASE_PLAN.md) — the v1.0 launch plan (AppSource + open source), branding, and help-doc architecture. **Read this for the road to release.**
+1. [`docs/PROJECT_PLAN.md`](docs/PROJECT_PLAN.md) — what the four sprints deliver and when.
+   - [`docs/PROJECT_PLAN.md`](docs/PROJECT_PLAN.md) — the v1.0 launch plan (AppSource + open source), branding, and help-doc architecture. **Read this for the road to release.**
 2. [`AGENTS.md`](AGENTS.md) — the rules that apply to every commit (humans included).
 3. [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md) — the contributor flow in 90 seconds.
 4. [`docs/COMMIT_PROCESS.md`](docs/COMMIT_PROCESS.md) — Conventional Commits, branches, PR, release.
 5. [`docs/GLOSSARY.md`](docs/GLOSSARY.md) — terminology mapping (read before the others).
 6. [`docs/FEATURES.md`](docs/FEATURES.md) — what the add-in does.
 7. [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — how it does it.
-8. [`planning/STEPS.md`](planning/STEPS.md) — how we ship it, step by step.
-9. [`planning/GUI_DEFINITIONS.md`](planning/GUI_DEFINITIONS.md) — what it looks like.
-10. [`planning/STATUS.md`](planning/STATUS.md) — current build / sprint status.
+8. [`docs/PROJECT_PLAN.md`](docs/PROJECT_PLAN.md) — how we ship it, step by step.
+9. [`docs/PROJECT_PLAN.md`](docs/PROJECT_PLAN.md) — what it looks like.
+10. [`docs/PROJECT_PLAN.md`](docs/PROJECT_PLAN.md) — current build / sprint status.
 11. [`docs/SYNAPLAN_INTEGRATION.md`](docs/SYNAPLAN_INTEGRATION.md) — what changes (and doesn't) in `synaplan` / `synaplan-platform`.
 12. [`INSTALL.md`](INSTALL.md) — end-user install (post-AppSource release) + developer sideload guide with the field-tested gotchas.
 

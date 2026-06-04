@@ -1,6 +1,6 @@
 # Synamail — Glossary
 
-Single source of truth for terminology used across `planning/PLAN.md`, `planning/STEPS.md`, `docs/FEATURES.md`, and `planning/GUI_DEFINITIONS.md`. When in doubt, the **canonical term** column wins.
+Single source of truth for terminology used across `docs/PROJECT_PLAN.md`, `docs/PROJECT_PLAN.md`, `docs/FEATURES.md`, and `docs/PROJECT_PLAN.md`. When in doubt, the **canonical term** column wins.
 
 | User-facing / brief term | Canonical term in this project                                                       | Definition / where it lives                                                                                                                                                                                                        |
 | ------------------------ | ------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

@@ -11,7 +11,7 @@ Outlook add-in (taskpane + ribbon commands) that connects the user's Outlook cli
 
 **Toolchain:** Node ≥ 22 (Maintenance LTS through April 2027). Active LTS is Node 24 (`.nvmrc`); CI exercises both. `engines.node` in `package.json` is the source of truth.
 
-**Authoritative docs:** [`planning/PLAN.md`](planning/PLAN.md), [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md), [`docs/FEATURES.md`](docs/FEATURES.md), [`docs/COMMIT_PROCESS.md`](docs/COMMIT_PROCESS.md), [`planning/STEPS.md`](planning/STEPS.md), [`planning/GUI_DEFINITIONS.md`](planning/GUI_DEFINITIONS.md), [`docs/GLOSSARY.md`](docs/GLOSSARY.md).
+**Authoritative docs:** [`docs/PROJECT_PLAN.md`](docs/PROJECT_PLAN.md), [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md), [`docs/FEATURES.md`](docs/FEATURES.md), [`docs/COMMIT_PROCESS.md`](docs/COMMIT_PROCESS.md), [`docs/PROJECT_PLAN.md`](docs/PROJECT_PLAN.md), [`docs/PROJECT_PLAN.md`](docs/PROJECT_PLAN.md), [`docs/GLOSSARY.md`](docs/GLOSSARY.md).
 
 ## Critical Rules
 
@@ -256,11 +256,11 @@ background/color.
 
 ## Detailed Documentation
 
-- [`planning/PLAN.md`](planning/PLAN.md) — the 4-sprint plan.
-- [`planning/STATUS.md`](planning/STATUS.md) — current build / sprint status.
-- [`planning/STEPS.md`](planning/STEPS.md) — step-by-step execution.
-- [`planning/GUI_DEFINITIONS.md`](planning/GUI_DEFINITIONS.md) — UI spec + assets.
-- [`planning/APPSOURCE_CHECKLIST.md`](planning/APPSOURCE_CHECKLIST.md) — Microsoft submission gate.
+- [`docs/PROJECT_PLAN.md`](docs/PROJECT_PLAN.md) — the 4-sprint plan.
+- [`docs/PROJECT_PLAN.md`](docs/PROJECT_PLAN.md) — current build / sprint status.
+- [`docs/PROJECT_PLAN.md`](docs/PROJECT_PLAN.md) — step-by-step execution.
+- [`docs/PROJECT_PLAN.md`](docs/PROJECT_PLAN.md) — UI spec + assets.
+- [`docs/PROJECT_PLAN.md`](docs/PROJECT_PLAN.md) — Microsoft submission gate.
 - [`docs/AUTH_FLOW.md`](docs/AUTH_FLOW.md) — **authoritative sign-in / sign-out flow** (read before touching auth).
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — auth, API surface, security.
 - [`docs/FEATURES.md`](docs/FEATURES.md) — feature contract.

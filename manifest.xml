@@ -10,7 +10,7 @@
     Synamail — Outlook add-in for Synaplan.
 
     Dev manifest. Production GUID + version + asset URLs are bumped during
-    Sprint 4. See planning/APPSOURCE_CHECKLIST.md.
+    Sprint 4. See docs/PROJECT_PLAN.md.
   -->
 
   <Id>5b6e8f74-2c5a-4f1d-9d3c-1b9a4a3c0e01</Id>

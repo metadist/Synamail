@@ -4,7 +4,7 @@ Thanks for your interest in Synamail. This page is the contributor entry point �
 
 ## Before you start
 
-1. Read [`planning/PLAN.md`](../planning/PLAN.md) — the 4-sprint plan tells you which features are landing when and which work is still planning vs. coding.
+1. Read [`docs/PROJECT_PLAN.md`](../docs/PROJECT_PLAN.md) — the 4-sprint plan tells you which features are landing when and which work is still planning vs. coding.
 2. Read [`docs/FEATURES.md`](FEATURES.md) — the feature contract for the add-in.
 3. Skim [`docs/ARCHITECTURE.md`](ARCHITECTURE.md) — auth flow + Synaplan endpoint usage.
 4. Read [`docs/COMMIT_PROCESS.md`](COMMIT_PROCESS.md) — **mandatory** reading before opening a PR.

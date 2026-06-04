@@ -17,7 +17,7 @@
 
 ## Sprint / Step
 
-<!-- Which sprint and step from planning/STEPS.md does this advance? -->
+<!-- Which sprint and step from docs/PROJECT_PLAN.md does this advance? -->
 
 Sprint `__`, Step `__.__`
 

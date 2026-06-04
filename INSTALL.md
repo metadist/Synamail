@@ -438,13 +438,13 @@ builds and `https://web.synaplan.com` in production builds.
 
 ## Related documents
 
-- [`planning/STATUS.md`](planning/STATUS.md) — current build status, Sprint 2 acceptance state, next actions.
+- [`docs/PROJECT_PLAN.md`](docs/PROJECT_PLAN.md) — current build status, Sprint 2 acceptance state, next actions.
 - [`docs/SYNAPLAN_INTEGRATION.md`](docs/SYNAPLAN_INTEGRATION.md) — what the Synaplan platform side needs (the bridge page).
 - [`docs/COMMIT_PROCESS.md`](docs/COMMIT_PROCESS.md) — pre-commit gate, hooks, CI.
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — full architecture brief.
 - [`AGENTS.md`](AGENTS.md) — rules every contributor (and AI agent) follows.
-- [`planning/STEPS.md`](planning/STEPS.md) — sprint-by-sprint execution plan.
-- [`planning/APPSOURCE_CHECKLIST.md`](planning/APPSOURCE_CHECKLIST.md) — what Microsoft will check at certification.
+- [`docs/PROJECT_PLAN.md`](docs/PROJECT_PLAN.md) — sprint-by-sprint execution plan.
+- [`docs/PROJECT_PLAN.md`](docs/PROJECT_PLAN.md) — what Microsoft will check at certification.
 
 ---
 

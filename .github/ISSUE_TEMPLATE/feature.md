@@ -15,7 +15,7 @@ labels: enhancement
 
 ## Sprint fit
 
-<!-- Which sprint does this fit in, given the current planning/PLAN.md? Is it a v1 must-have, or v1.1+? -->
+<!-- Which sprint does this fit in, given the current docs/PROJECT_PLAN.md? Is it a v1 must-have, or v1.1+? -->
 
 ## Synaplan endpoints needed
 

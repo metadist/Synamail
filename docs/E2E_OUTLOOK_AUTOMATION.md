@@ -27,7 +27,7 @@ faithful, deterministic `Office` global via `page.addInitScript` (installed befo
 any app script, exactly as a host would). It pre-seeds roaming settings with an
 API key so the app boots straight into the signed-in Home view, then drives the
 real UI. The Synaplan API is stubbed at the network boundary with the exact wire
-shapes verified against a live local stack (see `planning/STATUS.md`), so the
+shapes verified against a live local stack (see `docs/PROJECT_PLAN.md`), so the
 app's real client code path runs unchanged — only `fetch` responses are canned.
 
 Files:

@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Master release & launch plan (`planning/RELEASE_PLAN.md`) covering the path from the
+- Master release & launch plan (`docs/PROJECT_PLAN.md`) covering the path from the
   current beta to a dual v1.0 launch on Microsoft AppSource and as open source.
 - End-user guide (`docs/USER_GUIDE.md`) — a plain-language, screenshot-led walkthrough.
 - Open-source project files: `SECURITY.md`, `CODE_OF_CONDUCT.md`, this changelog.
