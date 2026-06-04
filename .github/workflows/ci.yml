@@ -287,6 +287,8 @@ jobs:
     needs: [docs, commitlint, manifest, build, e2e]
     if: always()
     steps:
+      # NOTE: e2e is intentionally NOT in the condition below — it is advisory
+      # while the Playwright harness is hardened for CI (see the e2e job).
       - name: Verify
         if: |
           !cancelled() && (
@@ -295,8 +297,6 @@ jobs:
             (needs.manifest.result   != 'success' && needs.manifest.result   != 'skipped') ||
             (needs.build.result      != 'success' && needs.build.result      != 'skipped')
           )
-          # NOTE: e2e is intentionally NOT gated here — it is advisory while the
-          # Playwright harness is hardened for CI (see the e2e job comment).
         run: |
           echo "One or more checks failed."
           exit 1
