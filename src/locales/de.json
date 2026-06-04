@@ -22,6 +22,12 @@
     "emailLoaded": "E-Mail geöffnet: {subject}",
     "emailActions": "E-Mail-Aktionen",
     "emailTitle": "Geöffnete E-Mail",
+    "sections": {
+      "emailActions": "E-Mail-Aktionen",
+      "filterKb": "Für Wissensdatenbank filtern",
+      "composeAnswer": "Antwort verfassen",
+      "mailActions": "Mail-Aktionen"
+    },
     "commands": {
       "chat": "Chat",
       "search": "E-Mails filtern für Wissensdatenbank",
@@ -66,6 +72,7 @@
     }
   },
   "read": {
+    "noEmail": "Öffne eine E-Mail, um diese Aktionen zu nutzen.",
     "title": "E-Mail-Aktionen",
     "from": "Von",
     "senderTitle": "Absender",
@@ -217,6 +224,17 @@
       "nameAndSenders": "Gib der Route einen Namen und mindestens einen Absender.",
       "group": "Gib einen Projekt-/Wissensdatenbank-Ordner ein."
     }
+  },
+  "composeAnswer": {
+    "subtitle": "Dem Absender antworten oder neue E-Mail verfassen",
+    "replyHint": "Antwort an {email}. Leer lassen für eine Standardantwort oder Hinweise ergänzen.",
+    "newHint": "Keine E-Mail geöffnet — beschreibe die zu schreibende E-Mail.",
+    "replyPlaceholder": "Wie sollen wir antworten? (optional)",
+    "newPlaceholder": "z. B. Den Lieferanten bitten, den Liefertermin im Mai zu bestätigen.",
+    "draftReply": "Antwort entwerfen",
+    "draftNew": "E-Mail entwerfen",
+    "replyOpened": "Antwort in Outlook geöffnet.",
+    "needPrompt": "Beschreibe zuerst die zu schreibende E-Mail."
   },
   "settings": {
     "title": "Einstellungen",

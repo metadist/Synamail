@@ -404,13 +404,33 @@ describe('RealSynaplanClient — fileUpload', () => {
     const fetchImpl = mockFetchSequence([{ body: { files: [{ file_id: 9 }] } }])
     const c = buildClient(fetchImpl as unknown as typeof fetch)
     const r = await c.fileUpload({
-      filename: 'x.eml',
+      filename: 'x.txt',
       contentBase64: btoa('y'),
-      mimeType: 'message/rfc822',
+      mimeType: 'text/plain',
     })
     expect(r).toEqual({ fileId: 9 })
     const form = (fetchImpl.mock.calls[0][1] as RequestInit).body as FormData
     expect(form.get('process_level')).toBe('extract')
+  })
+
+  it('throws the server error when the upload is rejected (no file id)', async () => {
+    // Synaplan answers 206 with success:false + errors for an unsupported type.
+    const fetchImpl = mockFetchSequence([
+      {
+        status: 206,
+        body: {
+          success: false,
+          files: [],
+          errors: [
+            { filename: 'mail.eml', error: 'File type not allowed. Allowed: pdf, docx, txt' },
+          ],
+        },
+      },
+    ])
+    const c = buildClient(fetchImpl as unknown as typeof fetch)
+    await expect(
+      c.fileUpload({ filename: 'mail.eml', contentBase64: btoa('z'), mimeType: 'message/rfc822' }),
+    ).rejects.toMatchObject({ code: 'UPLOAD_FAILED', message: /File type not allowed/ })
   })
 })
 

@@ -53,7 +53,7 @@ async function saveCurrent(): Promise<void> {
   if (!groupKey.value) return
   status.value = null
   await run('save', async () => {
-    const file = await getReadItemAsFile(item.value)
+    const file = getReadItemAsFile(item.value)
     const r = await call((c) =>
       c.fileUpload({
         filename: file.filename,

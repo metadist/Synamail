@@ -358,6 +358,12 @@ export class RealSynaplanClient implements SynaplanClient {
     // The response shape varies (`files[0].id` vs `fileIds[0]` vs `file_id`);
     // pick the first id we can find so callers get a stable `FileUploadResult`.
     const fileId = pickFirstFileId(res)
+    // Synaplan returns HTTP 200/206 with `success:false` + an `errors` array
+    // when a file is rejected (e.g. unsupported type). That's NOT a successful
+    // save, so surface the real reason instead of a bogus "file #0".
+    if (!fileId) {
+      throw apiError(0, 'UPLOAD_FAILED', uploadErrorMessage(res))
+    }
     return { fileId }
   }
 
@@ -666,9 +672,11 @@ function base64ToBlob(b64: string, mime: string): Blob {
 }
 
 interface FileUploadResponse {
-  files?: { id?: number; file_id?: number }[]
+  success?: boolean
+  files?: { id?: number; file_id?: number; success?: boolean; error?: string }[]
   fileIds?: number[]
   file_id?: number
+  errors?: { filename?: string; error?: string }[]
 }
 
 function pickFirstFileId(res: FileUploadResponse | undefined | null): number {
@@ -679,6 +687,15 @@ function pickFirstFileId(res: FileUploadResponse | undefined | null): number {
   if (Array.isArray(res.fileIds) && res.fileIds.length > 0) return res.fileIds[0]
   if (typeof res.file_id === 'number') return res.file_id
   return 0
+}
+
+/** Best human-readable reason a file upload didn't yield a stored file id. */
+function uploadErrorMessage(res: FileUploadResponse | undefined | null): string {
+  const fromErrors = res?.errors?.find((e) => e.error)?.error
+  if (fromErrors) return fromErrors
+  const fromFile = res?.files?.find((f) => f.error)?.error
+  if (fromFile) return fromFile
+  return 'Upload failed — the server did not store the file.'
 }
 
 // ---------------------------------------------------------------------------

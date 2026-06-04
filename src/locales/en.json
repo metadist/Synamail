@@ -22,6 +22,12 @@
     "emailLoaded": "Email open: {subject}",
     "emailActions": "Email actions",
     "emailTitle": "Open email",
+    "sections": {
+      "emailActions": "Email actions",
+      "filterKb": "Filter for knowledge base",
+      "composeAnswer": "Compose answer",
+      "mailActions": "Mail actions"
+    },
     "commands": {
       "chat": "Chat",
       "search": "Filter emails for knowledge base",
@@ -66,6 +72,7 @@
     }
   },
   "read": {
+    "noEmail": "Open an email to use these actions.",
     "title": "Email actions",
     "from": "From",
     "senderTitle": "Sender",
@@ -217,6 +224,17 @@
       "nameAndSenders": "Give the route a name and at least one sender.",
       "group": "Enter a project / knowledge base folder."
     }
+  },
+  "composeAnswer": {
+    "subtitle": "Answer the sender, or draft a new email",
+    "replyHint": "Reply to {email}. Leave blank for a standard reply, or add instructions.",
+    "newHint": "No email open — describe the email to write.",
+    "replyPlaceholder": "How should we answer? (optional)",
+    "newPlaceholder": "e.g. Ask the supplier to confirm the May delivery date.",
+    "draftReply": "Draft reply",
+    "draftNew": "Draft email",
+    "replyOpened": "Reply opened in Outlook.",
+    "needPrompt": "Describe the email to write first."
   },
   "settings": {
     "title": "Settings",

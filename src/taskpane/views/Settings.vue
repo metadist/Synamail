@@ -189,8 +189,6 @@ async function onLanguageChange(): Promise<void> {
     </div>
 
     <div class="syn-card">
-      <h3 class="syn-card-title">{{ t('settings.advanced') }}</h3>
-      <ActionButton @click="go('mail-routes')"> {{ t('settings.mailRoutes') }} → </ActionButton>
       <ActionButton @click="handleReset">{{ t('settings.resetRoaming') }}</ActionButton>
     </div>
 

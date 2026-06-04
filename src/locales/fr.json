@@ -22,6 +22,12 @@
     "emailLoaded": "E-mail ouvert : {subject}",
     "emailActions": "Actions sur l'e-mail",
     "emailTitle": "E-mail ouvert",
+    "sections": {
+      "emailActions": "Actions e-mail",
+      "filterKb": "Filtrer pour la base de connaissances",
+      "composeAnswer": "Composer une réponse",
+      "mailActions": "Actions courrier"
+    },
     "commands": {
       "chat": "Discussion",
       "search": "Filtrer les e-mails pour la base de connaissances",
@@ -66,6 +72,7 @@
     }
   },
   "read": {
+    "noEmail": "Ouvrez un e-mail pour utiliser ces actions.",
     "title": "Actions sur l'e-mail",
     "from": "De",
     "senderTitle": "Expéditeur",
@@ -217,6 +224,17 @@
       "nameAndSenders": "Donnez un nom à la route et au moins un expéditeur.",
       "group": "Saisissez un dossier projet / base de connaissances."
     }
+  },
+  "composeAnswer": {
+    "subtitle": "Répondre à l'expéditeur ou rédiger un nouvel e-mail",
+    "replyHint": "Répondre à {email}. Laissez vide pour une réponse standard ou ajoutez des instructions.",
+    "newHint": "Aucun e-mail ouvert — décrivez l'e-mail à rédiger.",
+    "replyPlaceholder": "Comment répondre ? (facultatif)",
+    "newPlaceholder": "ex. Demander au fournisseur de confirmer la date de livraison de mai.",
+    "draftReply": "Rédiger la réponse",
+    "draftNew": "Rédiger l'e-mail",
+    "replyOpened": "Réponse ouverte dans Outlook.",
+    "needPrompt": "Décrivez d'abord l'e-mail à rédiger."
   },
   "settings": {
     "title": "Paramètres",

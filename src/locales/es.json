@@ -22,6 +22,12 @@
     "emailLoaded": "Correo abierto: {subject}",
     "emailActions": "Acciones del correo",
     "emailTitle": "Correo abierto",
+    "sections": {
+      "emailActions": "Acciones del correo",
+      "filterKb": "Filtrar para la base de conocimiento",
+      "composeAnswer": "Redactar respuesta",
+      "mailActions": "Rutas de correo"
+    },
     "commands": {
       "chat": "Chat",
       "search": "Filtrar correos para la base de conocimiento",
@@ -66,6 +72,7 @@
     }
   },
   "read": {
+    "noEmail": "Abre un correo para usar estas acciones.",
     "title": "Acciones del correo",
     "from": "De",
     "senderTitle": "Remitente",
@@ -217,6 +224,17 @@
       "nameAndSenders": "Da un nombre a la ruta y al menos un remitente.",
       "group": "Introduce una carpeta de proyecto / base de conocimiento."
     }
+  },
+  "composeAnswer": {
+    "subtitle": "Responder al remitente o redactar un nuevo correo",
+    "replyHint": "Responder a {email}. Déjalo vacío para una respuesta estándar o añade instrucciones.",
+    "newHint": "Ningún correo abierto — describe el correo a escribir.",
+    "replyPlaceholder": "¿Cómo respondemos? (opcional)",
+    "newPlaceholder": "p. ej. Pedir al proveedor que confirme la fecha de entrega de mayo.",
+    "draftReply": "Redactar respuesta",
+    "draftNew": "Redactar correo",
+    "replyOpened": "Respuesta abierta en Outlook.",
+    "needPrompt": "Describe primero el correo a escribir."
   },
   "settings": {
     "title": "Ajustes",

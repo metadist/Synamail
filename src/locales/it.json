@@ -22,6 +22,12 @@
     "emailLoaded": "E-mail aperta: {subject}",
     "emailActions": "Azioni e-mail",
     "emailTitle": "E-mail aperta",
+    "sections": {
+      "emailActions": "Azioni email",
+      "filterKb": "Filtra per base di conoscenza",
+      "composeAnswer": "Componi risposta",
+      "mailActions": "Azioni posta"
+    },
     "commands": {
       "chat": "Chat",
       "search": "Filtra e-mail per la base di conoscenza",
@@ -66,6 +72,7 @@
     }
   },
   "read": {
+    "noEmail": "Apri un'email per usare queste azioni.",
     "title": "Azioni e-mail",
     "from": "Da",
     "senderTitle": "Mittente",
@@ -217,6 +224,17 @@
       "nameAndSenders": "Assegna un nome alla route e almeno un mittente.",
       "group": "Inserisci una cartella progetto / base di conoscenza."
     }
+  },
+  "composeAnswer": {
+    "subtitle": "Rispondi al mittente o redigi una nuova email",
+    "replyHint": "Rispondi a {email}. Lascia vuoto per una risposta standard o aggiungi istruzioni.",
+    "newHint": "Nessuna email aperta — descrivi l'email da scrivere.",
+    "replyPlaceholder": "Come rispondiamo? (facoltativo)",
+    "newPlaceholder": "es. Chiedere al fornitore di confermare la data di consegna di maggio.",
+    "draftReply": "Bozza risposta",
+    "draftNew": "Bozza email",
+    "replyOpened": "Risposta aperta in Outlook.",
+    "needPrompt": "Descrivi prima l'email da scrivere."
   },
   "settings": {
     "title": "Impostazioni",

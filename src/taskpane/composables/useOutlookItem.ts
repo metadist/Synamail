@@ -202,38 +202,34 @@ export interface MessageFile {
 }
 
 /**
- * Capture the currently-selected read-mode message as a file payload suitable
- * for `synaplanClient.fileUpload(...)`. Uses `getAsFileAsync` (Mailbox 1.8)
- * which returns base64 EML when available. Falls back to a plain-text export
- * of the body when the API is missing (older clients, unit tests).
+ * Capture the currently-selected read-mode message as an uploadable file.
+ *
+ * We export the message as PLAIN TEXT (`.txt`) — a small header block
+ * (subject / participants) followed by the body — NOT `.eml`. Synaplan's file
+ * ingestion only accepts document/media types (pdf, docx, txt, csv, …) and
+ * rejects `message/rfc822`; the body text is also what's actually useful for
+ * RAG (an `.eml`'s MIME envelope is noise). Building from the snapshot keeps
+ * this working across every Outlook host without depending on
+ * `getAsFileAsync`.
  */
-export async function getReadItemAsFile(snapshot: OutlookItemSnapshot): Promise<MessageFile> {
+export function getReadItemAsFile(snapshot: OutlookItemSnapshot): MessageFile {
   const baseName = sanitizeFilename(snapshot.subject || 'message')
-  const raw = (typeof Office !== 'undefined' ? Office.context?.mailbox?.item : undefined) as
-    | (Office.MessageRead & {
-        getAsFileAsync?: (cb: (r: Office.AsyncResult<string>) => void) => void
-      })
-    | undefined
-
-  if (raw && typeof raw.getAsFileAsync === 'function') {
-    const eml = await new Promise<string>((resolve, reject) => {
-      raw.getAsFileAsync!((r) => {
-        if (r.status === Office.AsyncResultStatus.Succeeded) resolve(r.value ?? '')
-        else reject(new Error(r.error?.message ?? 'getAsFileAsync failed'))
-      })
-    })
-    return {
-      filename: `${baseName}.eml`,
-      contentBase64: eml,
-      mimeType: 'message/rfc822',
-    }
-  }
-
   return {
     filename: `${baseName}.txt`,
-    contentBase64: toBase64Utf8(snapshot.bodyText ?? ''),
+    contentBase64: toBase64Utf8(buildEmailText(snapshot)),
     mimeType: 'text/plain',
   }
+}
+
+/** Plain-text export of a message: header lines + a blank line + the body. */
+export function buildEmailText(snapshot: OutlookItemSnapshot): string {
+  const header: string[] = []
+  if (snapshot.subject) header.push(`Subject: ${snapshot.subject}`)
+  if (snapshot.from) header.push(`From: ${snapshot.from}`)
+  if (snapshot.to.length) header.push(`To: ${snapshot.to.join(', ')}`)
+  if (snapshot.cc.length) header.push(`Cc: ${snapshot.cc.join(', ')}`)
+  const body = snapshot.bodyText ?? ''
+  return header.length ? `${header.join('\n')}\n\n${body}` : body
 }
 
 function sanitizeFilename(s: string): string {

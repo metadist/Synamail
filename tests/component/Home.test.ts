@@ -30,11 +30,9 @@ function mountHome() {
 }
 
 describe('Home.vue', () => {
-  it('renders the chat composer and the two command launchers', () => {
+  it('renders the chat composer at the top', () => {
     const wrapper = mountHome()
     expect(wrapper.find('textarea').exists()).toBe(true)
-    expect(wrapper.find('[data-testid="cmd-search"]').exists()).toBe(true)
-    expect(wrapper.find('[data-testid="cmd-newmail"]').exists()).toBe(true)
   })
 
   it('seeds the composer with a sample question so Send starts active', () => {
@@ -53,17 +51,16 @@ describe('Home.vue', () => {
     expect(wrapper.text()).toContain('echo: hello world')
   })
 
-  it('opens the search & vectorize dialog from the first command', async () => {
-    const wrapper = mountHome()
-    expect(wrapper.find('#sv-topic').exists()).toBe(false)
-    await wrapper.find('[data-testid="cmd-search"]').trigger('click')
-    expect(wrapper.find('#sv-topic').exists()).toBe(true)
+  it('renders the four accordion sections', () => {
+    const text = mountHome().text()
+    expect(text).toContain(en.home.sections.emailActions)
+    expect(text).toContain(en.home.sections.filterKb)
+    expect(text).toContain(en.home.sections.composeAnswer)
+    expect(text).toContain(en.home.sections.mailActions)
   })
 
-  it('opens the new mail dialog from the second command', async () => {
-    const wrapper = mountHome()
-    expect(wrapper.find('#nm-desc').exists()).toBe(false)
-    await wrapper.find('[data-testid="cmd-newmail"]').trigger('click')
-    expect(wrapper.find('#nm-desc').exists()).toBe(true)
+  it('embeds the knowledge-base filter form inline (no modal)', () => {
+    // Accordion content is always in the DOM; the form is present without a click.
+    expect(mountHome().find('#sv-topic').exists()).toBe(true)
   })
 })

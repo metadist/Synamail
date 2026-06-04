@@ -4,7 +4,6 @@ import { useI18n } from 'vue-i18n'
 import ActionButton from '@/taskpane/components/ActionButton.vue'
 import Toast from '@/taskpane/components/Toast.vue'
 import { getMailRoutes, saveMailRoutes } from '@/taskpane/composables/useRoamingSettings'
-import { go } from '@/taskpane/router'
 import { SUPPORTED_LOCALES } from '@/i18n'
 import type { MailRoute, MailRouteKind } from '@shared/mail-routes/types'
 
@@ -16,8 +15,6 @@ const seen = ref<Record<string, number>>({})
 const error = ref<string | null>(null)
 const status = ref<string | null>(null)
 
-// Editor state — a flat set of draft fields, assembled into a typed MailRoute
-// on save so the template never has to narrow the discriminated union.
 const isEditing = ref(false)
 const draftId = ref('')
 const draftKind = ref<MailRouteKind>('meeting')
@@ -185,34 +182,22 @@ onMounted(load)
 </script>
 
 <template>
-  <section class="routes">
-    <header class="syn-view-header">
-      <button type="button" class="syn-back" @click="go('settings')">
-        ← {{ t('common.back') }}
-      </button>
-      <h2 class="syn-view-title">{{ t('mailRoutes.title') }}</h2>
-    </header>
-
-    <p class="syn-muted">{{ t('mailRoutes.intro') }}</p>
-
-    <div class="syn-card routes__pause">
-      <div>
-        <h3 class="syn-card-title">{{ t('mailRoutes.pauseTitle') }}</h3>
-        <p class="syn-card-sub">
-          {{ paused ? t('mailRoutes.pausedOn') : t('mailRoutes.pausedOff') }}
-        </p>
-      </div>
+  <div class="routes">
+    <div class="routes__pause">
+      <p class="syn-card-sub">
+        {{ paused ? t('mailRoutes.pausedOn') : t('mailRoutes.pausedOff') }}
+      </p>
       <ActionButton :block="false" @click="togglePaused">
         {{ paused ? t('mailRoutes.resume') : t('mailRoutes.pause') }}
       </ActionButton>
     </div>
 
     <!-- Editor -->
-    <div v-if="isEditing" class="syn-card">
-      <h3 class="syn-card-title">
+    <div v-if="isEditing" class="routes__editor">
+      <h4 class="syn-card-title">
         {{ draftId ? t('mailRoutes.editTitle') : t('mailRoutes.newTitle') }} —
         {{ kindLabel(draftKind) }}
-      </h3>
+      </h4>
 
       <label class="routes__label">{{ t('mailRoutes.fields.name') }}</label>
       <input
@@ -283,45 +268,45 @@ onMounted(load)
     <template v-else>
       <p v-if="!routes.length" class="syn-muted">{{ t('mailRoutes.empty') }}</p>
 
-      <div v-for="r in routes" :key="r.id" class="syn-card" :class="{ routes__off: !r.enabled }">
-        <h3 class="syn-card-title">
+      <div
+        v-for="r in routes"
+        :key="r.id"
+        class="routes__item"
+        :class="{ routes__off: !r.enabled }"
+      >
+        <h4 class="syn-card-title">
           {{ r.name }}
           <span class="routes__badge">{{ kindLabel(r.kind) }}</span>
-        </h3>
+        </h4>
         <p class="syn-card-sub">{{ r.senders.join(', ') }}</p>
         <p class="syn-card-sub">{{ routeSummary(r) }}</p>
         <div class="syn-row">
           <ActionButton :block="false" @click="toggleEnabled(r)">
             {{ r.enabled ? t('mailRoutes.disable') : t('mailRoutes.enable') }}
           </ActionButton>
-          <ActionButton :block="false" @click="beginEdit(r)">{{
-            t('mailRoutes.edit')
-          }}</ActionButton>
+          <ActionButton :block="false" @click="beginEdit(r)">
+            {{ t('mailRoutes.edit') }}
+          </ActionButton>
           <ActionButton :block="false" @click="removeRoute(r)">
             {{ t('mailRoutes.remove') }}
           </ActionButton>
         </div>
       </div>
 
-      <div class="syn-card">
-        <h3 class="syn-card-title">{{ t('mailRoutes.addTitle') }}</h3>
-        <p class="syn-card-sub">{{ t('mailRoutes.addHint') }}</p>
-        <div class="routes__add">
-          <ActionButton v-for="k in KINDS" :key="k" :block="false" @click="beginCreate(k)">
-            + {{ kindLabel(k) }}
-          </ActionButton>
-        </div>
+      <div class="routes__add">
+        <ActionButton v-for="k in KINDS" :key="k" :block="false" @click="beginCreate(k)">
+          + {{ kindLabel(k) }}
+        </ActionButton>
       </div>
     </template>
 
     <Toast v-if="status" kind="success" :message="status" />
     <Toast v-if="error" kind="error" :message="error" />
-  </section>
+  </div>
 </template>
 
 <style scoped>
 .routes {
-  padding: var(--syn-space-3);
   display: flex;
   flex-direction: column;
   gap: var(--syn-space-3);
@@ -331,6 +316,14 @@ onMounted(load)
   align-items: center;
   justify-content: space-between;
   gap: var(--syn-space-2);
+}
+.routes__editor,
+.routes__item {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--syn-border);
+  border-radius: var(--syn-radius-sm);
+  padding: var(--syn-space-3);
 }
 .routes__label {
   display: block;
@@ -380,6 +373,5 @@ onMounted(load)
   display: flex;
   flex-wrap: wrap;
   gap: var(--syn-space-2);
-  margin-top: var(--syn-space-2);
 }
 </style>
