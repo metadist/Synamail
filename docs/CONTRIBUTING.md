@@ -15,7 +15,7 @@ If you can answer "yes" to "do I understand which sprint this work belongs to?",
 
 ```bash
 # Clone
-git clone https://github.com/<org>/Synamail.git
+git clone https://github.com/metadist/Synamail.git
 cd Synamail
 
 # Make sure you're on a supported Node version (>=22; .nvmrc pins to 24)

@@ -1,4 +1,4 @@
-.PHONY: help bootstrap dev sideload lint format check-types test test-e2e validate \
+.PHONY: help bootstrap dev sideload lint format check-types test test-e2e test-e2e-live validate \
         build build-manifest generate-schemas ci-local clean deps doctor sync bridge \
         up down budget
 
@@ -86,8 +86,11 @@ check-types: ## Run vue-tsc -b (catches errors ESLint misses)
 test: ## Run Vitest unit + component tests
 	@if [ -f package.json ]; then npm run test -- --run; else echo "skip: no package.json (Sprint 2.1)"; fi
 
-test-e2e: ## Run Playwright E2E suite (requires sideloadable manifest)
+test-e2e: ## Run Playwright E2E suite (taskpane + Office shim, mocked Synaplan)
 	@if [ -f package.json ]; then npm run test:e2e; else echo "skip: no package.json (Sprint 2.1)"; fi
+
+test-e2e-live: ## Run the E2E flows against a real Synaplan (set SYNAPLAN_BASE_URL + SYNAPLAN_API_KEY)
+	@SYNAPLAN_E2E_LIVE=1 npm run test:e2e
 
 validate: ## Validate manifest.xml (and unified manifest if present)
 	@if [ -f manifest.xml ]; then \

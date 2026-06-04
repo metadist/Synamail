@@ -22,6 +22,7 @@
 
 import {
   ask as askPrompt,
+  categorize as categorizePrompt,
   classify as classifyPrompt,
   meetingProposals as meetingProposalsPrompt,
   newMail as newMailPrompt,
@@ -32,6 +33,8 @@ import {
 } from './prompts'
 import type {
   ApiError,
+  CategorizeInput,
+  CategorizeResult,
   ChatTurnInput,
   ChatTurnResult,
   ClassifyInput,
@@ -48,13 +51,10 @@ import type {
   RagGroup,
   RagSearchHit,
   RagSearchInput,
-  RoutingTestResult,
-  RoutingTopic,
   SummariseInput,
   SummariseResult,
   TranslateInput,
   TranslateResult,
-  UpdateTopicRulesInput,
 } from './types'
 
 export interface SynaplanClient {
@@ -98,24 +98,13 @@ export interface SynaplanClient {
    */
   getModelConfig(): Promise<ModelConfig>
 
-  // -------------------------------------------------------------------------
-  // Synapse Routing rules (RULE integration — docs/FEATURES.md §5)
-  // -------------------------------------------------------------------------
-
-  /** List the user's routable topics (system + custom) with their rules. */
-  listTopics(): Promise<RoutingTopic[]>
   /**
-   * Update a topic's Tier-0 selection rules / keywords / enabled flag.
-   * Only user-owned topics are writable by non-admin users; updating a
-   * system topic (`isDefault`) yields a 403 the caller should surface.
+   * Categorize an email against a set of user-defined categories (each with a
+   * meaning/example). Returns the best-fitting category name + confidence, or
+   * `null` when nothing fits. Pure AI via `POST /messages/send`; the caller
+   * applies the result as an Outlook category.
    */
-  updateTopicRules(id: number, input: UpdateTopicRulesInput): Promise<RoutingTopic>
-  /**
-   * Dry-run the Synapse Router for a message text and return the Top-K
-   * topic candidates with raw cosine scores. Available to any authenticated
-   * user; does not route or persist anything.
-   */
-  testRouting(text: string, limit?: number): Promise<RoutingTestResult>
+  categorize(input: CategorizeInput): Promise<CategorizeResult | null>
 }
 
 // Sender history ("More from this sender") and block-sender are Outlook
@@ -321,12 +310,18 @@ export class RealSynaplanClient implements SynaplanClient {
       method: 'POST',
       body: JSON.stringify(body),
     })
+    // Live API (verified 2026-06-04) returns hits as
+    // `{ chunk_id, message_id, text, score, start_line, end_line }` — NOT the
+    // `{ file_id, file_name, group_key }` the OpenAPI annotation advertises.
+    // Map from the real fields; `message_id` is the source-message id, the hit
+    // carries no filename, and the group is the one we searched in.
+    const searchedGroup = input.groups && input.groups.length > 0 ? input.groups[0] : undefined
     return (res?.results ?? []).map((hit) => ({
-      fileId: hit.file_id ?? 0,
+      fileId: hit.message_id ?? hit.file_id ?? 0,
       filename: hit.file_name ?? '',
       snippet: hit.text ?? '',
       score: hit.score ?? 0,
-      group: hit.group_key ?? undefined,
+      group: hit.group_key ?? searchedGroup,
     }))
   }
 
@@ -396,43 +391,17 @@ export class RealSynaplanClient implements SynaplanClient {
   }
 
   // -------------------------------------------------------------------------
-  // Synapse Routing rules
+  // Categorize (Mail Routes — docs/MAIL_ROUTES.md §4a)
   // -------------------------------------------------------------------------
 
-  async listTopics(): Promise<RoutingTopic[]> {
-    const res = await this.request<PromptsListResponse>('/api/v1/prompts')
-    return (res?.prompts ?? []).map(mapTopic)
-  }
-
-  async updateTopicRules(id: number, input: UpdateTopicRulesInput): Promise<RoutingTopic> {
-    const body: Record<string, unknown> = {}
-    if (input.selectionRules !== undefined) body.selectionRules = input.selectionRules
-    if (input.keywords !== undefined) body.keywords = input.keywords
-    if (input.enabled !== undefined) body.enabled = input.enabled
-    const res = await this.request<PromptMutationResponse>(`/api/v1/prompts/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(body),
-    })
-    if (!res?.success || !res.prompt) {
-      throw apiError(0, 'RULE_UPDATE_FAILED', 'Synaplan did not confirm the rule update')
-    }
-    return mapTopic(res.prompt)
-  }
-
-  async testRouting(text: string, limit = 5): Promise<RoutingTestResult> {
-    const res = await this.request<RoutingTestResponse>('/api/v1/prompts/test', {
-      method: 'POST',
-      body: JSON.stringify({ text, limit }),
-    })
-    return {
-      query: res?.query ?? text,
-      candidates: (res?.candidates ?? []).map((c) => ({
-        topic: c.topic ?? '',
-        score: c.score ?? 0,
-        stale: c.stale ?? undefined,
-      })),
-      latencyMs: res?.latency_ms,
-    }
+  async categorize(input: CategorizeInput): Promise<CategorizeResult | null> {
+    const list = input.categories.map((c) => `- "${c.name}": ${c.meaning}`).join('\n')
+    const message = composeMessage(
+      categorizePrompt(list, input.clarify),
+      buildEmailBlock({ subject: input.subject, body: input.body, from: input.from }),
+    )
+    const text = await this.sendChat(message)
+    return parseCategorizeResponse(text, input.categories)
   }
 
   // -------------------------------------------------------------------------
@@ -753,9 +722,16 @@ interface CreateChatResponse {
 interface RagSearchResponse {
   success?: boolean
   results?: {
-    id?: number
+    // Real fields returned by the live API (verified 2026-06-04).
+    chunk_id?: string
+    message_id?: number
     text?: string
     score?: number
+    start_line?: number | null
+    end_line?: number | null
+    // Legacy/spec-advertised fields kept for forward-compat — not currently
+    // emitted by the server but tolerated if a future version adds them.
+    id?: number
     file_id?: number
     file_name?: string
     group_key?: string | null
@@ -791,45 +767,35 @@ interface ConfigModelsResponse {
   models?: Record<string, RawCatalogModel[]>
 }
 
-interface RawPrompt {
-  id?: number
-  topic?: string
-  name?: string
-  shortDescription?: string
-  selectionRules?: string | null
-  keywords?: string | null
-  enabled?: boolean
-  isDefault?: boolean
-  isUserOverride?: boolean
-}
-
-interface PromptsListResponse {
-  success?: boolean
-  prompts?: RawPrompt[]
-}
-
-interface PromptMutationResponse {
-  success?: boolean
-  prompt?: RawPrompt
-}
-
-interface RoutingTestResponse {
-  success?: boolean
-  query?: string
-  candidates?: { topic?: string; score?: number; stale?: boolean }[]
-  latency_ms?: number
-}
-
-function mapTopic(p: RawPrompt): RoutingTopic {
-  return {
-    id: p.id ?? 0,
-    topic: p.topic ?? '',
-    name: p.name ?? p.topic ?? '',
-    shortDescription: p.shortDescription ?? '',
-    selectionRules: p.selectionRules ?? null,
-    keywords: p.keywords ?? null,
-    enabled: p.enabled ?? true,
-    isDefault: p.isDefault ?? false,
-    isUserOverride: p.isUserOverride ?? false,
+function parseCategorizeResponse(
+  text: string,
+  categories: { name: string; meaning: string }[],
+): CategorizeResult | null {
+  // The categorize prompt asks for JSON {category, confidence, reasoning}.
+  // Tolerate fences/prose; only return a category that's in the candidate list.
+  const cleaned = text
+    .replace(/```(?:json)?\s*/gi, '')
+    .replace(/```/g, '')
+    .trim()
+  const start = cleaned.indexOf('{')
+  const end = cleaned.lastIndexOf('}')
+  if (start === -1 || end === -1 || end <= start) return null
+  try {
+    const parsed = JSON.parse(cleaned.slice(start, end + 1)) as {
+      category?: string
+      confidence?: number
+      reasoning?: string
+    }
+    const name = typeof parsed.category === 'string' ? parsed.category.trim() : ''
+    if (!name || name.toLowerCase() === 'none') return null
+    const match = categories.find((c) => c.name.toLowerCase() === name.toLowerCase())
+    if (!match) return null
+    return {
+      category: match.name,
+      confidence: typeof parsed.confidence === 'number' ? parsed.confidence : 0,
+      reasoning: typeof parsed.reasoning === 'string' ? parsed.reasoning : '',
+    }
+  } catch {
+    return null
   }
 }

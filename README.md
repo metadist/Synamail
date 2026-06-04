@@ -1,6 +1,28 @@
 # Synamail
 
-MS Outlook add-in for Synaplan. Work directly with your Outlook client and your own Synaplan account, locally or remotely.
+**Your Synaplan AI workspace, right inside Outlook.** Summarise, translate, draft
+replies, classify, save emails to your knowledge base, and ask follow-up questions —
+without leaving your inbox. Works in Outlook on the Web (Windows, Mac, **and Linux**),
+new Outlook for Windows, classic Outlook 2024, and Outlook on Mac.
+
+---
+
+## Pick your path
+
+| 👤 **I just want to use it**                                                | 🛠 **I want to build / host it**                                                    |
+| --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| Install Synamail and start in 60 seconds — no technical setup.              | Run from source, contribute, or self-host against your own Synaplan.                |
+| → **[User Guide](docs/USER_GUIDE.md)** (start here)                         | → **[Developer install & sideload](INSTALL.md#for-developers-running-from-source)** |
+| → [Install from the Marketplace](INSTALL.md#for-end-users-released-version) | → [Architecture](docs/ARCHITECTURE.md) · [Contributing](docs/CONTRIBUTING.md)       |
+| → [Privacy in plain words](docs/USER_GUIDE.md#10-privacy-in-plain-words)    | → [Commit process](docs/COMMIT_PROCESS.md) · [Security policy](SECURITY.md)         |
+
+> Not sure if you can use it at work? Many corporate mailboxes restrict add-ins — see
+> [the User Guide](docs/USER_GUIDE.md#2-install-synamail) for what to ask your IT team.
+
+---
+
+> The rest of this README is for **builders**. Everyday users should head to the
+> [User Guide](docs/USER_GUIDE.md).
 
 ## Project structure
 
@@ -55,6 +77,7 @@ Synamail/
 ## Reading order for new contributors
 
 1. [`planning/PLAN.md`](planning/PLAN.md) — what the four sprints deliver and when.
+   - [`planning/RELEASE_PLAN.md`](planning/RELEASE_PLAN.md) — the v1.0 launch plan (AppSource + open source), branding, and help-doc architecture. **Read this for the road to release.**
 2. [`AGENTS.md`](AGENTS.md) — the rules that apply to every commit (humans included).
 3. [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md) — the contributor flow in 90 seconds.
 4. [`docs/COMMIT_PROCESS.md`](docs/COMMIT_PROCESS.md) — Conventional Commits, branches, PR, release.
@@ -70,7 +93,7 @@ Synamail/
 ## Quick start
 
 ```bash
-git clone https://github.com/<org>/Synamail.git
+git clone https://github.com/metadist/Synamail.git
 cd Synamail
 make bootstrap       # enables git hooks, installs deps (once Sprint 2.1 has landed)
 make doctor          # verifies your local toolchain

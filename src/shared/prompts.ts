@@ -26,6 +26,20 @@ export const classify = (categories: string[]): string =>
   `{"category": "<one of the above>", "confidence": <0..1>, "reasoning": "<short>"}. ` +
   `No prose, no markdown, just the JSON.`
 
+/**
+ * Categorize an email against user-defined categories (each "name": meaning).
+ * `clarify` is optional free-text guidance. The model must pick exactly one
+ * listed name, or "none" if nothing fits.
+ */
+export const categorize = (categoryList: string, clarify?: string): string =>
+  `You assign exactly ONE category to an email, choosing from this list ` +
+  `(name: meaning):\n${categoryList}\n` +
+  (clarify ? `Extra guidance from the user: ${clarify}\n` : '') +
+  `Pick the single best-fitting category by its meaning. If none fit, use ` +
+  `"none". Return a JSON object: {"category": "<exact name from the list, or ` +
+  `none>", "confidence": <0..1>, "reasoning": "<short>"}. JSON only — no prose, ` +
+  `no markdown fences.`
+
 export const ask = (): string =>
   `You are answering follow-up questions about a specific email. Stay grounded ` +
   `in the email content; if asked something the email doesn't cover, say so.`

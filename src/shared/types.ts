@@ -250,50 +250,32 @@ export interface MeetingProposal {
 }
 
 // ---------------------------------------------------------------------------
-// Synapse Routing rules (RULE integration — docs/FEATURES.md §5).
-//
-// A "routing topic" is a Synaplan Prompt (`GET /api/v1/prompts`). Its
-// `selectionRules` (Tier-0 IF/THEN matchers) and `keywords` decide how
-// incoming email is routed before embedding / AI classification runs.
+// Categorize (Mail Routes — docs/MAIL_ROUTES.md §4a). The AI assigns the
+// best-fitting user-defined Outlook category to an email.
 // ---------------------------------------------------------------------------
 
-export interface RoutingTopic {
-  id: number
-  /** Stable topic key, e.g. `billing`, `support`. */
-  topic: string
-  /** Display label from the backend. */
+/** A user-defined category and what it means (drives AI categorization). */
+export interface CategoryMeaning {
+  /** Outlook category name (often a repurposed colour, e.g. "Blue Category"). */
   name: string
-  shortDescription: string
-  /** Tier-0 IF/THEN matcher text. Null when none set. */
-  selectionRules: string | null
-  /** Comma-separated keyword matchers. Null when none set. */
-  keywords: string | null
-  enabled: boolean
-  /** True for system prompts (ownerId 0) — read-only for non-admin users. */
-  isDefault: boolean
-  /** True when the user has a personal override of a system topic. */
-  isUserOverride: boolean
+  /** Plain-language meaning/example, e.g. "about project XYZ from @bmw.de". */
+  meaning: string
 }
 
-export interface UpdateTopicRulesInput {
-  selectionRules?: string | null
-  keywords?: string | null
-  enabled?: boolean
+export interface CategorizeInput {
+  subject: string
+  body: string
+  from?: string
+  categories: CategoryMeaning[]
+  /** Optional free-text "AI clarify" guidance. */
+  clarify?: string
 }
 
-export interface RoutingCandidate {
-  topic: string
-  /** Raw cosine score from the Synapse Router dry-run. */
-  score: number
-  /** True when the topic's embedding is stale vs its current text. */
-  stale?: boolean
-}
-
-export interface RoutingTestResult {
-  query: string
-  candidates: RoutingCandidate[]
-  /** Server-reported round-trip latency in ms, when present. */
-  latencyMs?: number
+export interface CategorizeResult {
+  /** One of the candidate category names (validated against the input list). */
+  category: string
+  confidence: number
+  reasoning: string
 }
 
 export interface ApiError {

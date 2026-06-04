@@ -151,6 +151,7 @@
     "searchPlaceholder": "Cerca le email di questo contatto…",
     "search": "Cerca",
     "results": "Email salvate",
+    "savedEmail": "Email salvata",
     "noResults": "Niente salvato per questo contatto finora.",
     "saveCurrent": "Salva qui l'email corrente",
     "saved": "Salvato in {group}.",

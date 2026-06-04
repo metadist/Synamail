@@ -151,6 +151,7 @@
     "searchPlaceholder": "Buscar los correos de este contacto…",
     "search": "Buscar",
     "results": "Correos guardados",
+    "savedEmail": "Correo guardado",
     "noResults": "Aún no hay nada guardado para este contacto.",
     "saveCurrent": "Guardar el correo actual aquí",
     "saved": "Guardado en {group}.",
