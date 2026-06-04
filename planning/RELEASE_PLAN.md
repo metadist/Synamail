@@ -382,7 +382,7 @@ Rough effort (excluding Microsoft's review calendar): **A** ~2–3 days, **B** ~
    "Outlook Add-in" page). The in-app **? Help** link and AppSource listing point
    there. Privacy/Terms reuse the existing Synaplan pages. (§C.4 / §D.4)
 
-### All launch decisions are now locked. Remaining work is execution.
+### All launch decisions are now locked — remaining work is execution
 
 ---
 
