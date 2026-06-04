@@ -104,7 +104,7 @@ node --version                # → v24.x.x
 ### Step 1 — Clone and bootstrap
 
 ```bash
-git clone https://github.com/<org>/Synamail.git
+git clone https://github.com/metadist/Synamail.git
 cd Synamail
 make bootstrap     # enables .githooks/, runs npm install
 make doctor        # verifies node/npm/hooks

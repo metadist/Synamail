@@ -310,12 +310,18 @@ export class RealSynaplanClient implements SynaplanClient {
       method: 'POST',
       body: JSON.stringify(body),
     })
+    // Live API (verified 2026-06-04) returns hits as
+    // `{ chunk_id, message_id, text, score, start_line, end_line }` — NOT the
+    // `{ file_id, file_name, group_key }` the OpenAPI annotation advertises.
+    // Map from the real fields; `message_id` is the source-message id, the hit
+    // carries no filename, and the group is the one we searched in.
+    const searchedGroup = input.groups && input.groups.length > 0 ? input.groups[0] : undefined
     return (res?.results ?? []).map((hit) => ({
-      fileId: hit.file_id ?? 0,
+      fileId: hit.message_id ?? hit.file_id ?? 0,
       filename: hit.file_name ?? '',
       snippet: hit.text ?? '',
       score: hit.score ?? 0,
-      group: hit.group_key ?? undefined,
+      group: hit.group_key ?? searchedGroup,
     }))
   }
 
@@ -699,9 +705,16 @@ interface CreateChatResponse {
 interface RagSearchResponse {
   success?: boolean
   results?: {
-    id?: number
+    // Real fields returned by the live API (verified 2026-06-04).
+    chunk_id?: string
+    message_id?: number
     text?: string
     score?: number
+    start_line?: number | null
+    end_line?: number | null
+    // Legacy/spec-advertised fields kept for forward-compat — not currently
+    // emitted by the server but tolerated if a future version adds them.
+    id?: number
     file_id?: number
     file_name?: string
     group_key?: string | null

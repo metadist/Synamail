@@ -144,6 +144,7 @@
     "searchPlaceholder": "Search this contact's emails…",
     "search": "Search",
     "results": "Saved emails",
+    "savedEmail": "Saved email",
     "noResults": "Nothing saved for this contact yet.",
     "saveCurrent": "Save current email here",
     "saved": "Saved to {group}.",

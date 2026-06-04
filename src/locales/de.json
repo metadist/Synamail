@@ -144,6 +144,7 @@
     "searchPlaceholder": "E-Mails dieses Kontakts durchsuchen…",
     "search": "Suchen",
     "results": "Gespeicherte E-Mails",
+    "savedEmail": "Gespeicherte E-Mail",
     "noResults": "Für diesen Kontakt ist noch nichts gespeichert.",
     "saveCurrent": "Aktuelle E-Mail hier speichern",
     "saved": "In {group} gespeichert.",

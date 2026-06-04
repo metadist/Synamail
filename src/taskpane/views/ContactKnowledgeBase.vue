@@ -71,9 +71,11 @@ async function saveCurrent(): Promise<void> {
     )
     if (r) {
       await setLastRagGroupId(groupKey.value).catch(() => undefined)
-      status.value = t('contactKb.saved', { group: groupKey.value })
-      // Refresh the list so the freshly saved email shows up.
+      // Refresh the list so the freshly saved email shows up, THEN show the
+      // confirmation — search() clears `status`, so setting it first would wipe
+      // the toast before the user ever sees it.
       await search()
+      status.value = t('contactKb.saved', { group: groupKey.value })
     }
     return r
   })
@@ -88,7 +90,7 @@ async function ask(): Promise<void> {
     // snippets for the question and pass them as context to the chat turn.
     const context = await call((c) => c.ragSearch({ query: q, groups: [groupKey.value], limit: 5 }))
     const grounding = (context ?? [])
-      .map((h, i) => `[${i + 1}] ${h.filename}: ${h.snippet}`)
+      .map((h, i) => `[${i + 1}] ${h.filename || 'email'}: ${h.snippet}`)
       .join('\n')
     const augmented = grounding
       ? `About the contact ${email.value}. Use these saved emails as context:\n${grounding}\n\nQuestion: ${q}`
@@ -141,7 +143,7 @@ onMounted(() => {
 
         <ul v-if="hits.length" class="ckb__hits">
           <li v-for="(h, i) in hits" :key="i" class="ckb__hit">
-            <strong>{{ h.filename }}</strong>
+            <strong>{{ h.filename || t('contactKb.savedEmail') }}</strong>
             <span class="ckb__score">{{ Math.round(h.score * 100) }}%</span>
             <p class="syn-muted">{{ h.snippet }}</p>
           </li>

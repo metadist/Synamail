@@ -289,21 +289,26 @@ describe('RealSynaplanClient — ask (chat round-trip)', () => {
 })
 
 describe('RealSynaplanClient — rag', () => {
-  it('translates input.groups[0]/threshold to group_key/min_score', async () => {
+  it('translates input.groups[0]/threshold to group_key/min_score and maps the real hit shape', async () => {
+    // Real wire shape verified against the live API on 2026-06-04:
+    // results carry { chunk_id, message_id, text, score, start_line, end_line }
+    // — NOT the file_id/file_name/group_key the OpenAPI annotation advertises.
     const fetchImpl = mockFetchSequence([
       {
         body: {
           success: true,
+          query: 'find me',
           results: [
             {
-              id: 1,
+              chunk_id: 'doc_7_1_0',
+              message_id: 7,
               text: 'snip',
               score: 0.9,
-              file_id: 7,
-              file_name: 'a.pdf',
-              group_key: 'default',
+              start_line: 0,
+              end_line: 0,
             },
           ],
+          total_results: 1,
         },
       },
     ])
@@ -322,8 +327,33 @@ describe('RealSynaplanClient — rag', () => {
       min_score: 0.7,
       group_key: 'contact:alice@example.com',
     })
+    // message_id → fileId; no filename in the hit; group filled from the request.
     expect(hits).toEqual([
-      { fileId: 7, filename: 'a.pdf', snippet: 'snip', score: 0.9, group: 'default' },
+      {
+        fileId: 7,
+        filename: '',
+        snippet: 'snip',
+        score: 0.9,
+        group: 'contact:alice@example.com',
+      },
+    ])
+  })
+
+  it('still tolerates the legacy/spec-advertised file_id/file_name/group_key fields', async () => {
+    const fetchImpl = mockFetchSequence([
+      {
+        body: {
+          success: true,
+          results: [
+            { id: 1, text: 'snip', score: 0.8, file_id: 7, file_name: 'a.pdf', group_key: 'g1' },
+          ],
+        },
+      },
+    ])
+    const c = buildClient(fetchImpl as unknown as typeof fetch)
+    const hits = await c.ragSearch({ query: 'q', groups: ['g-req'] })
+    expect(hits).toEqual([
+      { fileId: 7, filename: 'a.pdf', snippet: 'snip', score: 0.8, group: 'g1' },
     ])
   })
 
