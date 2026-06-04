@@ -17,7 +17,14 @@ const BASE_URL = process.env.BASE_URL ?? 'https://localhost:3000'
 
 export default defineConfig({
   testDir: './tests/e2e',
-  fullyParallel: true,
+  globalSetup: './tests/e2e/support/global-setup.ts',
+  // The webServer is the Vite dev server, which compiles modules on demand.
+  // Parallel workers hitting it cold all at once serialise behind that first
+  // compile and blow the default 30s test timeout — so in CI we run serially
+  // (the suite is small and fast once warm) with a generous timeout.
+  fullyParallel: !process.env.CI,
+  workers: process.env.CI ? 1 : undefined,
+  timeout: process.env.CI ? 60_000 : 30_000,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   reporter: process.env.CI ? [['html'], ['github']] : 'list',
