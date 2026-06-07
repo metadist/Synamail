@@ -51,11 +51,10 @@ describe('Home.vue', () => {
     expect(wrapper.text()).toContain('echo: hello world')
   })
 
-  it('renders the four accordion sections', () => {
+  it('renders the three accordion sections', () => {
     const text = mountHome().text()
     expect(text).toContain(en.home.sections.emailActions)
     expect(text).toContain(en.home.sections.filterKb)
-    expect(text).toContain(en.home.sections.composeAnswer)
     expect(text).toContain(en.home.sections.mailActions)
   })
 

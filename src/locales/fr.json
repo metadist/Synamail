@@ -25,8 +25,7 @@
     "sections": {
       "emailActions": "Actions e-mail",
       "filterKb": "Filtrer pour la base de connaissances",
-      "composeAnswer": "Composer une réponse",
-      "mailActions": "Actions courrier"
+      "mailActions": "Automatisations e-mail"
     },
     "commands": {
       "chat": "Discussion",
@@ -75,8 +74,9 @@
     "noEmail": "Ouvrez un e-mail pour utiliser ces actions.",
     "title": "Actions sur l'e-mail",
     "from": "De",
+    "subjectLabel": "Objet",
     "senderTitle": "Expéditeur",
-    "contactKb": "Base de connaissances du contact",
+    "contactProfile": "Profilage IA du contact",
     "askTitle": "Poser une question sur cet e-mail",
     "actions": {
       "summarise": "Résumer",
@@ -146,7 +146,7 @@
     "ragSearchPlaceholder": "Rechercher dans votre base de connaissances…",
     "ragNoResults": "Aucun extrait correspondant dans votre base de connaissances."
   },
-  "contactKb": {
+  "contactProfile": {
     "noContact": "Ouvrez un e-mail pour choisir un contact.",
     "searchPlaceholder": "Rechercher les e-mails de ce contact…",
     "search": "Rechercher",
@@ -225,17 +225,6 @@
       "group": "Saisissez un dossier projet / base de connaissances."
     }
   },
-  "composeAnswer": {
-    "subtitle": "Répondre à l'expéditeur ou rédiger un nouvel e-mail",
-    "replyHint": "Répondre à {email}. Laissez vide pour une réponse standard ou ajoutez des instructions.",
-    "newHint": "Aucun e-mail ouvert — décrivez l'e-mail à rédiger.",
-    "replyPlaceholder": "Comment répondre ? (facultatif)",
-    "newPlaceholder": "ex. Demander au fournisseur de confirmer la date de livraison de mai.",
-    "draftReply": "Rédiger la réponse",
-    "draftNew": "Rédiger l'e-mail",
-    "replyOpened": "Réponse ouverte dans Outlook.",
-    "needPrompt": "Décrivez d'abord l'e-mail à rédiger."
-  },
   "settings": {
     "title": "Paramètres",
     "signedInAs": "Connecté en tant que",
@@ -261,6 +250,7 @@
   },
   "common": {
     "back": "Retour",
+    "go": "Lancer",
     "cancel": "Annuler",
     "save": "Enregistrer",
     "close": "Fermer",

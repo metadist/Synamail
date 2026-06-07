@@ -25,8 +25,7 @@
     "sections": {
       "emailActions": "Acciones del correo",
       "filterKb": "Filtrar para la base de conocimiento",
-      "composeAnswer": "Redactar respuesta",
-      "mailActions": "Rutas de correo"
+      "mailActions": "Automatizaciones de correo"
     },
     "commands": {
       "chat": "Chat",
@@ -75,8 +74,9 @@
     "noEmail": "Abre un correo para usar estas acciones.",
     "title": "Acciones del correo",
     "from": "De",
+    "subjectLabel": "Asunto",
     "senderTitle": "Remitente",
-    "contactKb": "Base de conocimiento del contacto",
+    "contactProfile": "Perfilado de IA del contacto",
     "askTitle": "Preguntar sobre este correo",
     "actions": {
       "summarise": "Resumir",
@@ -146,7 +146,7 @@
     "ragSearchPlaceholder": "Busca en tu base de conocimiento…",
     "ragNoResults": "No hay fragmentos coincidentes en tu base de conocimiento."
   },
-  "contactKb": {
+  "contactProfile": {
     "noContact": "Abre un correo para elegir un contacto.",
     "searchPlaceholder": "Buscar los correos de este contacto…",
     "search": "Buscar",
@@ -225,17 +225,6 @@
       "group": "Introduce una carpeta de proyecto / base de conocimiento."
     }
   },
-  "composeAnswer": {
-    "subtitle": "Responder al remitente o redactar un nuevo correo",
-    "replyHint": "Responder a {email}. Déjalo vacío para una respuesta estándar o añade instrucciones.",
-    "newHint": "Ningún correo abierto — describe el correo a escribir.",
-    "replyPlaceholder": "¿Cómo respondemos? (opcional)",
-    "newPlaceholder": "p. ej. Pedir al proveedor que confirme la fecha de entrega de mayo.",
-    "draftReply": "Redactar respuesta",
-    "draftNew": "Redactar correo",
-    "replyOpened": "Respuesta abierta en Outlook.",
-    "needPrompt": "Describe primero el correo a escribir."
-  },
   "settings": {
     "title": "Ajustes",
     "signedInAs": "Sesión iniciada como",
@@ -261,6 +250,7 @@
   },
   "common": {
     "back": "Atrás",
+    "go": "Ir",
     "cancel": "Cancelar",
     "save": "Guardar",
     "close": "Cerrar",

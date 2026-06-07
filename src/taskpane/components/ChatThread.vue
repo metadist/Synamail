@@ -106,7 +106,7 @@ watch(
       </div>
     </div>
 
-    <div class="chat__composer">
+    <div class="chat__composer" :class="{ 'chat__composer--bordered': messages.length }">
       <textarea
         v-model="draft"
         rows="2"
@@ -238,8 +238,13 @@ watch(
   display: flex;
   gap: var(--syn-space-2);
   align-items: flex-end;
-  padding-top: var(--syn-space-2);
   background: var(--syn-surface);
+}
+/* Only divide the composer from the thread once messages exist — on the empty
+   initial state the line under the non-foldable "Chat" header looks out of
+   place next to the foldable accordions below. */
+.chat__composer--bordered {
+  padding-top: var(--syn-space-2);
   border-top: 1px solid var(--syn-border);
 }
 .chat__input {

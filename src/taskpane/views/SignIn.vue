@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import ActionButton from '@/taskpane/components/ActionButton.vue'
 import Toast from '@/taskpane/components/Toast.vue'
 import { signIn, defaultBaseUrl } from '@/taskpane/composables/useAuth'
+import { errorMessage } from '@shared/synaplan-client'
 import { setPreferredBaseUrl } from '@/taskpane/composables/useRoamingSettings'
 import { go } from '@/taskpane/router'
 
@@ -51,7 +52,7 @@ async function saveInstance(): Promise<void> {
     savedUrl.value = v
     status.value = t('signIn.instanceSaved', { url: v })
   } catch (err) {
-    error.value = err instanceof Error ? err.message : String(err)
+    error.value = errorMessage(err)
   }
 }
 
@@ -73,7 +74,7 @@ async function handleClick(): Promise<void> {
     await signIn({ baseUrl: v })
     go('home')
   } catch (err) {
-    error.value = err instanceof Error ? err.message : String(err)
+    error.value = errorMessage(err)
   } finally {
     loading.value = false
   }

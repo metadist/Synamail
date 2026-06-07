@@ -5,6 +5,7 @@ import type { RagGroup } from '@shared/types'
 import ActionButton from '@/taskpane/components/ActionButton.vue'
 import Toast from '@/taskpane/components/Toast.vue'
 import { useSynaplanClient } from '@/taskpane/composables/useSynaplanClient'
+import { errorMessage } from '@shared/synaplan-client'
 
 interface Props {
   /** Lower-cased sender email used to suggest a `contact:<email>` group. */
@@ -59,7 +60,7 @@ onMounted(async () => {
       props.lastUsedGroupId || contactGroupId.value || combinedGroups.value[0]?.id || ''
     if (preferred) groupId.value = preferred
   } catch (err) {
-    loadError.value = err instanceof Error ? err.message : String(err)
+    loadError.value = errorMessage(err)
   } finally {
     loadingGroups.value = false
   }

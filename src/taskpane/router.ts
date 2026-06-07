@@ -5,21 +5,21 @@
 
 import { ref } from 'vue'
 
-export type ViewName = 'sign-in' | 'home' | 'read' | 'compose' | 'settings' | 'contact-kb'
+export type ViewName = 'sign-in' | 'home' | 'read' | 'compose' | 'settings' | 'contact-profile'
 
 export const currentView = ref<ViewName>('sign-in')
 const history: ViewName[] = []
 
 /**
- * The contact email the ContactKnowledgeBase view is scoped to. Set via
- * `openContactKb(email)` before navigating, so the view knows which
+ * The contact email the ContactProfile view is scoped to. Set via
+ * `openContactProfile(email)` before navigating, so the view knows which
  * `contact:<email>` RAG group to search / save into. Null = no contact picked.
  */
 export const selectedContactEmail = ref<string | null>(null)
 
-export function openContactKb(email: string): void {
+export function openContactProfile(email: string): void {
   selectedContactEmail.value = email.trim().toLowerCase() || null
-  go('contact-kb')
+  go('contact-profile')
 }
 
 export function go(view: ViewName): void {

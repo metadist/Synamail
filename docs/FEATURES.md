@@ -113,20 +113,20 @@ Note on terminology: the user's brief says "**RAG keys**"; Synaplan calls these 
 - Pre-selects the **last-used group** for this Outlook (stored in `roamingSettings.lastRagGroupId`).
 - Shows the contact-default as a separate suggestion chip at the top — clicking it picks `contact:<sender>`.
 
-## 4. Contact knowledge base — search by sender / recipient
+## 4. Contact AI Profiling — per-contact RAG group (search by sender / recipient)
 
-This is the feature the user asked for: _"search by sender or recipient to create a knowledge base for these contacts"_. Implemented as a **per-contact RAG group convention**, no Synaplan-side schema changes.
+This is the feature the user asked for: _"search by sender or recipient to create a knowledge base for these contacts"_. Implemented as a **per-contact RAG group convention**, no Synaplan-side schema changes. This per-contact corpus is the data foundation for **Contact AI Profiling** — see [`CONTACT_PROFILING.md`](CONTACT_PROFILING.md) for the rolling-profile design built on top of it (§8 has the summary).
 
 ### 4.1 Data model (convention only — no backend change)
 
 - For every contact the user accumulates emails about, Synamail uses a RAG group with the name **`contact:<lowercased-email>`** (e.g. `contact:alice@example.com`).
 - The group is created on demand the first time the user clicks "Save this email to <alice@example.com>'s knowledge base".
-- Group naming is the only thing that makes a group a "contact" group. The plugin treats any group with the `contact:` prefix as a contact group when populating the ContactKnowledgeBase view.
+- Group naming is the only thing that makes a group a "contact" group. The plugin treats any group with the `contact:` prefix as a contact group when populating the ContactProfile view.
 
 ### 4.2 UI surfaces
 
-- **In ReadMode:** a "Contact: `alice@example.com` ▾" pill below the subject. Click → opens `ContactKnowledgeBase.vue` scoped to that contact. The pill is a picker for multi-recipient threads (sender + each To/Cc address).
-- **`ContactKnowledgeBase.vue`** shows:
+- **In ReadMode:** a "Contact: `alice@example.com` ▾" pill below the subject. Click → opens `ContactProfile.vue` scoped to that contact. The pill is a picker for multi-recipient threads (sender + each To/Cc address).
+- **`ContactProfile.vue`** shows:
   - The contact's email + name (from the original Outlook headers).
   - A search box that runs `POST /api/v1/rag/search` filtered to `groups=[contact:<email>]`.
   - A list of saved emails with subject + date + snippet; click → open the source email in Outlook (where the Office API allows it).
@@ -193,9 +193,9 @@ Note: in the user's brief this was called "RULE integration". Synaplan's actual 
 | Classify                              | 3      | `messages/send` (JSON-mode)                                   | ReadMode                        | Live                        |
 | Ask follow-ups                        | 3      | `chats` + `chats/{id}/messages`                               | ReadMode                        | Live                        |
 | Save to RAG (chosen group)            | 3      | `files/upload` + `files/{id}/process` + `files/groups`        | ReadMode + modal                | Live                        |
-| Contact knowledge base — save         | 3      | `files/groups` (POST) + upload/process with `contact:<email>` | ReadMode → contact pill         | Live                        |
-| Contact knowledge base — search       | 3      | `rag/search` with group filter                                | ContactKnowledgeBase            | Live                        |
-| Contact knowledge base — ask          | 3      | `chats` with RAG scope hint                                   | ContactKnowledgeBase            | Live                        |
+| Contact AI Profiling — save           | 3      | `files/groups` (POST) + upload/process with `contact:<email>` | ReadMode → contact pill         | Live                        |
+| Contact AI Profiling — search         | 3      | `rag/search` with group filter                                | ContactProfile                  | Live                        |
+| Contact AI Profiling — ask            | 3      | `chats` with RAG scope hint                                   | ContactProfile                  | Live                        |
 | Insert from RAG (compose)             | 3      | `rag/search`                                                  | ComposeMode                     | Live                        |
 | Draft / improve / translate selection | 3      | `messages/send`                                               | ComposeMode                     | Live                        |
 | RULE integration — view               | 3      | `prompts` (or `synapse/topics`)                               | RuleEditor                      | Live (read)                 |
@@ -230,3 +230,36 @@ future Graph `Calendars.Read` for the meeting agent's free/busy lookup.
 Full model, action catalog (with feasibility), data model, trust checklist, and
 phased plan live in [`MAIL_ROUTES.md`](MAIL_ROUTES.md). **Not yet implemented** —
 design-first per the 2026-05-31 decision.
+
+## 8. Contact AI Profiling — rolling relationship memory (design / RFC)
+
+> Renames and supersedes the "Contact knowledge base" of §4. The
+> `contact:<email>` RAG group stays; profiling adds a durable, recomputed
+> **state object** on top of it.
+
+**User value:** opening a contact instantly answers "where does this
+relationship stand?" — _"you haven't mailed in 6 weeks; last exchange friendly
+but distanced"_, or _"you promised a demo but never mailed back"_. Built from
+exchanged emails **plus manual note snippets** the user adds (calls, meetings,
+verbal promises), so off-channel reality is captured. Tracks **open commitments**
+that a later note (_"demo delivered over phone"_) resolves.
+
+**Inputs:** emails (`fileUpload` into the contact group), manual notes
+(`type: note` text files), deterministic Outlook signals (last contact, cadence,
+who-owes), contact identity.
+
+**Engine:** targeted `rag/search` + code-computed deterministic facts + a
+`profileContact` JSON-mode prompt (`messages/send`, like `classify`). "Rolling" =
+recompute on open / save / add-note (add-ins aren't background services).
+
+**Data architecture (locked 2026-06-07): Option B — local-first, server-as-truth,
+no platform changes.** The corpus (emails + notes) lives in the user's Synaplan
+workspace = one synced source of truth across all their machines; the summary is
+_derived_ and cached locally (roaming LRU), optionally pinned as a `profile.json`
+artifact in the group for consistent cross-machine wording. **Sync the inputs,
+not the summary.** Reuses the existing `files`/RAG API only — no new tables,
+migrations or endpoints. GDPR: user-owned, transparent, fully deletable.
+
+Full model, storage tiers, lifecycle, UI, privacy and phased plan live in
+[`CONTACT_PROFILING.md`](CONTACT_PROFILING.md). **Not yet implemented** —
+design-first.

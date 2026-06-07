@@ -11,6 +11,7 @@ import {
   hydrateAuthState,
 } from '@/taskpane/composables/useAuth'
 import { useSynaplanClient } from '@/taskpane/composables/useSynaplanClient'
+import { errorMessage } from '@shared/synaplan-client'
 import { go } from '@/taskpane/router'
 import {
   clearAllSettings,
@@ -59,7 +60,7 @@ onMounted(async () => {
   try {
     models.value = await call((c) => c.getModelConfig())
   } catch (err) {
-    modelsError.value = err instanceof Error ? err.message : String(err)
+    modelsError.value = errorMessage(err)
   } finally {
     modelsLoading.value = false
   }
@@ -71,7 +72,7 @@ async function handleSignOut(): Promise<void> {
     await signOut({ revokeRemote: true })
     go('sign-in')
   } catch (err) {
-    error.value = err instanceof Error ? err.message : String(err)
+    error.value = errorMessage(err)
   }
 }
 
@@ -87,7 +88,7 @@ async function handleReset(): Promise<void> {
     hydrateAuthState()
     go('sign-in')
   } catch (err) {
-    error.value = err instanceof Error ? err.message : String(err)
+    error.value = errorMessage(err)
   }
 }
 
@@ -99,7 +100,7 @@ async function saveBaseUrl(): Promise<void> {
   try {
     await patchSettings({ baseUrl: baseUrlEdit.value })
   } catch (err) {
-    error.value = err instanceof Error ? err.message : String(err)
+    error.value = errorMessage(err)
   }
 }
 
@@ -119,7 +120,7 @@ async function onLanguageChange(): Promise<void> {
   try {
     await patchSettings({ language: pref })
   } catch (err) {
-    error.value = err instanceof Error ? err.message : String(err)
+    error.value = errorMessage(err)
   }
 }
 </script>

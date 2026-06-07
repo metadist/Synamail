@@ -38,7 +38,7 @@ module.exports = {
         'gui',
         'rag',
         'rules',
-        'contact-kb',
+        'contact-profile',
         'tests',
         'ci',
         'docs',

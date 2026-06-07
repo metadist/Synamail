@@ -23,7 +23,7 @@ labels: enhancement
 
 ## UI surface
 
-<!-- Which view (ReadMode/ComposeMode/Settings/RuleEditor/ContactKnowledgeBase/new) and roughly what the user sees. -->
+<!-- Which view (ReadMode/ComposeMode/Settings/RuleEditor/ContactProfile/new) and roughly what the user sees. -->
 
 ## Out of scope
 

@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import ActionButton from '@/taskpane/components/ActionButton.vue'
 import Toast from '@/taskpane/components/Toast.vue'
 import { getReadItemAsFile, useOutlookItem } from '@/taskpane/composables/useOutlookItem'
 import { useSynaplanClient } from '@/taskpane/composables/useSynaplanClient'
+import { errorMessage } from '@shared/synaplan-client'
 import { setLastRagGroupId } from '@/taskpane/composables/useRoamingSettings'
 import { go, selectedContactEmail } from '@/taskpane/router'
 import type { RagSearchHit } from '@shared/types'
@@ -32,7 +33,7 @@ async function run<T>(key: string, fn: () => Promise<T | null>): Promise<T | nul
   try {
     return await fn()
   } catch (err) {
-    error.value = err instanceof Error ? err.message : String(err)
+    error.value = errorMessage(err)
     return null
   } finally {
     active.value = null
@@ -40,10 +41,13 @@ async function run<T>(key: string, fn: () => Promise<T | null>): Promise<T | nul
 }
 
 async function search(): Promise<void> {
-  if (!groupKey.value) return
+  // The Synaplan /rag/search endpoint needs a query term — firing it with an
+  // empty string (e.g. on view open) just returns an error. Require input.
+  const q = query.value.trim()
+  if (!groupKey.value || !q) return
   status.value = null
   const r = await run('search', () =>
-    call((c) => c.ragSearch({ query: query.value.trim(), groups: [groupKey.value], limit: 15 })),
+    call((c) => c.ragSearch({ query: q, groups: [groupKey.value], limit: 15 })),
   )
   searched.value = true
   if (r) hits.value = r
@@ -75,7 +79,7 @@ async function saveCurrent(): Promise<void> {
       // confirmation — search() clears `status`, so setting it first would wipe
       // the toast before the user ever sees it.
       await search()
-      status.value = t('contactKb.saved', { group: groupKey.value })
+      status.value = t('contactProfile.saved', { group: groupKey.value })
     }
     return r
   })
@@ -109,51 +113,47 @@ async function ask(): Promise<void> {
     question.value = ''
   }
 }
-
-onMounted(() => {
-  if (groupKey.value) void search()
-})
 </script>
 
 <template>
-  <section class="ckb">
+  <section class="cp">
     <header class="syn-view-header">
       <button type="button" class="syn-back" @click="go('read')">← {{ t('common.back') }}</button>
-      <h2 class="syn-view-title">{{ t('read.contactKb') }}</h2>
+      <h2 class="syn-view-title">{{ t('read.contactProfile') }}</h2>
       <p v-if="email" class="syn-view-subtitle">{{ email }}</p>
     </header>
 
-    <p v-if="!email" class="syn-muted">{{ t('contactKb.noContact') }}</p>
+    <p v-if="!email" class="syn-muted">{{ t('contactProfile.noContact') }}</p>
 
     <template v-else>
       <div class="syn-card">
-        <h3 class="syn-card-title">{{ t('contactKb.results') }}</h3>
+        <h3 class="syn-card-title">{{ t('contactProfile.results') }}</h3>
         <div class="syn-row">
           <input
             v-model="query"
             type="text"
-            class="ckb__input"
-            :placeholder="t('contactKb.searchPlaceholder')"
+            class="cp__input"
+            :placeholder="t('contactProfile.searchPlaceholder')"
             @keyup.enter="search"
           />
           <ActionButton :block="false" :loading="active === 'search'" @click="search">
-            {{ t('contactKb.search') }}
+            {{ t('contactProfile.search') }}
           </ActionButton>
         </div>
 
-        <ul v-if="hits.length" class="ckb__hits">
-          <li v-for="(h, i) in hits" :key="i" class="ckb__hit">
-            <strong>{{ h.filename || t('contactKb.savedEmail') }}</strong>
-            <span class="ckb__score">{{ Math.round(h.score * 100) }}%</span>
+        <ul v-if="hits.length" class="cp__hits">
+          <li v-for="(h, i) in hits" :key="i" class="cp__hit">
+            <strong>{{ h.filename || t('contactProfile.savedEmail') }}</strong>
+            <span class="cp__score">{{ Math.round(h.score * 100) }}%</span>
             <p class="syn-muted">{{ h.snippet }}</p>
           </li>
         </ul>
         <p v-else-if="searched && active !== 'search'" class="syn-muted">
-          {{ t('contactKb.noResults') }}
+          {{ t('contactProfile.noResults') }}
         </p>
 
         <ActionButton :loading="active === 'save'" @click="saveCurrent">
-          {{ t('contactKb.saveCurrent') }}
+          {{ t('contactProfile.saveCurrent') }}
         </ActionButton>
       </div>
 
@@ -161,8 +161,8 @@ onMounted(() => {
       <Toast v-if="error" kind="error" :message="error" />
 
       <div class="syn-card">
-        <h3 class="syn-card-title">{{ t('contactKb.ask') }}</h3>
-        <div v-for="(turn, i) in askHistory" :key="i" class="ckb__turn">
+        <h3 class="syn-card-title">{{ t('contactProfile.ask') }}</h3>
+        <div v-for="(turn, i) in askHistory" :key="i" class="cp__turn">
           <p><strong>You:</strong> {{ turn.q }}</p>
           <p><strong>Synaplan:</strong> {{ turn.a }}</p>
         </div>
@@ -170,8 +170,8 @@ onMounted(() => {
           <input
             v-model="question"
             type="text"
-            class="ckb__input"
-            :placeholder="t('contactKb.askPlaceholder', { email })"
+            class="cp__input"
+            :placeholder="t('contactProfile.askPlaceholder', { email })"
             @keyup.enter="ask"
           />
           <ActionButton :block="false" :loading="active === 'ask'" @click="ask">
@@ -184,20 +184,20 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.ckb {
+.cp {
   padding: var(--syn-space-3);
   display: flex;
   flex-direction: column;
   gap: var(--syn-space-3);
 }
-.ckb__input {
+.cp__input {
   flex: 1;
   padding: var(--syn-space-2);
   border: 1px solid var(--syn-border);
   border-radius: var(--syn-radius-sm);
   font-family: inherit;
 }
-.ckb__hits {
+.cp__hits {
   list-style: none;
   padding: 0;
   margin: 0;
@@ -205,17 +205,17 @@ onMounted(() => {
   flex-direction: column;
   gap: var(--syn-space-2);
 }
-.ckb__hit {
+.cp__hit {
   border: 1px solid var(--syn-border);
   border-radius: var(--syn-radius-sm);
   padding: var(--syn-space-2);
 }
-.ckb__score {
+.cp__score {
   float: right;
   font-size: var(--syn-font-size-sm);
   color: var(--syn-muted);
 }
-.ckb__turn {
+.cp__turn {
   padding: var(--syn-space-2);
   border: 1px solid var(--syn-border);
   border-radius: var(--syn-radius-sm);

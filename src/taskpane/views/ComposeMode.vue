@@ -5,6 +5,7 @@ import ActionButton from '@/taskpane/components/ActionButton.vue'
 import LanguagePicker from '@/taskpane/components/LanguagePicker.vue'
 import Toast from '@/taskpane/components/Toast.vue'
 import { useSynaplanClient } from '@/taskpane/composables/useSynaplanClient'
+import { errorMessage } from '@shared/synaplan-client'
 import { go } from '@/taskpane/router'
 
 const { t } = useI18n()
@@ -66,7 +67,7 @@ async function run<T>(key: string, fn: () => Promise<T>): Promise<T | null> {
   try {
     return await fn()
   } catch (err) {
-    error.value = err instanceof Error ? err.message : String(err)
+    error.value = errorMessage(err)
     return null
   } finally {
     active.value = null

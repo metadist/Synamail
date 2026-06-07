@@ -25,8 +25,7 @@
     "sections": {
       "emailActions": "Ações de e-mail",
       "filterKb": "Filtrar para base de conhecimento",
-      "composeAnswer": "Redigir resposta",
-      "mailActions": "Ações de correio"
+      "mailActions": "Automações de e-mail"
     },
     "commands": {
       "chat": "Conversa",
@@ -75,8 +74,9 @@
     "noEmail": "Abra um e-mail para usar estas ações.",
     "title": "Ações de e-mail",
     "from": "De",
+    "subjectLabel": "Assunto",
     "senderTitle": "Remetente",
-    "contactKb": "Base de conhecimento do contacto",
+    "contactProfile": "Perfilagem de IA do contacto",
     "askTitle": "Perguntar sobre este e-mail",
     "actions": {
       "summarise": "Resumir",
@@ -146,7 +146,7 @@
     "ragSearchPlaceholder": "Pesquise na sua base de conhecimento…",
     "ragNoResults": "Nenhum trecho correspondente na sua base de conhecimento."
   },
-  "contactKb": {
+  "contactProfile": {
     "noContact": "Abra um e-mail para escolher um contacto.",
     "searchPlaceholder": "Pesquisar os e-mails deste contacto…",
     "search": "Pesquisar",
@@ -225,17 +225,6 @@
       "group": "Introduza uma pasta de projeto / base de conhecimento."
     }
   },
-  "composeAnswer": {
-    "subtitle": "Responder ao remetente ou redigir um novo e-mail",
-    "replyHint": "Responder a {email}. Deixe em branco para uma resposta padrão ou adicione instruções.",
-    "newHint": "Nenhum e-mail aberto — descreva o e-mail a escrever.",
-    "replyPlaceholder": "Como respondemos? (opcional)",
-    "newPlaceholder": "ex. Pedir ao fornecedor para confirmar a data de entrega de maio.",
-    "draftReply": "Rascunhar resposta",
-    "draftNew": "Rascunhar e-mail",
-    "replyOpened": "Resposta aberta no Outlook.",
-    "needPrompt": "Descreva primeiro o e-mail a escrever."
-  },
   "settings": {
     "title": "Definições",
     "signedInAs": "Sessão iniciada como",
@@ -261,6 +250,7 @@
   },
   "common": {
     "back": "Voltar",
+    "go": "Ir",
     "cancel": "Cancelar",
     "save": "Guardar",
     "close": "Fechar",

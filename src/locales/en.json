@@ -25,8 +25,7 @@
     "sections": {
       "emailActions": "Email actions",
       "filterKb": "Filter for knowledge base",
-      "composeAnswer": "Compose answer",
-      "mailActions": "Mail actions"
+      "mailActions": "Email automations"
     },
     "commands": {
       "chat": "Chat",
@@ -75,11 +74,12 @@
     "noEmail": "Open an email to use these actions.",
     "title": "Email actions",
     "from": "From",
+    "subjectLabel": "Subject",
     "senderTitle": "Sender",
-    "contactKb": "Contact knowledge base",
+    "contactProfile": "Contact AI Profiling",
     "askTitle": "Ask about this email",
     "actions": {
-      "summarise": "Summarise",
+      "summarise": "Summarize",
       "translate": "Translate",
       "draftReply": "Draft reply",
       "classify": "Classify",
@@ -121,7 +121,7 @@
       "title": "Messages from {email}",
       "count": "{n} recent messages",
       "mockBadge": "mock",
-      "summariseAll": "Summarise these messages",
+      "summariseAll": "Summarize these messages",
       "summarySubject": "Recent thread with {email} ({n} messages)"
     },
     "blockDialog": {
@@ -146,7 +146,7 @@
     "ragSearchPlaceholder": "Search your knowledge base…",
     "ragNoResults": "No matching snippets in your knowledge base."
   },
-  "contactKb": {
+  "contactProfile": {
     "noContact": "Open an email to pick a contact.",
     "searchPlaceholder": "Search this contact's emails…",
     "search": "Search",
@@ -225,17 +225,6 @@
       "group": "Enter a project / knowledge base folder."
     }
   },
-  "composeAnswer": {
-    "subtitle": "Answer the sender, or draft a new email",
-    "replyHint": "Reply to {email}. Leave blank for a standard reply, or add instructions.",
-    "newHint": "No email open — describe the email to write.",
-    "replyPlaceholder": "How should we answer? (optional)",
-    "newPlaceholder": "e.g. Ask the supplier to confirm the May delivery date.",
-    "draftReply": "Draft reply",
-    "draftNew": "Draft email",
-    "replyOpened": "Reply opened in Outlook.",
-    "needPrompt": "Describe the email to write first."
-  },
   "settings": {
     "title": "Settings",
     "signedInAs": "Signed in as",
@@ -261,6 +250,7 @@
   },
   "common": {
     "back": "Back",
+    "go": "Go",
     "cancel": "Cancel",
     "save": "Save",
     "close": "Close",

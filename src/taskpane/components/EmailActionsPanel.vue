@@ -21,7 +21,8 @@ import {
 } from '@/taskpane/composables/useOutlookItem'
 import { useOutlookMailbox } from '@/taskpane/composables/useOutlookMailbox'
 import { useSynaplanClient } from '@/taskpane/composables/useSynaplanClient'
-import { openContactKb } from '@/taskpane/router'
+import { errorMessage } from '@shared/synaplan-client'
+import { openContactProfile } from '@/taskpane/router'
 import type { MeetingProposal, SenderHistoryResult } from '@shared/types'
 
 const { t } = useI18n()
@@ -66,7 +67,7 @@ async function run<T>(key: NonNullable<ActionKey>, fn: () => Promise<T | null>):
   try {
     return await fn()
   } catch (err) {
-    error.value = err instanceof Error ? err.message : String(err)
+    error.value = errorMessage(err)
     return null
   } finally {
     active.value = null
@@ -114,7 +115,7 @@ async function draftReply(): Promise<void> {
     try {
       Office.context.mailbox.item?.displayReplyForm({ htmlBody: r.htmlBody })
     } catch (err) {
-      error.value = err instanceof Error ? err.message : String(err)
+      error.value = errorMessage(err)
     }
   }
 }
@@ -319,7 +320,7 @@ function addToCalendar(p: MeetingProposal): void {
       body: t('read.meeting.bodyFrom', { subject: item.value.subject }),
     })
   } catch (err) {
-    error.value = err instanceof Error ? err.message : String(err)
+    error.value = errorMessage(err)
   }
 }
 </script>
@@ -334,35 +335,74 @@ function addToCalendar(p: MeetingProposal): void {
       <Toast v-if="status" kind="success" :message="status" />
       <Toast v-if="error" kind="error" :message="error" />
 
-      <div class="syn-stack">
-        <ActionButton :loading="active === 'summarise'" @click="summarise">
-          {{ t('read.actions.summarise') }}
+      <!-- One row per action: label, optional control, then a uniform Go button.
+           The 3-column grid keeps every Go button the same size and aligned in
+           a single column — a clean "table" rather than jumping button widths. -->
+      <div class="ea__grid">
+        <span class="ea__label">{{ t('read.actions.summarise') }}</span>
+        <span class="ea__control" />
+        <ActionButton
+          class="ea__go"
+          :block="false"
+          :loading="active === 'summarise'"
+          @click="summarise"
+        >
+          {{ t('common.go') }}
         </ActionButton>
 
-        <div class="syn-row">
-          <ActionButton :loading="active === 'translate'" :block="false" @click="translate">
-            {{ t('read.actions.translate') }}
-          </ActionButton>
-          <LanguagePicker v-model="targetLang" />
-        </div>
-
-        <div class="syn-row">
-          <ActionButton :loading="active === 'reply'" :block="false" @click="draftReply">
-            {{ t('read.actions.draftReply') }}
-          </ActionButton>
-          <TonePicker v-model="tone" />
-        </div>
-
-        <ActionButton :loading="active === 'classify'" @click="classify">
-          {{ t('read.actions.classify') }}
+        <span class="ea__label">{{ t('read.actions.translate') }}</span>
+        <span class="ea__control"><LanguagePicker v-model="targetLang" /></span>
+        <ActionButton
+          class="ea__go"
+          :block="false"
+          :loading="active === 'translate'"
+          @click="translate"
+        >
+          {{ t('common.go') }}
         </ActionButton>
 
-        <ActionButton :loading="active === 'save'" @click="openSaveDialog">
-          {{ t('read.actions.saveToRag') }}
+        <span class="ea__label">{{ t('read.actions.draftReply') }}</span>
+        <span class="ea__control"><TonePicker v-model="tone" /></span>
+        <ActionButton
+          class="ea__go"
+          :block="false"
+          :loading="active === 'reply'"
+          @click="draftReply"
+        >
+          {{ t('common.go') }}
         </ActionButton>
 
-        <ActionButton :loading="active === 'meeting'" @click="findMeetingTimes">
-          {{ t('read.actions.findMeetingTimes') }}
+        <span class="ea__label">{{ t('read.actions.classify') }}</span>
+        <span class="ea__control" />
+        <ActionButton
+          class="ea__go"
+          :block="false"
+          :loading="active === 'classify'"
+          @click="classify"
+        >
+          {{ t('common.go') }}
+        </ActionButton>
+
+        <span class="ea__label">{{ t('read.actions.saveToRag') }}</span>
+        <span class="ea__control" />
+        <ActionButton
+          class="ea__go"
+          :block="false"
+          :loading="active === 'save'"
+          @click="openSaveDialog"
+        >
+          {{ t('common.go') }}
+        </ActionButton>
+
+        <span class="ea__label">{{ t('read.actions.findMeetingTimes') }}</span>
+        <span class="ea__control" />
+        <ActionButton
+          class="ea__go"
+          :block="false"
+          :loading="active === 'meeting'"
+          @click="findMeetingTimes"
+        >
+          {{ t('common.go') }}
         </ActionButton>
       </div>
 
@@ -385,7 +425,9 @@ function addToCalendar(p: MeetingProposal): void {
         <h4 class="syn-card-title">{{ t('read.senderTitle') }}</h4>
         <p class="syn-card-sub">{{ senderEmail }}</p>
         <div class="syn-stack">
-          <ActionButton @click="openContactKb(senderEmail)">{{ t('read.contactKb') }}</ActionButton>
+          <ActionButton @click="openContactProfile(senderEmail)">{{
+            t('read.contactProfile')
+          }}</ActionButton>
           <ActionButton :loading="active === 'senderHistory'" @click="loadSenderHistory">
             {{ t('read.actions.moreFromSender') }}
           </ActionButton>
@@ -436,6 +478,33 @@ function addToCalendar(p: MeetingProposal): void {
   display: flex;
   flex-direction: column;
   gap: var(--syn-space-3);
+}
+/* Action "table": [label] [optional control] [Go]. Empty control cells still
+   occupy the middle column so every Go button lines up in the last column. */
+.ea__grid {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  column-gap: var(--syn-space-2);
+  row-gap: var(--syn-space-2);
+}
+.ea__label {
+  font-weight: 500;
+  color: var(--syn-text);
+}
+.ea__label::after {
+  content: ':';
+}
+.ea__control {
+  display: flex;
+  justify-content: flex-end;
+}
+.ea__control :deep(select) {
+  min-width: 96px;
+}
+.ea__go {
+  min-width: 56px;
+  justify-content: center;
 }
 .ea__block {
   display: flex;

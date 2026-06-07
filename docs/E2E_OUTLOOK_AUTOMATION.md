@@ -44,7 +44,7 @@ Files:
 - `tests/e2e/support/harness.ts` — `bootTaskpane(page, item)` ties it together
   (it also blocks the Office.js CDN so the shim isn't overwritten), plus
   `openReadView` / `openComposeView` / `officeCalls` helpers and the `LIVE` flag.
-- `tests/e2e/{read-mode,compose-mode,contact-kb}.spec.ts` — the flow specs.
+- `tests/e2e/{read-mode,compose-mode,contact-profile}.spec.ts` — the flow specs.
 
 All specs are tagged `@ci`, so they run in GitHub CI's E2E job (which runs
 `--grep '@ci'`) as well as locally. They are deterministic — no real backend, no

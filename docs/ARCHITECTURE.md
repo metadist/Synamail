@@ -171,7 +171,7 @@ synamail/                         (filesystem; product is "Synamail")
 │   │   ├── components/           ActionButton, Spinner, Toast, pickers
 │   │   ├── composables/          useAuth, useRoamingSettings, useOutlookItem, useSynaplanClient
 │   │   ├── styles/               tokens.css + app.css
-│   │   └── views/                SignIn, ReadMode, ComposeMode, Settings, RuleEditor, ContactKnowledgeBase
+│   │   └── views/                SignIn, ReadMode, ComposeMode, Settings, RuleEditor, ContactProfile
 │   ├── commands/
 │   │   ├── commands.html         Office function-file shell
 │   │   └── commands.ts           ribbon button handlers (no UI), Smart Alerts

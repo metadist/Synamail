@@ -28,7 +28,7 @@ First public release.
 - Live sign-in to Synaplan via the Office Dialog OAuth bridge.
 - Read mode: summarise, translate, draft reply, classify, ask follow-ups.
 - Save emails and attachments to a Synaplan knowledge-base group.
-- Per-contact knowledge base: save and search by sender / recipient.
+- Contact AI Profiling: per-contact knowledge group — save and search by sender / recipient.
 - Compose mode: draft from prompt, improve / shorten / translate selection, insert
   from knowledge base.
 - Mail Routes (Preview).

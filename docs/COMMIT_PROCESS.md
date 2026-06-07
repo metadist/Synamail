@@ -36,7 +36,7 @@ Every commit message **must** follow [Conventional Commits 1.0](https://www.conv
 
 Pick from this fixed list to keep history searchable:
 
-`taskpane`, `commands`, `dialog`, `auth`, `client`, `manifest`, `i18n`, `gui`, `rag`, `rules`, `contact-kb`, `tests`, `ci`, `docs`, `deps`, `assets`.
+`taskpane`, `commands`, `dialog`, `auth`, `client`, `manifest`, `i18n`, `gui`, `rag`, `rules`, `contact-profile`, `tests`, `ci`, `docs`, `deps`, `assets`.
 
 ### Subject rules
 
@@ -81,7 +81,7 @@ A `!` after the type (`refactor(client)!:`) or a `BREAKING CHANGE:` footer marks
 <type>/<short-kebab-summary>
 ```
 
-Example: `feat/contact-knowledge-base`, `fix/auth-401-loop`, `docs/sprint-3-spec`.
+Example: `feat/contact-profile`, `fix/auth-401-loop`, `docs/sprint-3-spec`.
 
 ### Branch policy
 
@@ -249,15 +249,15 @@ Recap of the rules in `AGENTS.md` for completeness, with this file as the canoni
 
 ```bash
 # Start a feature
-git checkout -b feat/contact-kb-search
+git checkout -b feat/contact-profile-search
 
 # Work, test, commit
 make ci-local
 git add -A
-git commit -m "feat(contact-kb): add sender-scoped RAG search"
+git commit -m "feat(contact-profile): add sender-scoped RAG search"
 
 # Push and open a PR
-git push -u origin feat/contact-kb-search
+git push -u origin feat/contact-profile-search
 gh pr create --fill
 
 # Update against main

@@ -10,8 +10,10 @@ interface Props {
   title: string
   subtitle?: string
   open?: boolean
+  /** Render the subtitle in full text color + bold (e.g. an email subject). */
+  strongSubtitle?: boolean
 }
-withDefaults(defineProps<Props>(), { subtitle: '', open: false })
+withDefaults(defineProps<Props>(), { subtitle: '', open: false, strongSubtitle: false })
 </script>
 
 <template>
@@ -19,7 +21,9 @@ withDefaults(defineProps<Props>(), { subtitle: '', open: false })
     <summary class="acc__summary">
       <span class="acc__heading">
         <span class="acc__title">{{ title }}</span>
-        <span v-if="subtitle" class="acc__sub">{{ subtitle }}</span>
+        <span v-if="subtitle" class="acc__sub" :class="{ 'acc__sub--strong': strongSubtitle }">{{
+          subtitle
+        }}</span>
       </span>
       <span class="acc__chev" aria-hidden="true">▾</span>
     </summary>
@@ -69,6 +73,10 @@ withDefaults(defineProps<Props>(), { subtitle: '', open: false })
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.acc__sub--strong {
+  color: var(--syn-text);
+  font-weight: 600;
 }
 .acc__chev {
   color: var(--syn-muted);

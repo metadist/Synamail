@@ -18,7 +18,7 @@ Synamail development is organized into 4 sprints:
 - No API key: `SignIn.vue`
 - API key + message selected: `ReadMode.vue`
 - API key + composing: `ComposeMode.vue`
-- Navigation: `Settings.vue`, `RuleEditor.vue`, `ContactKnowledgeBase.vue`
+- Navigation: `Settings.vue`, `RuleEditor.vue`, `ContactProfile.vue`
 
 ### Visual Language
 
@@ -30,7 +30,7 @@ Synamail development is organized into 4 sprints:
 
 - Icons (PNG): 16, 32, 64, 80, 128
 - Hero images: 256x256, 512x512
-- Screenshots (1366x768): SignIn, ReadMode, ComposeMode, Settings, ContactKnowledgeBase, RuleEditor
+- Screenshots (1366x768): SignIn, ReadMode, ComposeMode, Settings, ContactProfile, RuleEditor
 - Screencast (1080p, ≤60s)
 - Store copy (`assets/store/copy.md` en + de)
 

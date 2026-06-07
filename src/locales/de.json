@@ -25,8 +25,7 @@
     "sections": {
       "emailActions": "E-Mail-Aktionen",
       "filterKb": "Für Wissensdatenbank filtern",
-      "composeAnswer": "Antwort verfassen",
-      "mailActions": "Mail-Aktionen"
+      "mailActions": "E-Mail-Automationen"
     },
     "commands": {
       "chat": "Chat",
@@ -75,8 +74,9 @@
     "noEmail": "Öffne eine E-Mail, um diese Aktionen zu nutzen.",
     "title": "E-Mail-Aktionen",
     "from": "Von",
+    "subjectLabel": "Betreff",
     "senderTitle": "Absender",
-    "contactKb": "Kontakt-Wissensdatenbank",
+    "contactProfile": "Kontakt-KI-Profiling",
     "askTitle": "Zu dieser E-Mail fragen",
     "actions": {
       "summarise": "Zusammenfassen",
@@ -146,7 +146,7 @@
     "ragSearchPlaceholder": "Wissensdatenbank durchsuchen…",
     "ragNoResults": "Keine passenden Ausschnitte in deiner Wissensdatenbank."
   },
-  "contactKb": {
+  "contactProfile": {
     "noContact": "Öffne eine E-Mail, um einen Kontakt auszuwählen.",
     "searchPlaceholder": "E-Mails dieses Kontakts durchsuchen…",
     "search": "Suchen",
@@ -225,17 +225,6 @@
       "group": "Gib einen Projekt-/Wissensdatenbank-Ordner ein."
     }
   },
-  "composeAnswer": {
-    "subtitle": "Dem Absender antworten oder neue E-Mail verfassen",
-    "replyHint": "Antwort an {email}. Leer lassen für eine Standardantwort oder Hinweise ergänzen.",
-    "newHint": "Keine E-Mail geöffnet — beschreibe die zu schreibende E-Mail.",
-    "replyPlaceholder": "Wie sollen wir antworten? (optional)",
-    "newPlaceholder": "z. B. Den Lieferanten bitten, den Liefertermin im Mai zu bestätigen.",
-    "draftReply": "Antwort entwerfen",
-    "draftNew": "E-Mail entwerfen",
-    "replyOpened": "Antwort in Outlook geöffnet.",
-    "needPrompt": "Beschreibe zuerst die zu schreibende E-Mail."
-  },
   "settings": {
     "title": "Einstellungen",
     "signedInAs": "Angemeldet als",
@@ -261,6 +250,7 @@
   },
   "common": {
     "back": "Zurück",
+    "go": "Los",
     "cancel": "Abbrechen",
     "save": "Speichern",
     "close": "Schließen",

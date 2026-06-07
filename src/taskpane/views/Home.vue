@@ -4,7 +4,6 @@ import { useI18n } from 'vue-i18n'
 import AccordionItem from '@/taskpane/components/AccordionItem.vue'
 import ChatThread from '@/taskpane/components/ChatThread.vue'
 import type { ChatMessage } from '@/taskpane/components/ChatThread.vue'
-import ComposeAnswerPanel from '@/taskpane/components/ComposeAnswerPanel.vue'
 import EmailActionsPanel from '@/taskpane/components/EmailActionsPanel.vue'
 import KnowledgeFilterPanel from '@/taskpane/components/KnowledgeFilterPanel.vue'
 import MailRoutesPanel from '@/taskpane/components/MailRoutesPanel.vue'
@@ -30,8 +29,15 @@ const error = ref<string | null>(null)
 const status = ref<string | null>(null)
 
 const emailOpen = computed(() => item.value.mode === 'read')
+
+function truncate(text: string, max = 48): string {
+  return text.length > max ? `${text.slice(0, max)}…` : text
+}
+
 const emailActionsSubtitle = computed(() =>
-  emailOpen.value ? item.value.subject || t('home.emailTitle') : t('read.noEmail'),
+  emailOpen.value
+    ? `${t('read.subjectLabel')}: ${truncate(item.value.subject || t('home.emailTitle'))}`
+    : t('read.noEmail'),
 )
 
 async function send(text: string): Promise<void> {
@@ -93,7 +99,11 @@ async function resetChat(): Promise<void> {
     <Toast v-if="status" kind="success" :message="status" />
 
     <!-- 2. Email actions for the active email. -->
-    <AccordionItem :title="t('home.sections.emailActions')" :subtitle="emailActionsSubtitle">
+    <AccordionItem
+      :title="t('home.sections.emailActions')"
+      :subtitle="emailActionsSubtitle"
+      :strong-subtitle="emailOpen"
+    >
       <EmailActionsPanel />
     </AccordionItem>
 
@@ -102,15 +112,7 @@ async function resetChat(): Promise<void> {
       <KnowledgeFilterPanel @done="onVectorizeDone" />
     </AccordionItem>
 
-    <!-- 4. Compose an answer to the sender. -->
-    <AccordionItem
-      :title="t('home.sections.composeAnswer')"
-      :subtitle="t('composeAnswer.subtitle')"
-    >
-      <ComposeAnswerPanel />
-    </AccordionItem>
-
-    <!-- 5. Mail Actions — the automation routes. -->
+    <!-- 4. Mail Actions — the automation routes. -->
     <AccordionItem :title="t('home.sections.mailActions')" :subtitle="t('mailRoutes.intro')">
       <MailRoutesPanel />
     </AccordionItem>
