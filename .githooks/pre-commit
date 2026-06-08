@@ -68,11 +68,30 @@ if $docs_only; then
   exit 0
 fi
 
-# Full gate.
+# Full gate — run it QUIETLY.
+#
+# IDE git wrappers (Cursor, VS Code, …) pipe hook stdout/stderr into a modal and
+# surface ANY non-empty output as a "Git error" dialog — even on a clean exit 0.
+# `make ci-local` prints ~150 lines on success (starting with "→ make lint"), so
+# a PASSING gate would still pop a fake "Git: → make lint" error. We therefore
+# capture the gate's output and replay it (to stderr, where the IDE shows real
+# failures) ONLY when the gate actually fails. On success the hook stays silent.
 info "[pre-commit] running 'make ci-local'"
 if ! command -v make >/dev/null 2>&1; then
   info "[pre-commit] 'make' not available — skipping (CI will still gate the PR)"
   exit 0
 fi
 
-make ci-local
+log="$(mktemp)"
+trap 'rm -f "$log"' EXIT
+if make ci-local >"$log" 2>&1; then
+  info "[pre-commit] OK"
+  exit 0
+fi
+
+{
+  echo "[pre-commit] 'make ci-local' failed — fix the issues below, then re-commit:"
+  echo
+  cat "$log"
+} >&2
+exit 1

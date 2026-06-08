@@ -213,7 +213,10 @@ export class RealSynaplanClient implements SynaplanClient {
   }
 
   async translate(input: TranslateInput, onChunk?: StreamHandler): Promise<TranslateResult> {
-    const message = composeMessage(translatePrompt(input.targetLanguage), cleanEmailText(input.text))
+    const message = composeMessage(
+      translatePrompt(input.targetLanguage),
+      cleanEmailText(input.text),
+    )
     const text = await this.runChat(message, { onChunk, chatTitle: 'Outlook: translate' })
     return {
       translation: text,
@@ -614,18 +617,20 @@ function buildEmailBlock(input: {
  */
 export function cleanEmailText(s: string): string {
   if (!s) return ''
-  return s
-    .replace(/\r\n/g, '\n')
-    // Long tracking URLs, with or without surrounding < > (autolink) brackets.
-    // The char class excludes < > and whitespace so it stops at the autolink's
-    // closing bracket and never eats adjacent text that follows it.
-    .replace(/<?\b(?:https?:\/\/|mailto:)[^\s<>]{30,}>?/gi, '')
-    // Leftover empty autolink brackets.
-    .replace(/<\s*>/g, '')
-    // Trailing spaces and 3+ blank lines collapse to a single blank line.
-    .replace(/[ \t]+\n/g, '\n')
-    .replace(/\n{3,}/g, '\n\n')
-    .trim()
+  return (
+    s
+      .replace(/\r\n/g, '\n')
+      // Long tracking URLs, with or without surrounding < > (autolink) brackets.
+      // The char class excludes < > and whitespace so it stops at the autolink's
+      // closing bracket and never eats adjacent text that follows it.
+      .replace(/<?\b(?:https?:\/\/|mailto:)[^\s<>]{30,}>?/gi, '')
+      // Leftover empty autolink brackets.
+      .replace(/<\s*>/g, '')
+      // Trailing spaces and 3+ blank lines collapse to a single blank line.
+      .replace(/[ \t]+\n/g, '\n')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim()
+  )
 }
 
 function pickLanguage(input: SummariseInput | ClassifyInput): string {

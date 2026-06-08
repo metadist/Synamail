@@ -604,3 +604,78 @@ describe('isApiError', () => {
     expect(isApiError(new Error('x'))).toBe(false)
   })
 })
+
+describe('RealSynaplanClient — streaming', () => {
+  it('streams chunks and returns the accumulated text', async () => {
+    const fetchImpl = vi.fn()
+    fetchImpl.mockResolvedValueOnce(jsonResponse({ success: true, chat: { id: 7 } }))
+    fetchImpl.mockResolvedValueOnce(
+      sseResponse([
+        sseFrame({ status: 'data', chunk: 'Hola ' }),
+        sseFrame({ status: 'data', chunk: 'mundo' }),
+        sseFrame({ status: 'complete', messageId: 1 }),
+      ]),
+    )
+    const c = buildClient(fetchImpl as unknown as typeof fetch)
+    const seen: string[] = []
+    const r = await c.translate({ text: 'Hello world', targetLanguage: 'es' }, (t) => seen.push(t))
+
+    expect(r.translation).toBe('Hola mundo')
+    expect(seen).toEqual(['Hola ', 'Hola mundo'])
+    const [url, init] = fetchImpl.mock.calls[1] as [string, RequestInit]
+    expect(url).toContain('/api/v1/messages/stream')
+    expect(url).toContain('chatId=7')
+    expect((init.headers as Headers).get('X-API-Key')).toBe('sk_test')
+  })
+
+  it('falls back to the blocking endpoint when the stream request fails', async () => {
+    const fetchImpl = vi.fn()
+    fetchImpl.mockResolvedValueOnce(jsonResponse({ success: true, chat: { id: 9 } }))
+    fetchImpl.mockResolvedValueOnce(new Response('nope', { status: 404 }))
+    fetchImpl.mockResolvedValueOnce(
+      jsonResponse({ success: true, outgoingMessage: { text: 'fallback text' } }),
+    )
+    const c = buildClient(fetchImpl as unknown as typeof fetch, { maxRetries: 0 })
+    const r = await c.translate({ text: 'x', targetLanguage: 'de' }, () => {})
+
+    expect(r.translation).toBe('fallback text')
+    expect(fetchImpl).toHaveBeenCalledTimes(3)
+    expect(fetchImpl.mock.calls[2][0] as string).toContain('/api/v1/messages/send')
+  })
+
+  it('does not stream (no chat created) when no onChunk is given', async () => {
+    const fetchImpl = mockFetchSequence([
+      { body: { success: true, outgoingMessage: { text: 'blocking' } } },
+    ])
+    const c = buildClient(fetchImpl as unknown as typeof fetch)
+    const r = await c.translate({ text: 'x', targetLanguage: 'fr' })
+    expect(r.translation).toBe('blocking')
+    expect(fetchImpl).toHaveBeenCalledTimes(1)
+    expect(fetchImpl.mock.calls[0][0] as string).toContain('/api/v1/messages/send')
+  })
+})
+
+describe('cleanEmailText', () => {
+  it('strips angle-bracket autolinks and long tracking URLs', () => {
+    const dirty = `Read more <https://nl.nytimes.com/q/${'A'.repeat(80)}> now`
+    const clean = cleanEmailText(dirty)
+    expect(clean).not.toContain('http')
+    expect(clean).not.toContain('<')
+    expect(clean).toContain('Read more')
+    expect(clean).toContain('now')
+  })
+
+  it('does not eat text that follows a stripped autolink', () => {
+    const clean = cleanEmailText(`<https://track.example.com/${'x'.repeat(50)}>KEEPME`)
+    expect(clean).toContain('KEEPME')
+    expect(clean).not.toContain('track.example.com')
+  })
+
+  it('keeps short, human-meaningful URLs', () => {
+    expect(cleanEmailText('see https://syn.io')).toContain('https://syn.io')
+  })
+
+  it('collapses runs of blank lines', () => {
+    expect(cleanEmailText('a\n\n\n\nb')).toBe('a\n\nb')
+  })
+})

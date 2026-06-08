@@ -115,10 +115,7 @@ watch(
         </template>
         <template v-else>{{ m.text }}</template>
       </div>
-      <div
-        v-if="loading && !pendingAi"
-        class="chat__bubble chat__bubble--ai chat__bubble--loading"
-      >
+      <div v-if="loading && !pendingAi" class="chat__bubble chat__bubble--ai chat__bubble--loading">
         <span class="chat__dots" aria-hidden="true">…</span>
         {{ t('home.chat.thinking') }}
       </div>
