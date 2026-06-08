@@ -27,6 +27,10 @@
   --syn-success: #15803d;
   --syn-success-bg: #ecfdf5;
   --syn-success-fg: #166534;
+  --syn-warn: #b45309;
+  --syn-warn-bg: #fff7ed;
+  --syn-warn-fg: #b45309;
+  --syn-warn-border: #fed7aa;
   --syn-info-bg: #eff6ff;
   --syn-info-fg: #1d4ed8;
 
@@ -47,6 +51,7 @@
   --syn-font:
     'Segoe UI Variable', 'Segoe UI', -apple-system, BlinkMacSystemFont, system-ui, 'Helvetica Neue',
     Arial, sans-serif;
+  --syn-font-size-xs: 0.75rem;
   --syn-font-size-sm: 0.8125rem;
   --syn-font-size-md: 0.875rem;
   --syn-font-size-lg: 1rem;
@@ -68,6 +73,10 @@
     --syn-success: #4ade80;
     --syn-success-bg: rgba(34, 197, 94, 0.14);
     --syn-success-fg: #86efac;
+    --syn-warn: #fbbf24;
+    --syn-warn-bg: rgba(245, 158, 11, 0.16);
+    --syn-warn-fg: #fcd34d;
+    --syn-warn-border: rgba(245, 158, 11, 0.4);
     --syn-info-bg: rgba(59, 130, 246, 0.14);
     --syn-info-fg: #93c5fd;
   }

@@ -101,9 +101,9 @@ function fmt(iso: string): string {
   font-size: var(--syn-font-size-xs);
   padding: 2px var(--syn-space-1);
   border-radius: 999px;
-  background: var(--syn-warn-50, #fff7ed);
-  color: var(--syn-warn-700, #b45309);
-  border: 1px solid var(--syn-warn-200, #fed7aa);
+  background: var(--syn-warn-bg);
+  color: var(--syn-warn-fg);
+  border: 1px solid var(--syn-warn-border);
 }
 .senders__meta {
   font-size: var(--syn-font-size-sm);

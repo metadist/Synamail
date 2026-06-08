@@ -57,20 +57,27 @@ import type {
   TranslateResult,
 } from './types'
 
+/**
+ * Called with the cumulative text so far each time the server streams another
+ * chunk. Passing it to a streaming-capable method switches that call from a
+ * single blocking round-trip to a live Server-Sent-Events stream.
+ */
+export type StreamHandler = (textSoFar: string) => void
+
 export interface SynaplanClient {
   ping(): Promise<{ ok: boolean; email?: string }>
-  summarise(input: SummariseInput): Promise<SummariseResult>
-  translate(input: TranslateInput): Promise<TranslateResult>
+  summarise(input: SummariseInput, onChunk?: StreamHandler): Promise<SummariseResult>
+  translate(input: TranslateInput, onChunk?: StreamHandler): Promise<TranslateResult>
   draftReply(input: DraftReplyInput): Promise<DraftReplyResult>
   classify(input: ClassifyInput): Promise<ClassifyResult>
-  ask(input: ChatTurnInput): Promise<ChatTurnResult>
+  ask(input: ChatTurnInput, onChunk?: StreamHandler): Promise<ChatTurnResult>
   /**
    * General-purpose chat, not tied to a specific email. Mirrors `ask` for
    * chat-id persistence (caller stores the returned `chatId` in roaming
    * under a stable key such as `home`), but uses the simple-chat system
    * prompt instead of the email-grounded one.
    */
-  chat(input: ChatTurnInput): Promise<ChatTurnResult>
+  chat(input: ChatTurnInput, onChunk?: StreamHandler): Promise<ChatTurnResult>
   /** Draft a brand-new email (subject + HTML body) from a description. */
   composeNew(input: ComposeNewInput): Promise<ComposeNewResult>
   /**
@@ -194,10 +201,10 @@ export class RealSynaplanClient implements SynaplanClient {
   // extracted via extractAiText below).
   // -------------------------------------------------------------------------
 
-  async summarise(input: SummariseInput): Promise<SummariseResult> {
+  async summarise(input: SummariseInput, onChunk?: StreamHandler): Promise<SummariseResult> {
     const lang = pickLanguage(input)
     const message = composeMessage(summarisePrompt(lang), buildEmailBlock(input))
-    const text = await this.sendChat(message)
+    const text = await this.runChat(message, { onChunk, chatTitle: 'Outlook: summarise' })
     return {
       summary: text,
       bullets: parseMarkdownBullets(text),
@@ -205,9 +212,9 @@ export class RealSynaplanClient implements SynaplanClient {
     }
   }
 
-  async translate(input: TranslateInput): Promise<TranslateResult> {
-    const message = composeMessage(translatePrompt(input.targetLanguage), input.text)
-    const text = await this.sendChat(message)
+  async translate(input: TranslateInput, onChunk?: StreamHandler): Promise<TranslateResult> {
+    const message = composeMessage(translatePrompt(input.targetLanguage), cleanEmailText(input.text))
+    const text = await this.runChat(message, { onChunk, chatTitle: 'Outlook: translate' })
     return {
       translation: text,
       // Detection isn't returned by the server in this call shape; we record
@@ -235,46 +242,32 @@ export class RealSynaplanClient implements SynaplanClient {
     return parseClassifyResponse(text)
   }
 
-  async ask(input: ChatTurnInput): Promise<ChatTurnResult> {
+  async ask(input: ChatTurnInput, onChunk?: StreamHandler): Promise<ChatTurnResult> {
     // 1. Ensure a chat exists for this conversation. If the caller didn't
     //    supply chatId from roaming, create a fresh chat now and return its
     //    id alongside the answer so the caller can persist it.
-    let chatId = input.chatId
-    if (!chatId) {
-      const created = await this.request<CreateChatResponse>('/api/v1/chats', {
-        method: 'POST',
-        body: JSON.stringify({ title: `Outlook: ${input.conversationId.slice(0, 40)}` }),
-      })
-      if (!created?.success || !created.chat?.id) {
-        throw apiError(0, 'CHAT_CREATE_FAILED', 'Could not create chat')
-      }
-      chatId = created.chat.id
-    }
-    // 2. Send the question into that chat via /messages/send with trackId.
+    const chatId =
+      input.chatId ?? (await this.ensureChat(`Outlook: ${input.conversationId.slice(0, 40)}`))
+    // 2. Send the question into that chat. Email context is cleaned so tracking
+    //    URLs / autolink soup don't pollute the grounding (or the reply).
     const prefix = input.emailContext
-      ? `${askPrompt()}\n\n[email context]\n${input.emailContext}\n\n[question]\n`
+      ? `${askPrompt()}\n\n[email context]\n${cleanEmailText(input.emailContext)}\n\n[question]\n`
       : `${askPrompt()}\n\n`
-    const answer = await this.sendChat(`${prefix}${input.question}`, chatId, input.fileIds)
+    const answer = await this.runChat(`${prefix}${input.question}`, {
+      onChunk,
+      chatId,
+      fileIds: input.fileIds,
+    })
     return { chatId, answer }
   }
 
-  async chat(input: ChatTurnInput): Promise<ChatTurnResult> {
-    let chatId = input.chatId
-    if (!chatId) {
-      const created = await this.request<CreateChatResponse>('/api/v1/chats', {
-        method: 'POST',
-        body: JSON.stringify({ title: 'Synamail chat' }),
-      })
-      if (!created?.success || !created.chat?.id) {
-        throw apiError(0, 'CHAT_CREATE_FAILED', 'Could not create chat')
-      }
-      chatId = created.chat.id
-    }
-    const answer = await this.sendChat(
-      `${simpleChatPrompt()}\n\n${input.question}`,
+  async chat(input: ChatTurnInput, onChunk?: StreamHandler): Promise<ChatTurnResult> {
+    const chatId = input.chatId ?? (await this.ensureChat('Synamail chat'))
+    const answer = await this.runChat(`${simpleChatPrompt()}\n\n${input.question}`, {
+      onChunk,
       chatId,
-      input.fileIds,
-    )
+      fileIds: input.fileIds,
+    })
     return { chatId, answer }
   }
 
@@ -421,6 +414,116 @@ export class RealSynaplanClient implements SynaplanClient {
     }
     return extractAiText(res.outgoingMessage)
   }
+
+  /** Create a chat and return its id (used when the caller has none yet). */
+  private async ensureChat(title: string): Promise<number> {
+    const created = await this.request<CreateChatResponse>('/api/v1/chats', {
+      method: 'POST',
+      body: JSON.stringify({ title }),
+    })
+    if (!created?.success || !created.chat?.id) {
+      throw apiError(0, 'CHAT_CREATE_FAILED', 'Could not create chat')
+    }
+    return created.chat.id
+  }
+
+  /**
+   * Run one AI turn. With `onChunk` it streams via SSE (the answer renders as it
+   * arrives); without it, it falls back to the single blocking round-trip. The
+   * stream endpoint requires a `chatId`, so a throwaway chat is created on
+   * demand for the stateless actions (translate/summarise) that don't carry one.
+   */
+  private async runChat(
+    message: string,
+    opts: { onChunk?: StreamHandler; chatId?: number; chatTitle?: string; fileIds?: number[] },
+  ): Promise<string> {
+    if (!opts.onChunk) {
+      return this.sendChat(message, opts.chatId, opts.fileIds)
+    }
+    const chatId = opts.chatId ?? (await this.ensureChat(opts.chatTitle ?? 'Synamail chat'))
+    try {
+      return await this.streamChat(message, opts.onChunk, { chatId, fileIds: opts.fileIds })
+    } catch (err) {
+      if (isApiError(err) && err.status === 401) throw err
+      // Streaming unavailable on this deployment (or it failed): fall back to
+      // the blocking endpoint so the action still completes. The caller sets
+      // the final text from the return value, so the UI is correct either way.
+      return this.sendChat(message, chatId, opts.fileIds)
+    }
+  }
+
+  /**
+   * Stream an AI reply over Server-Sent Events from `GET /messages/stream`.
+   * The server emits newline-delimited `data: {json}` frames whose `status`
+   * field tags the event (`data` carries an incremental `chunk`; `complete`
+   * ends the turn; `error` aborts it). Chunks are deltas, so we accumulate
+   * them and hand the running total to `onChunk` after each one.
+   */
+  private async streamChat(
+    message: string,
+    onChunk: StreamHandler,
+    opts: { chatId: number; fileIds?: number[] },
+  ): Promise<string> {
+    const params = new URLSearchParams({ message, chatId: String(opts.chatId) })
+    if (opts.fileIds && opts.fileIds.length > 0) params.set('fileIds', opts.fileIds.join(','))
+
+    const headers = new Headers()
+    headers.set('X-API-Key', this.apiKey)
+    headers.set('Accept', 'text/event-stream')
+
+    const res = await this.fetchImpl(`${this.baseUrl}/api/v1/messages/stream?${params}`, {
+      method: 'GET',
+      headers,
+    })
+    if (res.status === 401) throw apiError(401, 'AUTH_FAILED', 'API key rejected')
+    if (!res.ok || !res.body) {
+      const text = await safeText(res)
+      throw apiError(res.status, 'HTTP_ERROR', text || res.statusText)
+    }
+
+    const reader = res.body.getReader()
+    const decoder = new TextDecoder()
+    let buffer = ''
+    let full = ''
+    let streamError: string | null = null
+
+    const handleFrame = (frame: string): void => {
+      // A frame is one or more `data:` lines; join their payloads and parse.
+      const data = frame
+        .split('\n')
+        .filter((l) => l.startsWith('data:'))
+        .map((l) => l.slice(5).trim())
+        .join('\n')
+      if (!data) return
+      let evt: SseEvent
+      try {
+        evt = JSON.parse(data) as SseEvent
+      } catch {
+        return
+      }
+      if (evt.status === 'data' && typeof evt.chunk === 'string') {
+        full += evt.chunk
+        onChunk(full)
+      } else if (evt.status === 'error') {
+        streamError = evt.error || evt.message || 'Streaming failed'
+      }
+    }
+
+    for (;;) {
+      const { value, done } = await reader.read()
+      if (done) break
+      buffer += decoder.decode(value, { stream: true })
+      let sep: number
+      while ((sep = buffer.indexOf('\n\n')) !== -1) {
+        handleFrame(buffer.slice(0, sep))
+        buffer = buffer.slice(sep + 2)
+      }
+    }
+    if (buffer.trim()) handleFrame(buffer)
+
+    if (streamError) throw apiError(0, 'AI_FAILED', streamError)
+    return full
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -499,8 +602,30 @@ function buildEmailBlock(input: {
   if (input.subject) parts.push(`Subject: ${input.subject}`)
   if (input.from) parts.push(`From: ${input.from}`)
   if (input.to && input.to.length) parts.push(`To: ${input.to.join(', ')}`)
-  parts.push('', input.body)
+  parts.push('', cleanEmailText(input.body))
   return parts.join('\n')
+}
+
+/**
+ * Strip the noise that wrecks AI output on real-world (esp. newsletter) email:
+ * tracking URLs and angle-bracket autolinks (`<https://…>`), and runs of blank
+ * lines. Short, human-meaningful URLs are left intact. Keeping this junk out of
+ * the prompt is what stops translations/summaries from echoing link soup back.
+ */
+export function cleanEmailText(s: string): string {
+  if (!s) return ''
+  return s
+    .replace(/\r\n/g, '\n')
+    // Long tracking URLs, with or without surrounding < > (autolink) brackets.
+    // The char class excludes < > and whitespace so it stops at the autolink's
+    // closing bracket and never eats adjacent text that follows it.
+    .replace(/<?\b(?:https?:\/\/|mailto:)[^\s<>]{30,}>?/gi, '')
+    // Leftover empty autolink brackets.
+    .replace(/<\s*>/g, '')
+    // Trailing spaces and 3+ blank lines collapse to a single blank line.
+    .replace(/[ \t]+\n/g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
 }
 
 function pickLanguage(input: SummariseInput | ClassifyInput): string {
@@ -712,6 +837,18 @@ interface MessagesSendResponse {
   incomingMessage?: unknown
   // `type: object` in the OpenAPI; extracted by extractAiText().
   outgoingMessage?: unknown
+}
+
+/**
+ * One decoded `data:` frame from `GET /messages/stream`. The server tags every
+ * frame with `status`; we act on `data` (incremental `chunk`) and `error`, and
+ * ignore the rest (`status`, `thinking`, `complete`, `file`, `perf`, …).
+ */
+interface SseEvent {
+  status?: string
+  chunk?: string
+  error?: string
+  message?: string
 }
 
 interface CreateChatResponse {

@@ -1,5 +1,10 @@
 import { describe, expect, it, vi } from 'vitest'
-import { RealSynaplanClient, createSynaplanClient, isApiError } from '@shared/synaplan-client'
+import {
+  RealSynaplanClient,
+  cleanEmailText,
+  createSynaplanClient,
+  isApiError,
+} from '@shared/synaplan-client'
 
 // ---------------------------------------------------------------------------
 // Helpers — build typed fetch mocks that return canned JSON responses.
@@ -48,6 +53,31 @@ function lastCallBody(fetchImpl: ReturnType<typeof vi.fn>): unknown {
   const init = fetchImpl.mock.calls.at(-1)?.[1] as RequestInit | undefined
   if (!init?.body) return undefined
   return typeof init.body === 'string' ? JSON.parse(init.body) : init.body
+}
+
+function jsonResponse(body: unknown, status = 200): Response {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { 'Content-Type': 'application/json' },
+  })
+}
+
+/** An SSE response whose body streams the given `data:` frames then closes. */
+function sseResponse(frames: string[]): Response {
+  const stream = new ReadableStream<Uint8Array>({
+    start(controller) {
+      controller.enqueue(new TextEncoder().encode(frames.join('')))
+      controller.close()
+    },
+  })
+  return new Response(stream, {
+    status: 200,
+    headers: { 'Content-Type': 'text/event-stream' },
+  })
+}
+
+function sseFrame(payload: Record<string, unknown>): string {
+  return `data: ${JSON.stringify(payload)}\n\n`
 }
 
 // ---------------------------------------------------------------------------

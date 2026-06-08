@@ -144,7 +144,9 @@
     "translate": "Traducir la selección",
     "insertFromRag": "Insertar desde la base de conocimiento",
     "ragSearchPlaceholder": "Busca en tu base de conocimiento…",
-    "ragNoResults": "No hay fragmentos coincidentes en tu base de conocimiento."
+    "ragNoResults": "No hay fragmentos coincidentes en tu base de conocimiento.",
+    "noComposeSurface": "Área de redacción no disponible.",
+    "noSelection": "Ningún texto seleccionado."
   },
   "contactProfile": {
     "noContact": "Abre un correo para elegir un contacto.",

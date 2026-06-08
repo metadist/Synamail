@@ -117,6 +117,56 @@ select:disabled {
   color: var(--syn-muted);
 }
 
+/* Shared rendered-Markdown surface — one consistent treatment for every place
+   that shows AI output via renderMarkdown(). Tight vertical rhythm so a reply
+   sits naturally inside a card/bubble; colors come from tokens for dark mode. */
+.syn-md {
+  /* The renderer emits block elements that manage their own spacing — don't let
+     an ancestor's `white-space: pre-wrap` (e.g. chat bubbles) add blank gaps
+     between the tags. */
+  white-space: normal;
+  word-break: break-word;
+}
+.syn-md > :first-child {
+  margin-top: 0;
+}
+.syn-md > :last-child {
+  margin-bottom: 0;
+}
+.syn-md p {
+  margin: 0 0 var(--syn-space-2);
+}
+.syn-md ul,
+.syn-md ol {
+  margin: 0 0 var(--syn-space-2);
+  padding-left: 1.25rem;
+}
+.syn-md .md-h {
+  display: block;
+  margin: var(--syn-space-2) 0 var(--syn-space-1);
+}
+.syn-md code {
+  background: rgba(127, 127, 127, 0.18);
+  padding: 0 4px;
+  border-radius: var(--syn-radius-sm);
+  font-family: ui-monospace, 'Cascadia Code', 'Consolas', monospace;
+  font-size: 0.95em;
+}
+.syn-md .md-pre {
+  background: rgba(127, 127, 127, 0.14);
+  padding: var(--syn-space-2);
+  border-radius: var(--syn-radius-sm);
+  overflow-x: auto;
+  margin: 0 0 var(--syn-space-2);
+}
+.syn-md .md-pre code {
+  background: none;
+  padding: 0;
+}
+.syn-md a {
+  color: var(--syn-brand-600);
+}
+
 /* Shared "back to parent view" control for submenus. */
 .syn-back {
   align-self: flex-start;

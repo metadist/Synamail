@@ -143,12 +143,6 @@ async function handleClick(): Promise<void> {
   flex-direction: column;
   gap: var(--syn-space-1);
 }
-.signin__override input {
-  padding: var(--syn-space-2);
-  border-radius: var(--syn-radius-sm);
-  border: 1px solid var(--syn-border);
-  font-family: inherit;
-}
 .signin__override-actions {
   display: flex;
   align-items: center;

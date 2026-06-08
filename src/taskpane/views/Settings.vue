@@ -210,25 +210,16 @@ async function onLanguageChange(): Promise<void> {
   gap: var(--syn-space-1);
   word-break: break-all;
 }
-input {
-  padding: var(--syn-space-2);
-  border: 1px solid var(--syn-border);
-  border-radius: var(--syn-radius-sm);
-  font-family: inherit;
-}
 .settings__field {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--syn-space-2);
 }
+/* Color/background/border come from the shared app.css baseline — only the
+   tighter padding + smaller type for this inline picker are overridden. */
 .settings__select {
   padding: var(--syn-space-1) var(--syn-space-2);
-  border: 1px solid var(--syn-border);
-  border-radius: var(--syn-radius-sm);
-  background: var(--syn-bg);
-  color: var(--syn-text);
-  font-family: inherit;
   font-size: var(--syn-font-size-sm);
 }
 .settings__models {

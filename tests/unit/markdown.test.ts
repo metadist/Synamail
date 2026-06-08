@@ -19,11 +19,39 @@ describe('renderMarkdown', () => {
     expect(renderMarkdown('1. one\n2. two')).toBe('<ol>\n<li>one</li>\n<li>two</li>\n</ol>')
   })
 
-  it('escapes HTML to prevent injection', () => {
+  it('strips dangerous HTML instead of showing it as text', () => {
     const html = renderMarkdown('<img src=x onerror=alert(1)> **safe**')
     expect(html).not.toContain('<img')
-    expect(html).toContain('&lt;img')
+    expect(html).not.toContain('&lt;img')
+    expect(html).not.toContain('onerror')
     expect(html).toContain('<strong>safe</strong>')
+  })
+
+  it('removes <script>/<style> blocks entirely', () => {
+    const html = renderMarkdown('Hello<script>alert(1)</script> world')
+    expect(html).not.toContain('script')
+    expect(html).not.toContain('alert')
+    expect(html).toContain('Hello')
+    expect(html).toContain('world')
+  })
+
+  it('converts common formatting HTML into rendered Markdown', () => {
+    expect(renderMarkdown('<strong>bold</strong>')).toContain('<strong>bold</strong>')
+    expect(renderMarkdown('<em>italic</em>')).toContain('<em>italic</em>')
+    expect(renderMarkdown('a<br>b')).toContain('a<br>b')
+  })
+
+  it('renders an HTML bullet list as a real list', () => {
+    const html = renderMarkdown('<ul><li>one</li><li>two</li></ul>')
+    expect(html).toContain('<ul>')
+    expect(html).toContain('<li>one</li>')
+    expect(html).toContain('<li>two</li>')
+    expect(html).not.toContain('&lt;')
+  })
+
+  it('decodes basic HTML entities once', () => {
+    expect(renderMarkdown('Tom &amp; Jerry')).toContain('Tom &amp; Jerry')
+    expect(renderMarkdown('Tom &amp; Jerry')).not.toContain('&amp;amp;')
   })
 
   it('only allows safe link schemes', () => {

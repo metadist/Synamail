@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { nextTick, ref, watch } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import ActionButton from '@/taskpane/components/ActionButton.vue'
 import { renderMarkdown } from '@shared/markdown'
@@ -30,6 +30,14 @@ const emit = defineEmits<{ (e: 'send', text: string): void; (e: 'reset'): void }
 const { t } = useI18n()
 const draft = ref(props.initialDraft)
 const root = ref<HTMLElement | null>(null)
+
+// True when the last message is an AI bubble still waiting for its first token
+// (the caller streams into it). The thinking indicator then lives in that
+// bubble instead of a separate one, so they never show at the same time.
+const pendingAi = computed(() => {
+  const last = props.messages[props.messages.length - 1]
+  return !!last && last.role === 'ai' && !last.text
+})
 
 // The composer is seeded with an example so Send is active and users see they
 // can type here. The first time they focus the still-untouched sample, clear it
@@ -94,13 +102,23 @@ watch(
         {{ emptyHint }}
       </p>
       <div v-for="(m, i) in messages" :key="i" :class="['chat__bubble', `chat__bubble--${m.role}`]">
-        <!-- AI replies are Markdown; renderMarkdown escapes first, so v-html is
-             XSS-safe here. User messages stay plain text. -->
-        <!-- eslint-disable-next-line vue/no-v-html -->
-        <div v-if="m.role === 'ai'" class="chat__md" v-html="renderMarkdown(m.text)" />
+        <template v-if="m.role === 'ai'">
+          <!-- While a streamed bubble is still empty, it shows the thinking
+               indicator; once tokens arrive it renders Markdown. renderMarkdown
+               sanitises the text, so v-html is XSS-safe here. -->
+          <span v-if="!m.text && loading && i === messages.length - 1" class="chat__loading">
+            <span class="chat__dots" aria-hidden="true">…</span>
+            {{ t('home.chat.thinking') }}
+          </span>
+          <!-- eslint-disable-next-line vue/no-v-html -->
+          <div v-else class="syn-md" v-html="renderMarkdown(m.text)" />
+        </template>
         <template v-else>{{ m.text }}</template>
       </div>
-      <div v-if="loading" class="chat__bubble chat__bubble--ai chat__bubble--loading">
+      <div
+        v-if="loading && !pendingAi"
+        class="chat__bubble chat__bubble--ai chat__bubble--loading"
+      >
         <span class="chat__dots" aria-hidden="true">…</span>
         {{ t('home.chat.thinking') }}
       </div>
@@ -189,45 +207,7 @@ watch(
 .chat__bubble--loading {
   opacity: 0.8;
 }
-.chat__md :first-child {
-  margin-top: 0;
-}
-.chat__md :last-child {
-  margin-bottom: 0;
-}
-.chat__md p {
-  margin: 0 0 var(--syn-space-2);
-}
-.chat__md ul,
-.chat__md ol {
-  margin: 0 0 var(--syn-space-2);
-  padding-left: 1.25rem;
-}
-.chat__md .md-h {
-  display: block;
-  margin: var(--syn-space-2) 0 var(--syn-space-1);
-}
-.chat__md code {
-  background: rgba(127, 127, 127, 0.18);
-  padding: 0 4px;
-  border-radius: var(--syn-radius-sm);
-  font-family: ui-monospace, 'Cascadia Code', 'Consolas', monospace;
-  font-size: 0.95em;
-}
-.chat__md .md-pre {
-  background: rgba(127, 127, 127, 0.14);
-  padding: var(--syn-space-2);
-  border-radius: var(--syn-radius-sm);
-  overflow-x: auto;
-  margin: 0 0 var(--syn-space-2);
-}
-.chat__md .md-pre code {
-  background: none;
-  padding: 0;
-}
-.chat__md a {
-  color: var(--syn-brand-600);
-}
+/* Markdown formatting comes from the shared `.syn-md` rules in app.css. */
 .chat__dots {
   margin-right: var(--syn-space-1);
 }

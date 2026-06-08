@@ -6,6 +6,7 @@ import Toast from '@/taskpane/components/Toast.vue'
 import { getReadItemAsFile, useOutlookItem } from '@/taskpane/composables/useOutlookItem'
 import { useSynaplanClient } from '@/taskpane/composables/useSynaplanClient'
 import { errorMessage } from '@shared/synaplan-client'
+import { renderMarkdown } from '@shared/markdown'
 import { setLastRagGroupId } from '@/taskpane/composables/useRoamingSettings'
 import { go, selectedContactEmail } from '@/taskpane/router'
 import type { RagSearchHit } from '@shared/types'
@@ -89,6 +90,9 @@ async function ask(): Promise<void> {
   const q = question.value.trim()
   if (!q || !groupKey.value) return
   status.value = null
+  // Add the turn up front and stream the answer into it.
+  const idx = askHistory.value.push({ q, a: '' }) - 1
+  question.value = ''
   const r = await run('ask', async () => {
     // Ground the answer in this contact's saved emails: pull the top RAG
     // snippets for the question and pass them as context to the chat turn.
@@ -100,17 +104,24 @@ async function ask(): Promise<void> {
       ? `About the contact ${email.value}. Use these saved emails as context:\n${grounding}\n\nQuestion: ${q}`
       : `About the contact ${email.value}. Question: ${q}`
     return call((c) =>
-      c.chat({
-        conversationId: `contact:${email.value}`,
-        question: augmented,
-        chatId: askChatId.value,
-      }),
+      c.chat(
+        {
+          conversationId: `contact:${email.value}`,
+          question: augmented,
+          chatId: askChatId.value,
+        },
+        (textSoFar) => {
+          askHistory.value[idx].a = textSoFar
+        },
+      ),
     )
   })
   if (r) {
     askChatId.value = r.chatId
-    askHistory.value.push({ q, a: r.answer })
-    question.value = ''
+    askHistory.value[idx].a = r.answer
+  } else {
+    askHistory.value.splice(idx, 1)
+    question.value = q
   }
 }
 </script>
@@ -163,8 +174,10 @@ async function ask(): Promise<void> {
       <div class="syn-card">
         <h3 class="syn-card-title">{{ t('contactProfile.ask') }}</h3>
         <div v-for="(turn, i) in askHistory" :key="i" class="cp__turn">
-          <p><strong>You:</strong> {{ turn.q }}</p>
-          <p><strong>Synaplan:</strong> {{ turn.a }}</p>
+          <p class="cp__turn-q">{{ turn.q }}</p>
+          <!-- AI answer is Markdown/HTML; renderMarkdown sanitises it. -->
+          <!-- eslint-disable-next-line vue/no-v-html -->
+          <div class="syn-md" v-html="renderMarkdown(turn.a)" />
         </div>
         <div class="syn-row">
           <input
@@ -190,12 +203,10 @@ async function ask(): Promise<void> {
   flex-direction: column;
   gap: var(--syn-space-3);
 }
+/* Color/background/border come from the shared app.css baseline — only the
+   row layout (grow to fill the search row) is overridden. */
 .cp__input {
   flex: 1;
-  padding: var(--syn-space-2);
-  border: 1px solid var(--syn-border);
-  border-radius: var(--syn-radius-sm);
-  font-family: inherit;
 }
 .cp__hits {
   list-style: none;
@@ -216,8 +227,17 @@ async function ask(): Promise<void> {
   color: var(--syn-muted);
 }
 .cp__turn {
+  display: flex;
+  flex-direction: column;
+  gap: var(--syn-space-1);
   padding: var(--syn-space-2);
   border: 1px solid var(--syn-border);
   border-radius: var(--syn-radius-sm);
+}
+/* The user's question, set apart from the rendered AI answer below it. */
+.cp__turn-q {
+  margin: 0;
+  font-weight: 600;
+  color: var(--syn-muted);
 }
 </style>

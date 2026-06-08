@@ -22,6 +22,7 @@ import {
 import { useOutlookMailbox } from '@/taskpane/composables/useOutlookMailbox'
 import { useSynaplanClient } from '@/taskpane/composables/useSynaplanClient'
 import { errorMessage } from '@shared/synaplan-client'
+import { renderMarkdown } from '@shared/markdown'
 import { openContactProfile } from '@/taskpane/router'
 import type { MeetingProposal, SenderHistoryResult } from '@shared/types'
 
@@ -75,26 +76,38 @@ async function run<T>(key: NonNullable<ActionKey>, fn: () => Promise<T | null>):
 }
 
 async function summarise(): Promise<void> {
+  result.value = ''
   const r = await run('summarise', () =>
     call((c) =>
-      c.summarise({
-        subject: item.value.subject,
-        body: item.value.bodyText,
-        from: item.value.from,
-        to: item.value.to,
-      }),
+      c.summarise(
+        {
+          subject: item.value.subject,
+          body: item.value.bodyText,
+          from: item.value.from,
+          to: item.value.to,
+        },
+        (textSoFar) => {
+          result.value = textSoFar
+        },
+      ),
     ),
   )
-  if (r) result.value = r.bullets.map((b) => `• ${b}`).join('\n')
+  if (r) result.value = r.summary
 }
 
 async function translate(): Promise<void> {
+  result.value = ''
   const r = await run('translate', () =>
     call((c) =>
-      c.translate({
-        text: item.value.bodyText,
-        targetLanguage: targetLang.value === 'auto' ? 'en' : targetLang.value,
-      }),
+      c.translate(
+        {
+          text: item.value.bodyText,
+          targetLanguage: targetLang.value === 'auto' ? 'en' : targetLang.value,
+        },
+        (textSoFar) => {
+          result.value = textSoFar
+        },
+      ),
     ),
   )
   if (r) result.value = r.translation
@@ -179,19 +192,25 @@ async function summariseSenderHistory(): Promise<void> {
   const block = senderHistory.value.items
     .map((m, i) => `# Message ${i + 1} — ${m.date}\n## ${m.subject}\n${m.snippet}`)
     .join('\n\n')
+  result.value = ''
   const r = await run('senderSummary', () =>
     call((c) =>
-      c.summarise({
-        subject: t('read.senderHistory.summarySubject', {
-          email: senderHistory.value!.email,
-          n: senderHistory.value!.total,
-        }),
-        body: block,
-        from: senderHistory.value!.email,
-      }),
+      c.summarise(
+        {
+          subject: t('read.senderHistory.summarySubject', {
+            email: senderHistory.value!.email,
+            n: senderHistory.value!.total,
+          }),
+          body: block,
+          from: senderHistory.value!.email,
+        },
+        (textSoFar) => {
+          result.value = textSoFar
+        },
+      ),
     ),
   )
-  if (r) result.value = r.bullets.map((b) => `• ${b}`).join('\n')
+  if (r) result.value = r.summary
 }
 
 async function ensureImageFileIds(): Promise<number[]> {
@@ -219,16 +238,25 @@ async function ask(): Promise<void> {
   if (!q) return
   const conversationId = conversationKey.value
   const chatId = getChatIdForConversation(conversationId)
+  // Add the turn up front and stream the answer into it so the reply renders
+  // as it arrives instead of after a long wait.
+  const idx = askHistory.value.push({ q, a: '' }) - 1
+  question.value = ''
   const r = await run('ask', async () => {
     const fileIds = await ensureImageFileIds()
     return call((c) =>
-      c.ask({
-        conversationId,
-        question: q,
-        emailContext: item.value.bodyText,
-        chatId,
-        fileIds: fileIds.length ? fileIds : undefined,
-      }),
+      c.ask(
+        {
+          conversationId,
+          question: q,
+          emailContext: item.value.bodyText,
+          chatId,
+          fileIds: fileIds.length ? fileIds : undefined,
+        },
+        (textSoFar) => {
+          askHistory.value[idx].a = textSoFar
+        },
+      ),
     )
   })
   if (r) {
@@ -239,8 +267,11 @@ async function ask(): Promise<void> {
         // Roaming write can fail in tests / offline; in-memory chatId still works.
       }
     }
-    askHistory.value.push({ q, a: r.answer })
-    question.value = ''
+    askHistory.value[idx].a = r.answer
+  } else {
+    // Failed (or 401) — drop the empty turn and restore the question to retry.
+    askHistory.value.splice(idx, 1)
+    question.value = q
   }
 }
 
@@ -335,75 +366,97 @@ function addToCalendar(p: MeetingProposal): void {
       <Toast v-if="status" kind="success" :message="status" />
       <Toast v-if="error" kind="error" :message="error" />
 
-      <!-- One row per action: label, optional control, then a uniform Go button.
-           The 3-column grid keeps every Go button the same size and aligned in
-           a single column — a clean "table" rather than jumping button widths. -->
-      <div class="ea__grid">
-        <span class="ea__label">{{ t('read.actions.summarise') }}</span>
-        <span class="ea__control" />
-        <ActionButton
-          class="ea__go"
-          :block="false"
-          :loading="active === 'summarise'"
-          @click="summarise"
-        >
-          {{ t('common.go') }}
-        </ActionButton>
+      <!-- One row per action: label on the left, an optional control + a
+           uniform Go button on the right. Each row wraps independently — when
+           the pane is too narrow to fit the label and the button on one line,
+           the control + Go group drops to the next line (still right-aligned)
+           instead of overflowing and clipping the button. -->
+      <div class="ea__actions">
+        <div class="ea__row">
+          <span class="ea__label">{{ t('read.actions.summarise') }}</span>
+          <div class="ea__row-end">
+            <ActionButton
+              class="ea__go"
+              :block="false"
+              :loading="active === 'summarise'"
+              @click="summarise"
+            >
+              {{ t('common.go') }}
+            </ActionButton>
+          </div>
+        </div>
 
-        <span class="ea__label">{{ t('read.actions.translate') }}</span>
-        <span class="ea__control"><LanguagePicker v-model="targetLang" /></span>
-        <ActionButton
-          class="ea__go"
-          :block="false"
-          :loading="active === 'translate'"
-          @click="translate"
-        >
-          {{ t('common.go') }}
-        </ActionButton>
+        <div class="ea__row">
+          <span class="ea__label">{{ t('read.actions.translate') }}</span>
+          <div class="ea__row-end">
+            <LanguagePicker v-model="targetLang" />
+            <ActionButton
+              class="ea__go"
+              :block="false"
+              :loading="active === 'translate'"
+              @click="translate"
+            >
+              {{ t('common.go') }}
+            </ActionButton>
+          </div>
+        </div>
 
-        <span class="ea__label">{{ t('read.actions.draftReply') }}</span>
-        <span class="ea__control"><TonePicker v-model="tone" /></span>
-        <ActionButton
-          class="ea__go"
-          :block="false"
-          :loading="active === 'reply'"
-          @click="draftReply"
-        >
-          {{ t('common.go') }}
-        </ActionButton>
+        <div class="ea__row">
+          <span class="ea__label">{{ t('read.actions.draftReply') }}</span>
+          <div class="ea__row-end">
+            <TonePicker v-model="tone" />
+            <ActionButton
+              class="ea__go"
+              :block="false"
+              :loading="active === 'reply'"
+              @click="draftReply"
+            >
+              {{ t('common.go') }}
+            </ActionButton>
+          </div>
+        </div>
 
-        <span class="ea__label">{{ t('read.actions.classify') }}</span>
-        <span class="ea__control" />
-        <ActionButton
-          class="ea__go"
-          :block="false"
-          :loading="active === 'classify'"
-          @click="classify"
-        >
-          {{ t('common.go') }}
-        </ActionButton>
+        <div class="ea__row">
+          <span class="ea__label">{{ t('read.actions.classify') }}</span>
+          <div class="ea__row-end">
+            <ActionButton
+              class="ea__go"
+              :block="false"
+              :loading="active === 'classify'"
+              @click="classify"
+            >
+              {{ t('common.go') }}
+            </ActionButton>
+          </div>
+        </div>
 
-        <span class="ea__label">{{ t('read.actions.saveToRag') }}</span>
-        <span class="ea__control" />
-        <ActionButton
-          class="ea__go"
-          :block="false"
-          :loading="active === 'save'"
-          @click="openSaveDialog"
-        >
-          {{ t('common.go') }}
-        </ActionButton>
+        <div class="ea__row">
+          <span class="ea__label">{{ t('read.actions.saveToRag') }}</span>
+          <div class="ea__row-end">
+            <ActionButton
+              class="ea__go"
+              :block="false"
+              :loading="active === 'save'"
+              @click="openSaveDialog"
+            >
+              {{ t('common.go') }}
+            </ActionButton>
+          </div>
+        </div>
 
-        <span class="ea__label">{{ t('read.actions.findMeetingTimes') }}</span>
-        <span class="ea__control" />
-        <ActionButton
-          class="ea__go"
-          :block="false"
-          :loading="active === 'meeting'"
-          @click="findMeetingTimes"
-        >
-          {{ t('common.go') }}
-        </ActionButton>
+        <div class="ea__row">
+          <span class="ea__label">{{ t('read.actions.findMeetingTimes') }}</span>
+          <div class="ea__row-end">
+            <ActionButton
+              class="ea__go"
+              :block="false"
+              :loading="active === 'meeting'"
+              @click="findMeetingTimes"
+            >
+              {{ t('common.go') }}
+            </ActionButton>
+          </div>
+        </div>
       </div>
 
       <div v-if="meetingProposals" class="ea__block">
@@ -419,7 +472,10 @@ function addToCalendar(p: MeetingProposal): void {
         <p v-else class="syn-muted">{{ t('read.meeting.none') }}</p>
       </div>
 
-      <pre v-if="result" class="ea__result">{{ result }}</pre>
+      <!-- AI output is Markdown/HTML; renderMarkdown sanitises it (strips raw
+           tags, escapes the rest), so v-html is safe here. -->
+      <!-- eslint-disable-next-line vue/no-v-html -->
+      <div v-if="result" class="ea__result syn-md" v-html="renderMarkdown(result)" />
 
       <div v-if="senderEmail" class="ea__block">
         <h4 class="syn-card-title">{{ t('read.senderTitle') }}</h4>
@@ -445,8 +501,10 @@ function addToCalendar(p: MeetingProposal): void {
           {{ t('read.askImageHint', { n: imageCount }) }}
         </p>
         <div v-for="(turn, i) in askHistory" :key="i" class="ea__turn">
-          <p><strong>You:</strong> {{ turn.q }}</p>
-          <p><strong>Synaplan:</strong> {{ turn.a }}</p>
+          <p class="ea__turn-q">{{ turn.q }}</p>
+          <!-- AI answer is Markdown/HTML; renderMarkdown sanitises it. -->
+          <!-- eslint-disable-next-line vue/no-v-html -->
+          <div class="syn-md" v-html="renderMarkdown(turn.a)" />
         </div>
         <div class="syn-row">
           <input
@@ -479,27 +537,40 @@ function addToCalendar(p: MeetingProposal): void {
   flex-direction: column;
   gap: var(--syn-space-3);
 }
-/* Action "table": [label] [optional control] [Go]. Empty control cells still
-   occupy the middle column so every Go button lines up in the last column. */
-.ea__grid {
-  display: grid;
-  grid-template-columns: 1fr auto auto;
+/* Action list: one wrapping row per action. The label grows to fill the line;
+   the control + Go group is pushed to the right (margin-left:auto) and wraps to
+   its own line when the pane is too narrow to fit both — so the Go button is
+   never clipped at the edge. The right-alignment keeps every Go button flush
+   with the right edge whether or not the row also has a picker. */
+.ea__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--syn-space-2);
+}
+.ea__row {
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
   column-gap: var(--syn-space-2);
-  row-gap: var(--syn-space-2);
+  row-gap: var(--syn-space-1);
 }
 .ea__label {
+  flex: 1 1 8rem;
+  min-width: 0;
   font-weight: 500;
   color: var(--syn-text);
 }
 .ea__label::after {
   content: ':';
 }
-.ea__control {
+.ea__row-end {
   display: flex;
+  align-items: center;
   justify-content: flex-end;
+  gap: var(--syn-space-2);
+  margin-left: auto;
 }
-.ea__control :deep(select) {
+.ea__row-end :deep(select) {
   min-width: 96px;
 }
 .ea__go {
@@ -518,15 +589,22 @@ function addToCalendar(p: MeetingProposal): void {
   padding: var(--syn-space-3);
   border: 1px solid var(--syn-border);
   border-radius: var(--syn-radius-md);
-  white-space: pre-wrap;
-  margin: 0;
-  font-family: inherit;
   font-size: var(--syn-font-size-sm);
 }
 .ea__turn {
+  display: flex;
+  flex-direction: column;
+  gap: var(--syn-space-1);
   padding: var(--syn-space-2);
   border: 1px solid var(--syn-border);
   border-radius: var(--syn-radius-sm);
+  font-size: var(--syn-font-size-sm);
+}
+/* The user's question, set apart from the rendered AI answer below it. */
+.ea__turn-q {
+  margin: 0;
+  font-weight: 600;
+  color: var(--syn-muted);
 }
 .ea__ask-input {
   flex: 1;

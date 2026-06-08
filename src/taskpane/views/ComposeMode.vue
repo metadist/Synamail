@@ -28,7 +28,7 @@ function getCompose(): Office.MessageCompose | null {
 async function setBody(html: string): Promise<void> {
   const compose = getCompose()
   if (!compose) {
-    error.value = 'Compose surface not available'
+    error.value = t('compose.noComposeSurface')
     return
   }
   await new Promise<void>((resolve, reject) => {
@@ -41,7 +41,7 @@ async function setBody(html: string): Promise<void> {
 async function setSelected(text: string): Promise<void> {
   const compose = getCompose()
   if (!compose) {
-    error.value = 'Compose surface not available'
+    error.value = t('compose.noComposeSurface')
     return
   }
   await new Promise<void>((resolve, reject) => {
@@ -93,7 +93,7 @@ async function transformSelection(kind: 'improve' | 'shorten' | 'translate'): Pr
   await run(kind, async () => {
     const sel = await getSelected()
     if (!sel.trim()) {
-      error.value = 'No text selected'
+      error.value = t('compose.noSelection')
       return
     }
     if (kind === 'translate') {
@@ -209,12 +209,9 @@ async function insertHit(hit: { filename: string; snippet: string }): Promise<vo
   flex-direction: column;
   gap: var(--syn-space-4);
 }
-textarea,
-input {
-  padding: var(--syn-space-2);
-  border: 1px solid var(--syn-border);
-  border-radius: var(--syn-radius-sm);
-  font-family: inherit;
+/* Color/background/border come from the shared app.css baseline — only the
+   layout-specific resize behaviour is overridden here. */
+textarea {
   resize: vertical;
 }
 .compose__hits {

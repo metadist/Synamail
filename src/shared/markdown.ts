@@ -1,10 +1,19 @@
 /**
  * Minimal, dependency-free, XSS-safe Markdown renderer for chat/AI output.
  *
- * Strategy: escape ALL HTML first, then layer on a curated subset of Markdown
- * by inserting only known-safe tags. Because the source is fully escaped up
- * front, model/user content can never inject markup; the only attribute we
- * emit is a link `href`, whose scheme is allow-listed (http/https/mailto).
+ * Strategy:
+ *   1. Assistant replies sometimes arrive as HTML instead of Markdown (or a
+ *      mix). `htmlToMarkdownish` converts the handful of common formatting tags
+ *      to their Markdown equivalents and STRIPS every other tag, so raw markup
+ *      (`<p>`, `<script>`, `<img onerror>`, …) never leaks through as visible
+ *      text or executable HTML.
+ *   2. Decode the basic HTML entities that conversion may leave behind, so they
+ *      don't get double-escaped in the next step.
+ *   3. Escape ALL remaining `<`/`>`/`&`, then layer on a curated subset of
+ *      Markdown by inserting only known-safe tags. Because the source is fully
+ *      escaped before any tag is emitted, model/user content can never inject
+ *      markup; the only attribute we emit is a link `href`, whose scheme is
+ *      allow-listed (http/https/mailto).
  *
  * Supported: fenced + inline code, bold, italic, links, headings, and
  * unordered/ordered lists, with blank-line paragraphs and single-newline
@@ -13,6 +22,52 @@
 
 function escapeHtml(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+}
+
+/**
+ * Fold a small set of common HTML formatting tags into Markdown tokens and
+ * remove everything else. Runs only when the input actually looks like it
+ * contains tags. The result is plain text + Markdown — never HTML — which the
+ * escaping renderer below then turns into a safe, fixed tag set.
+ */
+function htmlToMarkdownish(s: string): string {
+  if (!/<[a-z!/][^>]*>/i.test(s)) return s
+  return (
+    s
+      // Drop script/style outright, including their contents.
+      .replace(/<(script|style)\b[^>]*>[\s\S]*?<\/\1>/gi, '')
+      // Angle-bracket autolinks → the bare URL, so they don't get stripped to
+      // nothing (or left as a dangling `<`) by the catch-all tag removal below.
+      .replace(/<((?:https?:\/\/|mailto:)[^>\s]+)>/gi, '$1')
+      // Line breaks and block boundaries become newlines.
+      .replace(/<\s*br\s*\/?>/gi, '\n')
+      .replace(/<\/(p|div|h[1-6]|tr|table|blockquote|pre|ul|ol)\s*>/gi, '\n')
+      // List items become Markdown bullets.
+      .replace(/<li\b[^>]*>/gi, '\n- ')
+      // Emphasis maps to Markdown (open and close map to the same token).
+      .replace(/<\/?(strong|b)\b[^>]*>/gi, '**')
+      .replace(/<\/?(em|i)\b[^>]*>/gi, '*')
+      // Strip every remaining tag.
+      .replace(/<[^>]*>/g, '')
+      // Collapse the runs of blank lines that block-tag conversion can create.
+      .replace(/\n{3,}/g, '\n\n')
+  )
+}
+
+/**
+ * Decode the handful of entities that real HTML carries, so they render as the
+ * intended character instead of being re-escaped into a literal `&amp;…`.
+ * `&amp;` is decoded last so encoded sequences like `&amp;lt;` don't collapse
+ * into `<`.
+ */
+function decodeEntities(s: string): string {
+  return s
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#0*39;|&apos;/gi, "'")
+    .replace(/&amp;/gi, '&')
 }
 
 function escapeAttr(s: string): string {
@@ -51,7 +106,8 @@ function renderInline(text: string): string {
 
 export function renderMarkdown(src: string): string {
   if (!src) return ''
-  const lines = escapeHtml(src.replace(/\r\n/g, '\n')).split('\n')
+  const normalized = decodeEntities(htmlToMarkdownish(src)).replace(/\r\n/g, '\n')
+  const lines = escapeHtml(normalized).split('\n')
   const html: string[] = []
   let listType: 'ul' | 'ol' | null = null
   let paragraph: string[] = []

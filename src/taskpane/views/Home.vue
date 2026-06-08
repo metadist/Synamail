@@ -42,15 +42,19 @@ const emailActionsSubtitle = computed(() =>
 
 async function send(text: string): Promise<void> {
   messages.value.push({ role: 'user', text })
+  // Add the AI bubble up front and stream tokens into it as they arrive.
+  const aiIdx = messages.value.push({ role: 'ai', text: '' }) - 1
   sending.value = true
   error.value = null
   try {
     const chatId = getChatIdForConversation(HOME_CONVERSATION)
     const r = await call((c) =>
-      c.chat({ conversationId: HOME_CONVERSATION, question: text, chatId }),
+      c.chat({ conversationId: HOME_CONVERSATION, question: text, chatId }, (textSoFar) => {
+        messages.value[aiIdx].text = textSoFar
+      }),
     )
     if (r) {
-      messages.value.push({ role: 'ai', text: r.answer })
+      messages.value[aiIdx].text = r.answer
       if (!chatId && r.chatId) {
         try {
           await setChatIdForConversation(HOME_CONVERSATION, r.chatId)
@@ -58,8 +62,12 @@ async function send(text: string): Promise<void> {
           // Roaming write may fail offline/in tests; the in-memory thread still works.
         }
       }
+    } else {
+      // 401/cleared client — drop the empty AI bubble.
+      messages.value.splice(aiIdx, 1)
     }
   } catch (err) {
+    messages.value.splice(aiIdx, 1)
     error.value = errorMessage(err)
   } finally {
     sending.value = false

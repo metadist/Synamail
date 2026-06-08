@@ -144,7 +144,9 @@
     "translate": "Traduci la selezione",
     "insertFromRag": "Inserisci dalla base di conoscenza",
     "ragSearchPlaceholder": "Cerca nella tua base di conoscenza…",
-    "ragNoResults": "Nessun estratto corrispondente nella tua base di conoscenza."
+    "ragNoResults": "Nessun estratto corrispondente nella tua base di conoscenza.",
+    "noComposeSurface": "Area di composizione non disponibile.",
+    "noSelection": "Nessun testo selezionato."
   },
   "contactProfile": {
     "noContact": "Apri un'email per scegliere un contatto.",

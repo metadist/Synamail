@@ -144,7 +144,9 @@
     "translate": "Translate selection",
     "insertFromRag": "Insert from knowledge base",
     "ragSearchPlaceholder": "Search your knowledge base…",
-    "ragNoResults": "No matching snippets in your knowledge base."
+    "ragNoResults": "No matching snippets in your knowledge base.",
+    "noComposeSurface": "Compose surface not available.",
+    "noSelection": "No text selected."
   },
   "contactProfile": {
     "noContact": "Open an email to pick a contact.",

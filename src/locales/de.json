@@ -144,7 +144,9 @@
     "translate": "Auswahl übersetzen",
     "insertFromRag": "Aus Wissensdatenbank einfügen",
     "ragSearchPlaceholder": "Wissensdatenbank durchsuchen…",
-    "ragNoResults": "Keine passenden Ausschnitte in deiner Wissensdatenbank."
+    "ragNoResults": "Keine passenden Ausschnitte in deiner Wissensdatenbank.",
+    "noComposeSurface": "Bearbeitungsbereich nicht verfügbar.",
+    "noSelection": "Kein Text ausgewählt."
   },
   "contactProfile": {
     "noContact": "Öffne eine E-Mail, um einen Kontakt auszuwählen.",
