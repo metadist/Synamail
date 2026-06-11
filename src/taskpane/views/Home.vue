@@ -5,8 +5,6 @@ import AccordionItem from '@/taskpane/components/AccordionItem.vue'
 import ChatThread from '@/taskpane/components/ChatThread.vue'
 import type { ChatMessage } from '@/taskpane/components/ChatThread.vue'
 import EmailActionsPanel from '@/taskpane/components/EmailActionsPanel.vue'
-import KnowledgeFilterPanel from '@/taskpane/components/KnowledgeFilterPanel.vue'
-import MailRoutesPanel from '@/taskpane/components/MailRoutesPanel.vue'
 import Toast from '@/taskpane/components/Toast.vue'
 import { useOutlookItem } from '@/taskpane/composables/useOutlookItem'
 import {
@@ -26,7 +24,6 @@ const { call } = useSynaplanClient()
 const messages = ref<ChatMessage[]>([])
 const sending = ref(false)
 const error = ref<string | null>(null)
-const status = ref<string | null>(null)
 
 const emailOpen = computed(() => item.value.mode === 'read')
 
@@ -74,10 +71,6 @@ async function send(text: string): Promise<void> {
   }
 }
 
-function onVectorizeDone(group: string): void {
-  status.value = t('home.search.done', { group })
-}
-
 async function resetChat(): Promise<void> {
   messages.value = []
   error.value = null
@@ -104,7 +97,6 @@ async function resetChat(): Promise<void> {
     </div>
 
     <Toast v-if="error" kind="error" :message="error" />
-    <Toast v-if="status" kind="success" :message="status" />
 
     <!-- 2. Email actions for the active email. -->
     <AccordionItem
@@ -113,16 +105,6 @@ async function resetChat(): Promise<void> {
       :strong-subtitle="emailOpen"
     >
       <EmailActionsPanel />
-    </AccordionItem>
-
-    <!-- 3. Filter the mailbox into a knowledge base. -->
-    <AccordionItem :title="t('home.sections.filterKb')" :subtitle="t('home.commands.searchSub')">
-      <KnowledgeFilterPanel @done="onVectorizeDone" />
-    </AccordionItem>
-
-    <!-- 4. Mail Actions — the automation routes. -->
-    <AccordionItem :title="t('home.sections.mailActions')" :subtitle="t('mailRoutes.intro')">
-      <MailRoutesPanel />
     </AccordionItem>
   </section>
 </template>

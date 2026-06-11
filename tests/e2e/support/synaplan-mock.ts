@@ -61,6 +61,10 @@ function json(route: Route, body: unknown, status = 200): Promise<void> {
  * generic `{success:true}` so a stray call never hard-fails a flow.
  */
 export async function mockSynaplan(page: Page): Promise<void> {
+  // Contact AI Profiling (synamail plugin) — stateful per page so the
+  // empty-state → update → delete flow behaves like the real plugin.
+  const profiles = new Map<string, Record<string, unknown>>()
+
   await page.route('**/api/v1/**', async (route) => {
     const req = route.request()
     const url = new URL(req.url())
@@ -85,6 +89,20 @@ export async function mockSynaplan(page: Page): Promise<void> {
           createdAt: '2026-06-04T10:00:00Z',
           updatedAt: '2026-06-04T10:00:00Z',
         },
+      })
+    }
+
+    // Streaming variant used whenever the UI passes an onChunk handler. The
+    // catch-all would answer 200 JSON, which the SSE reader parses as "no
+    // frames" → empty result — so a real event-stream reply is required here.
+    if (path === '/api/v1/messages/stream' && method === 'GET') {
+      const text = aiReplyFor(url.searchParams.get('message') ?? '')
+      return route.fulfill({
+        status: 200,
+        contentType: 'text/event-stream',
+        body:
+          `data: ${JSON.stringify({ status: 'data', chunk: text })}\n\n` +
+          `data: ${JSON.stringify({ status: 'complete' })}\n\n`,
       })
     }
 
@@ -173,6 +191,40 @@ export async function mockSynaplan(page: Page): Promise<void> {
 
     if (path.startsWith('/api/v1/apikeys/') && method === 'DELETE') {
       return route.fulfill({ status: 204, body: '' })
+    }
+
+    // --- Contact AI Profiling (synamail plugin) ---------------------------
+    const profileMatch = path.match(
+      /^\/api\/v1\/user\/\d+\/plugins\/synamail\/profiles\/([^/]+)(\/update)?$/,
+    )
+    if (profileMatch) {
+      const email = decodeURIComponent(profileMatch[1]).toLowerCase()
+      if (method === 'POST' && profileMatch[2] === '/update') {
+        const existing = profiles.get(email)
+        const count = ((existing?.emailCount as number | undefined) ?? 0) + 1
+        const profile = {
+          email,
+          name: 'Alice Contoso',
+          org: 'contoso.com',
+          summary: `Alice handles invoicing at Contoso. ${count} email(s) profiled so far; the May invoice #4821 is awaiting confirmation.`,
+          tone: 'friendly but business-like',
+          facts: ['Works in accounting at Contoso', 'Prefers confirmations by Friday'],
+          openLoops: ['me: confirm the May invoice #4821'],
+          emailCount: count,
+          firstSeen: '2026-06-01T08:00:00+00:00',
+          lastInbound: '2026-06-04T09:00:00+00:00',
+          updatedAt: '2026-06-04T10:00:00+00:00',
+        }
+        profiles.set(email, profile)
+        return json(route, { success: true, profile })
+      }
+      if (method === 'DELETE') {
+        const deleted = profiles.delete(email)
+        return json(route, { success: true, deleted })
+      }
+      if (method === 'GET') {
+        return json(route, { success: true, profile: profiles.get(email) ?? null })
+      }
     }
 
     // --- catch-all --------------------------------------------------------

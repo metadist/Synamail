@@ -18,23 +18,12 @@
   },
   "home": {
     "title": "Home",
-    "intro": "Chatta con Synaplan, aggiungi le tue e-mail alla base di conoscenza oppure scrivi una nuova e-mail, senza dover selezionare alcun messaggio.",
-    "emailLoaded": "E-mail aperta: {subject}",
-    "emailActions": "Azioni e-mail",
     "emailTitle": "E-mail aperta",
     "sections": {
-      "emailActions": "Azioni email",
-      "filterKb": "Filtra per base di conoscenza",
-      "mailActions": "Automazioni email"
+      "emailActions": "Azioni email"
     },
     "commands": {
-      "chat": "Chat",
-      "search": "Filtra e-mail per la base di conoscenza",
-      "searchSub": "Trova messaggi su un argomento e aggiungili alla tua base di conoscenza",
-      "searchAction": "Cerca e-mail",
-      "newMail": "Nuova e-mail",
-      "newMailSub": "Descrivila e lascia che l'IA scriva l'e-mail",
-      "newMailAction": "Scrivi e-mail"
+      "chat": "Chat"
     },
     "chat": {
       "placeholder": "Chiedi qualsiasi cosa a Synaplan…",
@@ -44,36 +33,10 @@
       "sample": "Come si dice «efficienza» in inglese?",
       "scrollTop": "Su",
       "reset": "Nuova chat"
-    },
-    "search": {
-      "title": "Filtra e-mail per la base di conoscenza",
-      "topic": "Argomento",
-      "topicPlaceholder": "ad es. contratto fornitore 2026",
-      "keyword": "Cartella della base di conoscenza",
-      "run": "Cerca",
-      "mailboxResults": "Dalla tua casella di posta",
-      "mockBadge": "mock",
-      "noMailboxHits": "Nessun messaggio corrispondente trovato.",
-      "permissionNeeded": "La ricerca nella casella di posta richiede un aggiornamento delle autorizzazioni una tantum. Rimuovi e aggiungi di nuovo il componente aggiuntivo Synamail per concedere l'accesso alla casella di posta (i risultati della base di conoscenza continuano a funzionare).",
-      "kbResults": "Già nella tua base di conoscenza",
-      "vectorize": "Aggiungi {n} a «{group}»",
-      "vectorized": "{n} messaggio/i aggiunto/i a {group}.",
-      "done": "Messaggi aggiunti a {group}."
-    },
-    "newMail": {
-      "title": "Nuova e-mail",
-      "description": "Cosa deve dire l'e-mail?",
-      "descriptionPlaceholder": "ad es. Chiedere al fornitore di confermare la data di consegna di maggio e mettere in copia la contabilità.",
-      "generate": "Scrivi con l'IA",
-      "openInOutlook": "Apri in Outlook",
-      "unsupportedHost": "Questo host di Outlook non può aprire una nuova finestra di messaggio da un componente aggiuntivo.",
-      "opened": "Bozza aperta in una nuova finestra di Outlook."
     }
   },
   "read": {
     "noEmail": "Apri un'email per usare queste azioni.",
-    "title": "Azioni e-mail",
-    "from": "Da",
     "subjectLabel": "Oggetto",
     "senderTitle": "Mittente",
     "contactProfile": "Profilazione IA del contatto",
@@ -85,8 +48,6 @@
       "classify": "Classifica",
       "saveToRag": "Salva nella base di conoscenza",
       "ask": "Chiedi",
-      "moreFromSender": "Altro da questo mittente",
-      "blockSender": "Blocca mittente",
       "findMeetingTimes": "Trova orari riunione"
     },
     "meeting": {
@@ -96,10 +57,8 @@
       "badDate": "Impossibile leggere quell'orario. Prova un altro slot.",
       "bodyFrom": "Creato dall'email: {subject}"
     },
-    "result": "Risultato",
     "askPlaceholder": "Fai una domanda su questa e-mail…",
     "askImageHint": "{n} immagine/i di questa e-mail verranno inviate a Synaplan con la tua domanda.",
-    "contactPill": "Contatto: {email}",
     "saveDialog": {
       "title": "Salva nella base di conoscenza",
       "group": "Cartella della base di conoscenza",
@@ -116,37 +75,7 @@
       },
       "loadingGroups": "Caricamento cartelle…",
       "savedTo": "Salvato come file n. {fileId} in {group}."
-    },
-    "senderHistory": {
-      "title": "Messaggi da {email}",
-      "count": "{n} messaggi recenti",
-      "mockBadge": "mock",
-      "summariseAll": "Riassumi questi messaggi",
-      "summarySubject": "Conversazione recente con {email} ({n} messaggi)"
-    },
-    "blockDialog": {
-      "title": "Bloccare questo mittente?",
-      "body": "I messaggi futuri da {email} verranno spostati nella posta indesiderata e Synamail li ignorerà.",
-      "alsoClean": "Sposta anche i messaggi esistenti di questo mittente nella posta indesiderata",
-      "undoHint": "Puoi annullare questa operazione in qualsiasi momento in Outlook → Regole.",
-      "confirm": "Blocca mittente",
-      "successServer": "Regola creata. {moved} messaggi esistenti spostati nella posta indesiderata.",
-      "successMock": "Regola creata (mock di sviluppo) per {email}. La regola reale arriverà nello Sprint 4."
     }
-  },
-  "compose": {
-    "title": "Modalità composizione",
-    "intentLabel": "Intento",
-    "intentPlaceholder": "Descrivi cosa vuoi scrivere…",
-    "draft": "Scrivi da un'istruzione",
-    "improve": "Migliora la selezione",
-    "shorten": "Accorcia la selezione",
-    "translate": "Traduci la selezione",
-    "insertFromRag": "Inserisci dalla base di conoscenza",
-    "ragSearchPlaceholder": "Cerca nella tua base di conoscenza…",
-    "ragNoResults": "Nessun estratto corrispondente nella tua base di conoscenza.",
-    "noComposeSurface": "Area di composizione non disponibile.",
-    "noSelection": "Nessun testo selezionato."
   },
   "contactProfile": {
     "noContact": "Apri un'email per scegliere un contatto.",
@@ -158,73 +87,20 @@
     "saveCurrent": "Salva qui l'email corrente",
     "saved": "Salvato in {group}.",
     "ask": "Chiedi su questo contatto",
-    "askPlaceholder": "Domanda su {email}…"
-  },
-  "rules": {
-    "intro": "Gestisci gli argomenti che Synaplan usa per instradare e rispondere ai tuoi messaggi. Le regole per parole chiave Tier-0 prevalgono subito sulla classificazione IA.",
-    "testTitle": "Anteprima instradamento",
-    "test": "Prova sull'email corrente",
-    "testEmpty": "Nessun candidato.",
-    "testNoEmail": "Apri prima un'email per provare l'instradamento.",
-    "loading": "Caricamento argomenti…",
-    "empty": "Nessun argomento instradabile finora.",
-    "keywords": "Parole chiave",
-    "keywordsHint": "Parole chiave separate da virgole che instradano a questo argomento",
-    "selectionRules": "Regole (SE/ALLORA)",
-    "readonly": "Argomento di sistema — sola lettura. Crea un argomento personalizzato in Synaplan per modificarne le regole.",
-    "save": "Salva regola",
-    "saved": "Regola salvata per {topic}.",
-    "applyFromEmail": "Usa l'email corrente",
-    "systemBadge": "sistema"
-  },
-  "mailRoutes": {
-    "title": "Route email",
-    "intro": "Automazioni che eseguono azioni IA sulla posta in arrivo da mittenti specifici — come le regole di Outlook, ma con Synaplan.",
-    "pauseTitle": "Tutte le route",
-    "pausedOn": "In pausa — nessuna route viene eseguita fino alla ripresa.",
-    "pausedOff": "Attive — le route vengono eseguite sulle email corrispondenti.",
-    "pause": "Metti tutto in pausa",
-    "resume": "Riprendi",
-    "newTitle": "Nuova route",
-    "editTitle": "Modifica route",
-    "empty": "Ancora nessuna route. Aggiungine una sotto.",
-    "addTitle": "Aggiungi una route",
-    "addHint": "Scegli il tipo di automazione da creare.",
-    "disable": "Disattiva",
-    "enable": "Attiva",
-    "edit": "Modifica",
-    "remove": "Rimuovi",
-    "saved": "«{name}» salvata.",
-    "removed": "«{name}» rimossa.",
-    "kind": {
-      "meeting": "Assistente riunione / data",
-      "projectIngest": "Aggiungi al progetto",
-      "newsletterKb": "Base di conoscenza newsletter"
-    },
-    "summary": {
-      "meeting": "Controlla il calendario; propone di confermare con un invito di {mins} min.",
-      "ingest": "Aggiunge a «{group}», tradotto in {lang}."
-    },
-    "fields": {
-      "name": "Nome",
-      "namePlaceholder": "es. Oliver — riunioni",
-      "senders": "Mittenti",
-      "sendersPlaceholder": "oliver@acme.com, @partner.com",
-      "sendersHint": "Indirizzi completi o @dominio, separati da virgole.",
-      "duration": "Durata riunione predefinita (minuti)",
-      "group": "Cartella progetto / base di conoscenza",
-      "groupPlaceholder": "es. project:helios",
-      "tag": "Tag",
-      "tagPlaceholder": "predefinito: il nome della cartella",
-      "workingLanguage": "Lingua di lavoro",
-      "workingLanguageHint": "Il contenuto viene tradotto in questa lingua prima dell'aggiunta; l'originale viene conservato così la ricerca rivela la lingua di origine.",
-      "minBodyChars": "Lunghezza minima del testo da acquisire (caratteri)",
-      "includeAttachments": "Acquisisci anche gli allegati (documenti)",
-      "enabled": "Attiva"
-    },
-    "validation": {
-      "nameAndSenders": "Assegna un nome alla route e almeno un mittente.",
-      "group": "Inserisci una cartella progetto / base di conoscenza."
+    "askPlaceholder": "Domanda su {email}…",
+    "profile": {
+      "title": "Profilo evolutivo",
+      "empty": "Nessun profilo ancora. Integra l'e-mail aperta per crearne uno: Synamail costruisce un riepilogo crescente di questo contatto con ogni e-mail aggiunta.",
+      "updateFromEmail": "Aggiorna il profilo con questa e-mail",
+      "noEmailOpen": "Apri un'e-mail di questo contatto per ampliare il profilo.",
+      "updated": "Profilo aggiornato.",
+      "delete": "Elimina profilo",
+      "confirmDelete": "Eliminare definitivamente il profilo di questo contatto?",
+      "deleted": "Profilo eliminato.",
+      "asOf": "Aggiornato al {date} · {n} e-mail analizzate",
+      "facts": "Fatti",
+      "openLoops": "Punti aperti",
+      "unavailable": "Contact AI Profiling richiede il plugin Synamail sul tuo server Synaplan. Chiedi al tuo amministratore di installarlo (plugins/synamail)."
     }
   },
   "settings": {
@@ -244,10 +120,6 @@
     "preferences": "Preferenze",
     "defaultRagGroup": "Cartella predefinita della base di conoscenza",
     "language": "Lingua",
-    "autoDetectContactGroup": "Rileva automaticamente la cartella del contatto al salvataggio",
-    "advanced": "Avanzate",
-    "mailRoutes": "Route email",
-    "routingRules": "Argomenti Synaplan",
     "resetRoaming": "Reimposta impostazioni salvate"
   },
   "common": {
@@ -258,9 +130,7 @@
     "close": "Chiudi",
     "loading": "Caricamento…",
     "error": "Qualcosa è andato storto",
-    "tryAgain": "Riprova",
-    "comingSoon": "In arrivo in uno sprint successivo",
-    "mockMode": "Modalità mock — lo Sprint 3 la collega a web.synaplan.com"
+    "tryAgain": "Riprova"
   },
   "tone": {
     "formal": "Formale",

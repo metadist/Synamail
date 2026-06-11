@@ -1,12 +1,45 @@
 # Synamail Contact AI Profiling — Design (rolling relationship memory)
 
-**Status:** Design-first. Not yet implemented. This doc is the authoritative
-spec for the **Contact AI Profiling** feature (formerly "Contact knowledge
-base"). It supersedes the contact-KB description in
-[`FEATURES.md`](FEATURES.md) §4 for _what the feature does_; that file's coverage
-matrix still wins for _release timing_. Companion to
+**Status:** **Phase 1 SHIPPED (2026-06-10) — via the `synamail` Synaplan
+plugin.** This doc is the authoritative spec for the **Contact AI Profiling**
+feature (formerly "Contact knowledge base"). It supersedes the contact-KB
+description in [`FEATURES.md`](FEATURES.md) §4 for _what the feature does_;
+that file's coverage matrix still wins for _release timing_. Companion to
 [`MAIL_ROUTES.md`](MAIL_ROUTES.md) and [`ARCHITECTURE.md`](ARCHITECTURE.md).
 Owner: Synamail.
+
+> **Architecture update (2026-06-10) — supersedes the 2026-06-07 Option-B
+> lock.** Per the release decision, the profiling prompt must be an **extra,
+> separately-releasable artifact** following the Synaplan plugin structure
+> (like Synaform): developed in this repo under `synamail-plugin/`, released
+> to `synaplan/plugins/synamail/` with `make sync-plugin`, and installed
+> per-user with `php bin/console app:plugin:install <userId> synamail`.
+>
+> What shipped (Phase 1):
+>
+> - **Server-side rolling profile** per contact, stored in Synaplan's generic
+>   `plugin_data` table (dataType `synamail_profile`, key = lower-cased
+>   email). No core-schema change — a plugin is additive, so the spirit of
+>   "no platform changes" is preserved while gaining real cross-machine sync
+>   and removing the 32 KB roaming-quota concern entirely.
+> - **The rolling-update prompt lives in the plugin**
+>   (`SynamailController::buildProfileUpdatePrompt()`): existing narrative +
+>   ONE new email in → merged `summary` / `tone` / `facts` / `openLoops` out.
+>   Deterministic fields (email count, first/last seen, org-from-domain) are
+>   computed in PHP, never by the model.
+> - **Add-in surfaces** (`ContactProfile.vue`): profile card with the rolling
+>   summary, tone/org chips, facts, open loops, "as of" timestamp, an
+>   "Update profile from this email" action, and full profile delete.
+>   Saving an email into the `contact:<email>` group also rolls the profile.
+> - **Synaplan web UI**: the plugin's frontend panel lists all profiles with
+>   per-profile delete (transparency/GDPR surface).
+> - **Graceful degradation**: instances without the plugin get a
+>   `PROFILING_UNAVAILABLE` hint in the card; everything else still works.
+>
+> Not yet shipped (later phases): manual note snippets, resolve-by-note
+> commitment matching, org-level rollups. The sections below remain the
+> design record for those phases — read them with the plugin architecture in
+> mind.
 
 > **Read this first — terminology.** A "**profile**" here is a Synamail-owned,
 > evolving summary of one **contact** (a person, identified by email; or an

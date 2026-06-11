@@ -98,11 +98,14 @@ test-e2e: ## Run Playwright E2E suite (taskpane + Office shim, mocked Synaplan)
 test-e2e-live: ## Run the E2E flows against a real Synaplan (set SYNAPLAN_BASE_URL + SYNAPLAN_API_KEY)
 	@SYNAPLAN_E2E_LIVE=1 npm run test:e2e
 
-validate: ## Validate manifest.xml (and unified manifest if present)
+validate: ## Validate the dev + production manifests (and unified manifest if present)
 	@if [ -f manifest.xml ]; then \
 	  npx --yes office-addin-manifest validate manifest.xml; \
 	else \
 	  echo "skip: no manifest.xml (Sprint 2.2)"; \
+	fi
+	@if [ -f manifest.prod.xml ]; then \
+	  npx --yes office-addin-manifest validate manifest.prod.xml; \
 	fi
 	@if [ -f manifest.unified.json ]; then \
 	  npx --yes office-addin-manifest validate manifest.unified.json; \
@@ -118,8 +121,8 @@ build: ## Vite production build (also gates bundle size)
 budget: ## Enforce the dist bundle-size budget (mirrors CI; cross-platform)
 	@node -e "const fs=require('fs'),p=require('path');if(!fs.existsSync('dist')){console.log('budget: no dist/ — run make build first');process.exit(0)}let t=0;const w=d=>{for(const e of fs.readdirSync(d,{withFileTypes:true})){const f=p.join(d,e.name);e.isDirectory()?w(f):t+=fs.statSync(f).size}};w('dist');const b=2*1024*1024;console.log('dist size: '+t+' bytes (budget: '+b+')');if(t>b){console.error('::error::Bundle exceeds budget');process.exit(1)}console.log('budget: within 2 MiB')"
 
-build-manifest: ## Generate manifest.unified.json from manifest.xml (Sprint 4)
-	npx --yes office-addin-manifest-converter manifest.xml -o manifest.unified.json
+build-manifest: ## Generate manifest.unified.json from the PRODUCTION manifest (store submission)
+	npx --yes office-addin-manifest-converter manifest.prod.xml -o manifest.unified.json
 
 generate-schemas: ## Regenerate Zod schemas from Synaplan OpenAPI (Sprint 3)
 	@if [ -f package.json ]; then npm run generate:schemas; else echo "skip: no package.json (Sprint 2.1)"; fi
@@ -132,6 +135,21 @@ sync-plugin: ## Release synamail-plugin/ into $(SYNAPLAN_DIR)/plugins/synamail
 	rm -rf $(PLUGIN_DST)
 	cp -r $(PLUGIN_SRC) $(PLUGIN_DST)
 	@echo "Synced to $(PLUGIN_DST)"
+	@# plugins/synamail is TRACKED in the synaplan repo (like plugins/synaform).
+	@# Surface the drift right away so the sync never gets swept silently into
+	@# an unrelated synaplan commit — release it as its own dedicated commit.
+	@if git -C $(SYNAPLAN_DIR) rev-parse --is-inside-work-tree >/dev/null 2>&1; then \
+	  status=$$(git -C $(SYNAPLAN_DIR) status --short -- plugins/synamail); \
+	  if [ -n "$$status" ]; then \
+	    echo ""; \
+	    echo "Uncommitted plugin changes in $(SYNAPLAN_DIR):"; \
+	    echo "$$status"; \
+	    echo "→ commit them there as a dedicated commit, e.g.:"; \
+	    echo "  git -C $(SYNAPLAN_DIR) add plugins/synamail && git -C $(SYNAPLAN_DIR) commit -m 'feat(plugins): update synamail plugin to <version>'"; \
+	  else \
+	    echo "synaplan repo: plugins/synamail is clean (in sync with HEAD)"; \
+	  fi; \
+	fi
 
 sync-plugin-and-clear: sync-plugin ## Sync the plugin and clear the Synaplan Symfony cache
 	docker compose -f $(SYNAPLAN_DIR)/docker-compose.yml exec -T backend php bin/console cache:clear

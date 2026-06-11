@@ -51,15 +51,11 @@ describe('Home.vue', () => {
     expect(wrapper.text()).toContain('echo: hello world')
   })
 
-  it('renders the three accordion sections', () => {
+  it('renders the email-actions accordion section', () => {
     const text = mountHome().text()
     expect(text).toContain(en.home.sections.emailActions)
-    expect(text).toContain(en.home.sections.filterKb)
-    expect(text).toContain(en.home.sections.mailActions)
-  })
-
-  it('embeds the knowledge-base filter form inline (no modal)', () => {
-    // Accordion content is always in the DOM; the form is present without a click.
-    expect(mountHome().find('#sv-topic').exists()).toBe(true)
+    // Cut features stay cut: no knowledge-filter or mail-routes sections.
+    expect(text).not.toContain('Filter for knowledge base')
+    expect(text).not.toContain('Email automations')
   })
 })

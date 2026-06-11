@@ -18,23 +18,12 @@
   },
   "home": {
     "title": "Home",
-    "intro": "Chat with Synaplan, add your mail to your knowledge base, or draft a new email — no message selection needed.",
-    "emailLoaded": "Email open: {subject}",
-    "emailActions": "Email actions",
     "emailTitle": "Open email",
     "sections": {
-      "emailActions": "Email actions",
-      "filterKb": "Filter for knowledge base",
-      "mailActions": "Email automations"
+      "emailActions": "Email actions"
     },
     "commands": {
-      "chat": "Chat",
-      "search": "Filter emails for knowledge base",
-      "searchSub": "Find messages about a topic and add them to your knowledge base",
-      "searchAction": "Search emails",
-      "newMail": "New email",
-      "newMailSub": "Describe it and let AI draft the email",
-      "newMailAction": "Compose email"
+      "chat": "Chat"
     },
     "chat": {
       "placeholder": "Ask Synaplan anything…",
@@ -44,36 +33,10 @@
       "sample": "What does 'efficiency' mean in German?",
       "scrollTop": "To top",
       "reset": "New chat"
-    },
-    "search": {
-      "title": "Filter emails for knowledge base",
-      "topic": "Topic",
-      "topicPlaceholder": "e.g. supplier contract 2026",
-      "keyword": "Knowledge base folder",
-      "run": "Search",
-      "mailboxResults": "From your mailbox",
-      "mockBadge": "mock",
-      "noMailboxHits": "No matching messages found.",
-      "permissionNeeded": "Mailbox search needs a one-time permission update. Remove and re-add the Synamail add-in to grant mailbox access (knowledge-base results still work).",
-      "kbResults": "Already in your knowledge base",
-      "vectorize": "Add {n} to '{group}'",
-      "vectorized": "Added {n} message(s) to {group}.",
-      "done": "Messages added to {group}."
-    },
-    "newMail": {
-      "title": "New email",
-      "description": "What should the email say?",
-      "descriptionPlaceholder": "e.g. Ask the supplier to confirm the May delivery date and CC accounting.",
-      "generate": "Draft with AI",
-      "openInOutlook": "Open in Outlook",
-      "unsupportedHost": "This Outlook host can't open a new message window from an add-in.",
-      "opened": "Draft opened in a new Outlook window."
     }
   },
   "read": {
     "noEmail": "Open an email to use these actions.",
-    "title": "Email actions",
-    "from": "From",
     "subjectLabel": "Subject",
     "senderTitle": "Sender",
     "contactProfile": "Contact AI Profiling",
@@ -85,8 +48,6 @@
       "classify": "Classify",
       "saveToRag": "Save to knowledge base",
       "ask": "Ask",
-      "moreFromSender": "More from this sender",
-      "blockSender": "Block sender",
       "findMeetingTimes": "Find meeting times"
     },
     "meeting": {
@@ -96,10 +57,8 @@
       "badDate": "Couldn't read that time. Try another slot.",
       "bodyFrom": "Created from the email: {subject}"
     },
-    "result": "Result",
     "askPlaceholder": "Ask about this email…",
     "askImageHint": "{n} image(s) from this email will be sent to Synaplan with your question.",
-    "contactPill": "Contact: {email}",
     "saveDialog": {
       "title": "Save to knowledge base",
       "group": "Knowledge base folder",
@@ -116,37 +75,7 @@
       },
       "loadingGroups": "Loading folders…",
       "savedTo": "Saved as file #{fileId} in {group}."
-    },
-    "senderHistory": {
-      "title": "Messages from {email}",
-      "count": "{n} recent messages",
-      "mockBadge": "mock",
-      "summariseAll": "Summarize these messages",
-      "summarySubject": "Recent thread with {email} ({n} messages)"
-    },
-    "blockDialog": {
-      "title": "Block this sender?",
-      "body": "Future messages from {email} will be moved to Junk and Synamail will skip them.",
-      "alsoClean": "Also move existing messages from this sender to Junk",
-      "undoHint": "You can undo this any time in Outlook → Rules.",
-      "confirm": "Block sender",
-      "successServer": "Rule created. {moved} existing messages moved to Junk.",
-      "successMock": "Rule created (dev mock) for {email}. The real rule lands in Sprint 4."
     }
-  },
-  "compose": {
-    "title": "Compose mode",
-    "intentLabel": "Intent",
-    "intentPlaceholder": "Describe what you want to write…",
-    "draft": "Draft from prompt",
-    "improve": "Improve selection",
-    "shorten": "Shorten selection",
-    "translate": "Translate selection",
-    "insertFromRag": "Insert from knowledge base",
-    "ragSearchPlaceholder": "Search your knowledge base…",
-    "ragNoResults": "No matching snippets in your knowledge base.",
-    "noComposeSurface": "Compose surface not available.",
-    "noSelection": "No text selected."
   },
   "contactProfile": {
     "noContact": "Open an email to pick a contact.",
@@ -158,73 +87,20 @@
     "saveCurrent": "Save current email here",
     "saved": "Saved to {group}.",
     "ask": "Ask about this contact",
-    "askPlaceholder": "Ask about {email}…"
-  },
-  "rules": {
-    "intro": "Manage the topics Synaplan uses to route and answer your messages. Tier-0 keyword rules win immediately over AI classification.",
-    "testTitle": "Routing preview",
-    "test": "Test against current email",
-    "testEmpty": "No candidates.",
-    "testNoEmail": "Open an email first to test routing.",
-    "loading": "Loading topics…",
-    "empty": "No routable topics yet.",
-    "keywords": "Keywords",
-    "keywordsHint": "Comma-separated keywords that route to this topic",
-    "selectionRules": "Rules (IF/THEN)",
-    "readonly": "System topic — read-only. Create a custom topic in Synaplan to edit its rules.",
-    "save": "Save rule",
-    "saved": "Rule saved for {topic}.",
-    "applyFromEmail": "Use current email",
-    "systemBadge": "system"
-  },
-  "mailRoutes": {
-    "title": "Mail Routes",
-    "intro": "Automations that run AI actions on incoming mail from specific senders — like Outlook rules, but powered by Synaplan.",
-    "pauseTitle": "All routes",
-    "pausedOn": "Paused — no route runs until you resume.",
-    "pausedOff": "Active — routes run on matching mail.",
-    "pause": "Pause all",
-    "resume": "Resume",
-    "newTitle": "New route",
-    "editTitle": "Edit route",
-    "empty": "No routes yet. Add one below.",
-    "addTitle": "Add a route",
-    "addHint": "Pick the kind of automation to create.",
-    "disable": "Disable",
-    "enable": "Enable",
-    "edit": "Edit",
-    "remove": "Remove",
-    "saved": "Saved \"{name}\".",
-    "removed": "Removed \"{name}\".",
-    "kind": {
-      "meeting": "Meeting / date helper",
-      "projectIngest": "Add to project",
-      "newsletterKb": "Newsletter knowledge base"
-    },
-    "summary": {
-      "meeting": "Checks the calendar; suggests confirming with a {mins}-min invite.",
-      "ingest": "Adds to \"{group}\", translated to {lang}."
-    },
-    "fields": {
-      "name": "Name",
-      "namePlaceholder": "e.g. Oliver — meetings",
-      "senders": "Senders",
-      "sendersPlaceholder": "oliver@acme.com, @partner.com",
-      "sendersHint": "Full addresses or @domain, comma-separated.",
-      "duration": "Default meeting length (minutes)",
-      "group": "Project / knowledge base folder",
-      "groupPlaceholder": "e.g. project:helios",
-      "tag": "Tag",
-      "tagPlaceholder": "defaults to the folder name",
-      "workingLanguage": "Working language",
-      "workingLanguageHint": "Content is translated to this language before adding; the original is kept so search reveals the source language.",
-      "minBodyChars": "Minimum body length to capture (characters)",
-      "includeAttachments": "Also capture document attachments",
-      "enabled": "Enabled"
-    },
-    "validation": {
-      "nameAndSenders": "Give the route a name and at least one sender.",
-      "group": "Enter a project / knowledge base folder."
+    "askPlaceholder": "Ask about {email}…",
+    "profile": {
+      "title": "Rolling profile",
+      "empty": "No profile yet. Roll the open email in to start one — Synamail builds a growing summary of this contact with every email you add.",
+      "updateFromEmail": "Update profile from this email",
+      "noEmailOpen": "Open an email from this contact to grow the profile.",
+      "updated": "Profile updated.",
+      "delete": "Delete profile",
+      "confirmDelete": "Delete this contact's profile permanently?",
+      "deleted": "Profile deleted.",
+      "asOf": "As of {date} · {n} email(s) profiled",
+      "facts": "Facts",
+      "openLoops": "Open loops",
+      "unavailable": "Contact AI Profiling requires the Synamail plugin on your Synaplan server. Ask your admin to install it (plugins/synamail)."
     }
   },
   "settings": {
@@ -244,10 +120,6 @@
     "preferences": "Preferences",
     "defaultRagGroup": "Default knowledge base folder",
     "language": "Language",
-    "autoDetectContactGroup": "Auto-detect contact folder on save",
-    "advanced": "Advanced",
-    "mailRoutes": "Mail Routes",
-    "routingRules": "Synaplan topics",
     "resetRoaming": "Reset saved settings"
   },
   "common": {
@@ -258,9 +130,7 @@
     "close": "Close",
     "loading": "Loading…",
     "error": "Something went wrong",
-    "tryAgain": "Try again",
-    "comingSoon": "Coming in a later sprint",
-    "mockMode": "Mock mode — Sprint 3 wires this to web.synaplan.com"
+    "tryAgain": "Try again"
   },
   "tone": {
     "formal": "Formal",

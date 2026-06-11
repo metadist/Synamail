@@ -39,4 +39,22 @@ test.describe('@ci contact-profile', () => {
     await expect(turn).toBeVisible()
     await expect(turn).toContainText('What was the last invoice?')
   })
+
+  test('rolling profile: empty state → update from email → delete', async ({ page }) => {
+    test.skip(LIVE, 'needs the synamail plugin installed on the live instance')
+    const card = page.locator('.syn-card', {
+      has: page.getByRole('heading', { name: 'Rolling profile' }),
+    })
+    // No profile yet — empty state with the update affordance.
+    await expect(card.getByText(/No profile yet/)).toBeVisible()
+    // Roll the open email in.
+    await card.getByRole('button', { name: 'Update profile from this email' }).click()
+    await expect(card.locator('.cp__as-of')).toContainText('1 email(s) profiled')
+    await expect(card.getByText('Open loops')).toBeVisible()
+    await expect(card.getByText(/confirm the May invoice/)).toBeVisible()
+    // Delete brings the empty state back.
+    page.on('dialog', (dialog) => dialog.accept())
+    await card.getByRole('button', { name: 'Delete profile' }).click()
+    await expect(card.getByText(/No profile yet/)).toBeVisible()
+  })
 })

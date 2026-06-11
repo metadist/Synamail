@@ -171,7 +171,7 @@ synamail/                         (filesystem; product is "Synamail")
 │   │   ├── components/           ActionButton, Spinner, Toast, pickers
 │   │   ├── composables/          useAuth, useRoamingSettings, useOutlookItem, useSynaplanClient
 │   │   ├── styles/               tokens.css + app.css
-│   │   └── views/                SignIn, ReadMode, ComposeMode, Settings, RuleEditor, ContactProfile
+│   │   └── views/                SignIn, Home, Settings, ContactProfile
 │   ├── commands/
 │   │   ├── commands.html         Office function-file shell
 │   │   └── commands.ts           ribbon button handlers (no UI), Smart Alerts
@@ -282,7 +282,7 @@ Outlook (taskpane)                Synaplan web                            Synapl
    in roamingSettings
 4. Dialog auto-closes;
    taskpane renders
-   ReadMode/ComposeMode
+   Home
 ```
 
 Key UX points:
@@ -411,8 +411,7 @@ Tests are mandatory before each merge. We aim for parity with the synaplan house
 ### 11.3 Component (Vitest + @vue/test-utils)
 
 - `SignIn.vue` — single button, click triggers `displayDialogAsync` with the right URL + `state`; resolves on `messageParent`; rejects on dialog close without message.
-- `ReadMode.vue` — buttons disabled until apiKey present; shows loading + error states; renders summary; "Save to RAG" calls upload + process in order.
-- `ComposeMode.vue` — `setAsync` / `setSelectedDataAsync` invoked with the right coercion type.
+- `Home.vue` — chat send/reply round-trip; renders the Email-actions accordion (and only that — cut sections stay cut).
 - `Settings.vue` — "Sign out" calls revoke endpoint + clears roaming settings.
 
 ### 11.4 E2E (Playwright + Outlook on the Web)
@@ -423,7 +422,7 @@ We'll use the [office-addin-test-helpers](https://github.com/OfficeDev/office-js
 | ----------------------------- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
 | Sideload                      | Run `npm run sideload`; assert ribbon button appears in OWA                           | Manifest accepted, button visible                                        |
 | First-run                     | Open taskpane, no key configured                                                      | SignIn view shown                                                        |
-| Sign-in — Google fast path    | Click "Sign in", browser already has Synaplan session, click "Connect" in bridge page | Dialog auto-closes within ~2s, ReadMode renders                          |
+| Sign-in — Google fast path    | Click "Sign in", browser already has Synaplan session, click "Connect" in bridge page | Dialog auto-closes within ~2s, Home renders                              |
 | Sign-in — full Google login   | Click "Sign in", complete Google OAuth in dialog, click "Connect"                     | Same as above; `roamingSettings.apiKey` populated                        |
 | Sign-in — wrong state nonce   | Inject a bad `state` in the bridge response                                           | Add-in rejects, surfaces error toast, no key stored                      |
 | Sign-in — user cancels dialog | Close dialog without connecting                                                       | No key stored, SignIn view still shown                                   |

@@ -69,33 +69,6 @@ describe('RealSynaplanClient.chat', () => {
   })
 })
 
-describe('RealSynaplanClient.composeNew', () => {
-  it('parses a JSON subject+body reply', async () => {
-    const fetchImpl = mockFetchSequence([
-      {
-        body: {
-          success: true,
-          outgoingMessage: JSON.stringify({ subject: 'Delivery date', htmlBody: '<p>Hi</p>' }),
-        },
-      },
-    ])
-    const c = buildClient(fetchImpl as unknown as typeof fetch)
-    const r = await c.composeNew({ description: 'ask about delivery', language: 'en' })
-    expect(r.subject).toBe('Delivery date')
-    expect(r.htmlBody).toBe('<p>Hi</p>')
-  })
-
-  it('falls back to a derived subject when the reply is not JSON', async () => {
-    const fetchImpl = mockFetchSequence([
-      { body: { success: true, outgoingMessage: { text: 'just some prose, no json' } } },
-    ])
-    const c = buildClient(fetchImpl as unknown as typeof fetch)
-    const r = await c.composeNew({ description: 'Quarterly update to the team' })
-    expect(r.subject).toBe('Quarterly update to the team')
-    expect(r.htmlBody).toContain('just some prose')
-  })
-})
-
 describe('RealSynaplanClient.getModelConfig', () => {
   it('joins defaults ids with the catalog to resolve names', async () => {
     const fetchImpl = mockFetchSequence([

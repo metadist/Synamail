@@ -17,7 +17,7 @@ import { expect, type Page } from '@playwright/test'
 import { installOfficeShim, type MailItemSeed, type SeedSettings } from './office-shim'
 import { mockSynaplan } from './synaplan-mock'
 
-export { READ_ITEM, COMPOSE_ITEM } from './office-shim'
+export { READ_ITEM } from './office-shim'
 export type { MailItemSeed } from './office-shim'
 
 export const LIVE = process.env.SYNAPLAN_E2E_LIVE === '1'
@@ -74,14 +74,15 @@ export async function officeCalls(page: Page): Promise<{ name: string; arg?: unk
   )
 }
 
-/** Open the email-actions (Read) view from Home. Requires a read item. */
+/** Expand the "Email actions" accordion on Home. Requires a read item. */
 export async function openReadView(page: Page): Promise<void> {
-  await page.getByRole('button', { name: 'Email actions' }).click()
-  await expect(page.getByRole('heading', { name: 'Email actions' })).toBeVisible()
+  const flap = page.locator('details.acc', { hasText: 'Email actions' })
+  await flap.locator('summary').click()
+  await expect(flap.locator('.ea__actions')).toBeVisible()
 }
 
-/** Open the Compose view from Home. Requires a compose item. */
-export async function openComposeView(page: Page): Promise<void> {
-  await page.getByRole('button', { name: 'Email actions' }).click()
-  await expect(page.getByRole('heading', { name: 'Compose mode' })).toBeVisible()
+/** Click the Go button of one email-action row (e.g. "Summarize"). */
+export async function runEmailAction(page: Page, label: string): Promise<void> {
+  const row = page.locator('.ea__row', { hasText: label })
+  await row.getByRole('button', { name: 'Go' }).click()
 }

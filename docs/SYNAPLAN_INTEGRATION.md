@@ -133,22 +133,37 @@ make sideload     # opens Outlook on the Web with the manifest
 # page should now load inside the dialog.
 ```
 
-### 2.5 Optional — Sprint 3.5+: `plugins/synamail/` on the platform
+### 2.5 SHIPPED (2026-06-10) — the `synamail` Synaplan plugin (Contact AI Profiling)
 
-If we later want server-side hygiene specific to the Outlook add-in (e.g. enforcing the `contact:<email>` RAG-group naming convention, exposing a non-admin RULE-preview endpoint, tagging files with `from`/`to` headers automatically on upload), we add a Synaplan plugin under:
+The plugin anticipated here now exists and carries **Contact AI Profiling**:
+rolling per-contact profiles (summary / tone / facts / open loops) whose AI
+prompt and storage live server-side, so profiling can evolve without an add-in
+release. Same dev→release flow as Synaform:
+
+- **Developed in this repo** under `synamail-plugin/`:
 
 ```
-synaplan-platform/plugins/synamail/
-├── manifest.json
+synamail-plugin/
+├── manifest.json              (id synamail, namespace Plugin\Synamail)
 ├── backend/
-│   ├── Controller/
-│   │   └── SynamailController.php
-│   └── Service/
+│   └── Controller/
+│       └── SynamailController.php   (profile endpoints + the rolling-summary prompt)
+├── frontend/
+│   ├── index.js               (Synaplan web panel: list + delete profiles)
+│   └── i18n/{en,de,es,tr}.json
 └── migrations/
-    └── 001_setup.sql          (per-user BCONFIG keys)
+    └── 001_setup.sql          (per-user BCONFIG group P_synamail)
 ```
 
-Routes namespace: `/api/v1/user/{userId}/plugins/synamail/...` (matches the SortX precedent).
+- **Released to the main repo** with `make sync-plugin` (copies to
+  `synaplan/plugins/synamail/`; `make sync-plugin-and-clear` also clears the
+  Symfony cache). For production, copy the same directory to
+  `synaplan-platform/plugins/synamail/`.
+
+Routes namespace: `/api/v1/user/{userId}/plugins/synamail/profiles...`
+(API-key authenticated; the add-in resolves the numeric user id via
+`GET /api/v1/auth/me`). Profiles are stored in Synaplan's generic
+`plugin_data` table — **no core schema change**.
 
 After dropping the plugin in:
 
@@ -158,7 +173,10 @@ docker compose restart backend worker
 docker compose exec backend php bin/console app:plugin:install <userId> synamail
 ```
 
-**This is opt-in and non-blocking.** Nothing in Sprints 2, 3, or 4 of the Synamail plan depends on this plugin existing.
+**Graceful degradation:** on instances without the plugin, the add-in's
+profile card shows an install hint (`PROFILING_UNAVAILABLE`); every other
+feature keeps working. Remember to install the plugin for the AppSource
+reviewer demo account.
 
 ## 3. CORS — already permissive
 
@@ -184,16 +202,16 @@ If at some point Synaplan tightens CORS to an explicit allow-list, **then** the 
 
 Almost nothing in v1. For completeness:
 
-| `synaplan-platform/` artefact | Touched for Synamail?                                                   |
-| ----------------------------- | ----------------------------------------------------------------------- |
-| `docker-compose.yml`          | No.                                                                     |
-| `.env`                        | No — Synamail introduces no new env vars on the Synaplan side in v1.    |
-| `plugins/`                    | No in v1. Optional `plugins/synamail/` from Sprint 3.5 onwards (§2.5).  |
-| `up/` (NFS uploads)           | No — file-upload path is unchanged.                                     |
-| `re-startweb{1,2,3}.sh`       | No — just **run** them after `docker compose pull`.                     |
-| `synaplan.sql`                | No — no schema changes for Synamail.                                    |
-| Galera DB                     | No — no schema changes.                                                 |
-| Reverse proxy / TLS           | No — `web.synaplan.com` already terminates TLS and routes to the image. |
+| `synaplan-platform/` artefact | Touched for Synamail?                                                                    |
+| ----------------------------- | ---------------------------------------------------------------------------------------- |
+| `docker-compose.yml`          | No.                                                                                      |
+| `.env`                        | No — Synamail introduces no new env vars on the Synaplan side in v1.                     |
+| `plugins/`                    | **Yes** — copy `synamail-plugin/` → `plugins/synamail/` for Contact AI Profiling (§2.5). |
+| `up/` (NFS uploads)           | No — file-upload path is unchanged.                                                      |
+| `re-startweb{1,2,3}.sh`       | No — just **run** them after `docker compose pull`.                                      |
+| `synaplan.sql`                | No — no schema changes for Synamail.                                                     |
+| Galera DB                     | No — no schema changes.                                                                  |
+| Reverse proxy / TLS           | No — `web.synaplan.com` already terminates TLS and routes to the image.                  |
 
 ## 5. Cheat sheet — your operator actions per sprint
 

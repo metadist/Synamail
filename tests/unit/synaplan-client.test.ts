@@ -540,59 +540,77 @@ describe('RealSynaplanClient — extractMeetingTimes', () => {
   })
 })
 
-describe('RealSynaplanClient — categorize', () => {
-  const cats = [
-    { name: 'Blue Category', meaning: 'project XYZ from @bmw.de' },
-    { name: 'Green Category', meaning: 'invoices and billing' },
-  ]
+describe('RealSynaplanClient — Contact AI Profiling (synamail plugin)', () => {
+  const me = { body: { success: true, user: { email: 'a@b.test', id: 7 } } }
+  const profile = {
+    email: 'alice@example.com',
+    summary: 'Alice runs procurement at Example Corp.',
+    tone: 'friendly',
+    facts: ['Works at Example Corp'],
+    openLoops: ['me: send the demo'],
+    emailCount: 3,
+    updatedAt: '2026-06-10T12:00:00+00:00',
+  }
 
-  it('returns the matched category from a JSON reply', async () => {
+  it('resolves the user id from /auth/me, then GETs the plugin profile route', async () => {
+    const fetchImpl = mockFetchSequence([me, { body: { success: true, profile } }])
+    const c = buildClient(fetchImpl as unknown as typeof fetch)
+    const r = await c.getContactProfile('Alice@Example.com')
+    expect(fetchImpl.mock.calls[0][0]).toBe('https://api.test/api/v1/auth/me')
+    expect(fetchImpl.mock.calls[1][0]).toBe(
+      'https://api.test/api/v1/user/7/plugins/synamail/profiles/alice%40example.com',
+    )
+    expect(r).toEqual(profile)
+  })
+
+  it('returns null when no profile exists yet, and caches the user id', async () => {
     const fetchImpl = mockFetchSequence([
-      {
-        body: {
-          success: true,
-          outgoingMessage: {
-            text: '{"category":"Blue Category","confidence":0.88,"reasoning":"mentions XYZ + bmw.de"}',
-          },
-        },
-      },
+      me,
+      { body: { success: true, profile: null } },
+      { body: { success: true, profile: null } },
     ])
     const c = buildClient(fetchImpl as unknown as typeof fetch)
-    const r = await c.categorize({
-      subject: 'XYZ update',
-      body: 'from the bmw team',
-      from: 'a@bmw.de',
-      categories: cats,
+    expect(await c.getContactProfile('alice@example.com')).toBeNull()
+    expect(await c.getContactProfile('alice@example.com')).toBeNull()
+    // auth/me once + two profile GETs — the id is cached after the first call.
+    expect(fetchImpl).toHaveBeenCalledTimes(3)
+  })
+
+  it('updateContactProfile POSTs the email payload and returns the new snapshot', async () => {
+    const fetchImpl = mockFetchSequence([me, { body: { success: true, profile } }])
+    const c = buildClient(fetchImpl as unknown as typeof fetch)
+    const r = await c.updateContactProfile({
+      email: 'alice@example.com',
+      subject: 'Re: demo',
+      body: 'Thanks, talk soon!',
+      direction: 'inbound',
+      name: 'Alice',
     })
-    expect(fetchImpl.mock.calls[0][0]).toBe('https://api.test/api/v1/messages/send')
-    expect(r).toEqual({
-      category: 'Blue Category',
-      confidence: 0.88,
-      reasoning: 'mentions XYZ + bmw.de',
+    expect(fetchImpl.mock.calls[1][0]).toBe(
+      'https://api.test/api/v1/user/7/plugins/synamail/profiles/alice%40example.com/update',
+    )
+    const body = lastCallBody(fetchImpl) as Record<string, unknown>
+    expect(body.direction).toBe('inbound')
+    expect(body.subject).toBe('Re: demo')
+    expect(body.name).toBe('Alice')
+    expect(r).toEqual(profile)
+  })
+
+  it('maps a 404 (plugin not installed) to PROFILING_UNAVAILABLE', async () => {
+    const fetchImpl = mockFetchSequence([me, { status: 404, body: 'No route found' }])
+    const c = buildClient(fetchImpl as unknown as typeof fetch, { maxRetries: 0 })
+    await expect(c.getContactProfile('alice@example.com')).rejects.toMatchObject({
+      code: 'PROFILING_UNAVAILABLE',
     })
   })
 
-  it('returns null when the AI says none', async () => {
-    const fetchImpl = mockFetchSequence([
-      { body: { success: true, outgoingMessage: { text: '{"category":"none","confidence":0}' } } },
-    ])
+  it('deleteContactProfile issues a DELETE on the profile route', async () => {
+    const fetchImpl = mockFetchSequence([me, { body: { success: true, deleted: true } }])
     const c = buildClient(fetchImpl as unknown as typeof fetch)
-    const r = await c.categorize({ subject: 's', body: 'b', categories: cats })
-    expect(r).toBeNull()
-  })
-
-  it('returns null for a hallucinated category not in the candidate list', async () => {
-    const fetchImpl = mockFetchSequence([
-      {
-        body: {
-          success: true,
-          outgoingMessage: { text: '{"category":"Purple Category","confidence":0.9}' },
-        },
-      },
-    ])
-    const c = buildClient(fetchImpl as unknown as typeof fetch)
-    const r = await c.categorize({ subject: 's', body: 'b', categories: cats })
-    expect(r).toBeNull()
+    await c.deleteContactProfile('alice@example.com')
+    const [url, init] = fetchImpl.mock.calls[1] as [string, RequestInit]
+    expect(url).toBe('https://api.test/api/v1/user/7/plugins/synamail/profiles/alice%40example.com')
+    expect(init.method).toBe('DELETE')
   })
 })
 

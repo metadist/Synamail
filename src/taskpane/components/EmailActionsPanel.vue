@@ -4,7 +4,6 @@ import { useI18n } from 'vue-i18n'
 import ActionButton from '@/taskpane/components/ActionButton.vue'
 import LanguagePicker from '@/taskpane/components/LanguagePicker.vue'
 import SaveToRagDialog from '@/taskpane/components/SaveToRagDialog.vue'
-import SenderHistoryList from '@/taskpane/components/SenderHistoryList.vue'
 import TonePicker from '@/taskpane/components/TonePicker.vue'
 import Toast from '@/taskpane/components/Toast.vue'
 import {
@@ -19,17 +18,15 @@ import {
   getReadItemAsFile,
   useOutlookItem,
 } from '@/taskpane/composables/useOutlookItem'
-import { useOutlookMailbox } from '@/taskpane/composables/useOutlookMailbox'
 import { useSynaplanClient } from '@/taskpane/composables/useSynaplanClient'
 import { errorMessage } from '@shared/synaplan-client'
 import { renderMarkdown } from '@shared/markdown'
 import { openContactProfile } from '@/taskpane/router'
-import type { MeetingProposal, SenderHistoryResult } from '@shared/types'
+import type { MeetingProposal } from '@shared/types'
 
 const { t } = useI18n()
 const { item } = useOutlookItem()
 const { call } = useSynaplanClient()
-const mailbox = useOutlookMailbox()
 
 type ActionKey =
   | 'summarise'
@@ -38,8 +35,6 @@ type ActionKey =
   | 'classify'
   | 'save'
   | 'ask'
-  | 'senderHistory'
-  | 'senderSummary'
   | 'meeting'
   | null
 const active = ref<ActionKey>(null)
@@ -52,7 +47,6 @@ const tone = ref<'formal' | 'concise' | 'friendly'>('concise')
 const question = ref('')
 const askHistory = ref<{ q: string; a: string }[]>([])
 const showSaveDialog = ref(false)
-const senderHistory = ref<SenderHistoryResult | null>(null)
 
 const emailOpen = computed(() => item.value.mode === 'read')
 const senderEmail = computed(() => item.value.from ?? '')
@@ -175,42 +169,6 @@ async function handleSaveConfirm(payload: {
     }
     return r
   })
-}
-
-async function loadSenderHistory(): Promise<void> {
-  const email = senderEmail.value
-  if (!email) return
-  status.value = null
-  senderHistory.value = null
-  result.value = ''
-  const r = await run('senderHistory', () => mailbox.senderHistory(email, 12))
-  if (r) senderHistory.value = r
-}
-
-async function summariseSenderHistory(): Promise<void> {
-  if (!senderHistory.value) return
-  const block = senderHistory.value.items
-    .map((m, i) => `# Message ${i + 1} — ${m.date}\n## ${m.subject}\n${m.snippet}`)
-    .join('\n\n')
-  result.value = ''
-  const r = await run('senderSummary', () =>
-    call((c) =>
-      c.summarise(
-        {
-          subject: t('read.senderHistory.summarySubject', {
-            email: senderHistory.value!.email,
-            n: senderHistory.value!.total,
-          }),
-          body: block,
-          from: senderHistory.value!.email,
-        },
-        (textSoFar) => {
-          result.value = textSoFar
-        },
-      ),
-    ),
-  )
-  if (r) result.value = r.summary
 }
 
 async function ensureImageFileIds(): Promise<number[]> {
@@ -484,15 +442,7 @@ function addToCalendar(p: MeetingProposal): void {
           <ActionButton @click="openContactProfile(senderEmail)">{{
             t('read.contactProfile')
           }}</ActionButton>
-          <ActionButton :loading="active === 'senderHistory'" @click="loadSenderHistory">
-            {{ t('read.actions.moreFromSender') }}
-          </ActionButton>
         </div>
-        <SenderHistoryList
-          v-if="senderHistory"
-          :history="senderHistory"
-          @summarise="summariseSenderHistory"
-        />
       </div>
 
       <div class="ea__block">

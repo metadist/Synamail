@@ -23,14 +23,6 @@ describe('prompts', () => {
     expect(p).toContain('billing, support, general')
   })
 
-  it('extractActionItems renders the markdown checklist instruction', () => {
-    expect(prompts.extractActionItems('en')).toContain('- [ ]')
-  })
-
-  it('preSendCheck produces JSON-only contract', () => {
-    expect(prompts.preSendCheck('en')).toContain('JSON only')
-  })
-
   it('meetingProposals embeds the reference now + timezone and asks for a JSON array', () => {
     const p = prompts.meetingProposals('2026-06-01T09:00:00', 'Europe/Berlin')
     expect(p).toContain('2026-06-01T09:00:00')

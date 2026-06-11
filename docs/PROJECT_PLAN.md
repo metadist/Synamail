@@ -8,17 +8,20 @@ Synamail development is organized into 4 sprints:
 
 - **Sprint 1 — Planning, Design & Test Definition**: Done.
 - **Sprint 2 — GUI, Local Sideload, Live Identification**: Done.
-- **Sprint 3 — Functionality & Live API Calls**: Done. All read and compose actions live.
-- **Sprint 4 — Release (AppSource & Open Source)**: Current focus.
+- **Sprint 3 — Functionality & Live API Calls**: Done for the v1 scope (read-mode actions; compose-mode deferred).
+- **Sprint 4 — Release (AppSource & Open Source)**: Current focus. The app was
+  **condensed for release on 2026-06-10**: compose mode, Mail Routes, the rule
+  editor, and all EWS-dependent features were cut (see `FEATURES.md` §6), and
+  **Contact AI Profiling (rolling profiles)** shipped via the new `synamail`
+  Synaplan plugin (`synamail-plugin/`, released with `make sync-plugin`).
 
 ## GUI Definitions & Assets
 
-### Routing
+### Routing (v1)
 
 - No API key: `SignIn.vue`
-- API key + message selected: `ReadMode.vue`
-- API key + composing: `ComposeMode.vue`
-- Navigation: `Settings.vue`, `RuleEditor.vue`, `ContactProfile.vue`
+- Signed in: `Home.vue` (chat + Email actions accordion)
+- Navigation: `Settings.vue`, `ContactProfile.vue`
 
 ### Visual Language
 
@@ -30,7 +33,7 @@ Synamail development is organized into 4 sprints:
 
 - Icons (PNG): 16, 32, 64, 80, 128
 - Hero images: 256x256, 512x512
-- Screenshots (1366x768): SignIn, ReadMode, ComposeMode, Settings, ContactProfile, RuleEditor
+- Screenshots (1366x768): SignIn, Home (chat + Email actions), Settings, ContactProfile (profile card)
 - Screencast (1080p, ≤60s)
 - Store copy (`assets/store/copy.md` en + de)
 
@@ -38,12 +41,23 @@ Synamail development is organized into 4 sprints:
 
 Mirrors Microsoft's certification policy 1100.
 
-- [ ] Manifest `Id`, `Version`, `DisplayName` = `Synamail`.
-- [ ] `office-addin-validator manifest.xml` / `manifest.unified.json` → 0 warnings.
-- [ ] Hosted on stable HTTPS (`web.synaplan.com/addin/` or `addin.synaplan.com`).
-- [ ] Privacy, Terms of Service, and Support URLs publicly reachable.
+- [x] Manifest `Id`, `Version`, `DisplayName` = `Synamail` — `manifest.prod.xml`
+      carries the production GUID (`342cee66-…`), v1.0.0.0, host
+      `addin.synaplan.com`, and the narrowed `ReadWriteItem` permission.
+- [x] `make validate` (office-addin-manifest) green for `manifest.xml` AND
+      `manifest.prod.xml`; `make build-manifest` converts the prod manifest to
+      `manifest.unified.json` for submission.
+- [ ] Hosted on stable HTTPS: publish `dist/` + `assets/` to
+      `https://addin.synaplan.com` (paths are baked into `manifest.prod.xml`).
+- [ ] Privacy, Terms of Service, and Support URLs publicly reachable. The
+      privacy policy MUST mention Contact AI Profiling (profiles of email
+      contacts, stored only in the user's own Synaplan workspace, fully
+      user-deletable) — reviewers look for this.
 - [ ] Functional across OWA, new Outlook (Windows), classic Outlook 2024, Mac.
-- [ ] Demo Microsoft 365 tenant credentials + Synaplan account pre-seeded for reviewers.
+      (v1 deliberately uses no EWS, so no feature is host-dependent.)
+- [ ] Demo Microsoft 365 tenant credentials + Synaplan account pre-seeded for
+      reviewers — install the `synamail` plugin for the demo user so the
+      profile card works (`php bin/console app:plugin:install <userId> synamail`).
 - [ ] Store listing + screenshots + copy in en/de uploaded.
 
 ## Open Source Launch

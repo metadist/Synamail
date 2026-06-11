@@ -4,9 +4,19 @@ Concrete feature specs for the Outlook add-in. Every section names: the user val
 
 This is the integration-ready feature contract. If anything here contradicts `docs/PROJECT_PLAN.md` or `docs/ARCHITECTURE.md`, this file wins for _what the feature does_; the other documents win for _when/where it's built_.
 
+> **v1 release scope (2026-06-10).** For the AppSource submission the app was
+> deliberately condensed to the features that work on **all** required Outlook
+> hosts: Home chat, the read-mode actions (§1), Save to knowledge base (§3),
+> Contact AI Profiling (§4 + §8, served by the `synamail` Synaplan plugin),
+> find-meeting-times, and Settings. Compose-mode assistance (§2), RULE/Synapse
+> editing (§5), Mail Routes (§7), and every EWS-dependent feature (mailbox-wide
+> search, sender history, block sender) are **cut from v1** — EWS retires for
+> Exchange Online in Oct 2026 and `makeEwsRequestAsync` is unavailable in new
+> Outlook for Windows. The coverage matrix in §6 is authoritative.
+
 ## 1. Read-mode AI actions
 
-The user opens an email in Outlook → the Synamail taskpane offers five actions on the selected message.
+The user opens an email in Outlook → the Synamail taskpane offers its actions on the selected message (rendered by `EmailActionsPanel.vue` inside Home's "Email actions" section).
 
 ### 1.1 Summarise
 
@@ -60,7 +70,13 @@ The user opens an email in Outlook → the Synamail taskpane offers five actions
 - **UI surface:** Anchored input at the bottom of `ReadMode.vue`. History is scrollable.
 - **Edge cases:** Reopening the same thread later reuses the existing `chatId`. If the chat was deleted server-side, fall back to creating a new one and update roaming.
 
-## 2. Compose-mode AI actions
+## 2. Compose-mode AI actions — **deferred (not in v1)**
+
+> **Cut from the v1 release (2026-06-10).** The compose view was never reachable
+> from the shipped navigation and used the wrong prompts. The spec below stays
+> as the design for a later release; the compose ribbon button currently opens
+> the same Home taskpane, which explains that email actions need an open
+> (read-mode) message.
 
 The user is writing or replying → the Synamail taskpane offers writing assistance.
 
@@ -148,7 +164,10 @@ This is the feature the user asked for: _"search by sender or recipient to creat
 - For internal-only senders (e.g. `alice@yourcompany.com`), the same convention applies — there is no special-casing.
 - Saving an email to a contact group **also** records the recipient list as searchable metadata on the file (via the `BFILES.BTAGS` field if available, confirm during wire-up), so a search for "alice" returns hits where alice was on the To: line too.
 
-## 5. RULE integration — Synapse Routing rules
+## 5. RULE integration — Synapse Routing rules — **deferred (not in v1)**
+
+> **Cut from the v1 release (2026-06-10).** `RuleEditor.vue` was never built;
+> the spec below is the design for a later release.
 
 Note: in the user's brief this was called "RULE integration". Synaplan's actual rule engine is **Synapse Routing** (`docs/SYNAPSE_ROUTING.md` in `synaplan/`), and the rules are stored in `BSELECTION_RULES` on each routable topic. Synamail surfaces this engine inside Outlook so users can shape how Synaplan routes their incoming emails (e.g. via the `smart+keyword@synaplan.net` webhook flow).
 
@@ -183,28 +202,39 @@ Note: in the user's brief this was called "RULE integration". Synaplan's actual 
 - Settings → "Email routing rules" tab opens `RuleEditor.vue`.
 - ReadMode → "···" overflow menu → "Use this email to create a routing rule".
 
-## 6. Feature coverage matrix (cross-check with docs/PROJECT_PLAN.md)
+## 6. Feature coverage matrix — v1 release scope (authoritative)
 
-| Feature                               | Sprint | Endpoint(s)                                                   | View                            | Status target               |
-| ------------------------------------- | ------ | ------------------------------------------------------------- | ------------------------------- | --------------------------- |
-| Summarise                             | 3      | `messages/send`                                               | ReadMode                        | Live                        |
-| Translate (email body)                | 3      | `messages/send`                                               | ReadMode                        | Live                        |
-| Draft reply                           | 3      | `messages/send` + `displayReplyForm`                          | ReadMode → Outlook compose      | Live                        |
-| Classify                              | 3      | `messages/send` (JSON-mode)                                   | ReadMode                        | Live                        |
-| Ask follow-ups                        | 3      | `chats` + `chats/{id}/messages`                               | ReadMode                        | Live                        |
-| Save to RAG (chosen group)            | 3      | `files/upload` + `files/{id}/process` + `files/groups`        | ReadMode + modal                | Live                        |
-| Contact AI Profiling — save           | 3      | `files/groups` (POST) + upload/process with `contact:<email>` | ReadMode → contact pill         | Live                        |
-| Contact AI Profiling — search         | 3      | `rag/search` with group filter                                | ContactProfile                  | Live                        |
-| Contact AI Profiling — ask            | 3      | `chats` with RAG scope hint                                   | ContactProfile                  | Live                        |
-| Insert from RAG (compose)             | 3      | `rag/search`                                                  | ComposeMode                     | Live                        |
-| Draft / improve / translate selection | 3      | `messages/send`                                               | ComposeMode                     | Live                        |
-| RULE integration — view               | 3      | `prompts` (or `synapse/topics`)                               | RuleEditor                      | Live (read)                 |
-| RULE integration — edit               | 3      | `prompts` PATCH                                               | RuleEditor                      | Live or deferred (see §5.3) |
-| Sign in (Office Dialog → API key)     | 2      | `/addin/connect` bridge → `apikeys` POST                      | SignIn                          | Live                        |
-| Sign out (revoke key)                 | 2      | `apikeys` DELETE                                              | Settings                        | Live                        |
-| Self-hosted instance override         | 2      | n/a (client-side)                                             | Settings → "Use a self-hosted…" | Live                        |
+### Shipped in v1
 
-Anything not in this table is either deferred to a future phase (Smart Alerts, `OnNewMessageCompose` autoload, mobile) or out of scope for v1.
+| Feature                                | Endpoint(s)                                                              | View                           | Status                                        |
+| -------------------------------------- | ------------------------------------------------------------------------ | ------------------------------ | --------------------------------------------- |
+| Home chat (general Synaplan chat)      | `chats` + `messages/send` (+ `messages/stream`)                          | Home                           | Live                                          |
+| Summarise                              | `messages/send`                                                          | Home → Email actions           | Live                                          |
+| Translate (email body)                 | `messages/send`                                                          | Home → Email actions           | Live                                          |
+| Draft reply                            | `messages/send` + `displayReplyForm`                                     | Home → Email actions → compose | Live                                          |
+| Classify                               | `messages/send` (JSON-mode)                                              | Home → Email actions           | Live                                          |
+| Find meeting times                     | `messages/send` + `displayNewAppointmentForm`                            | Home → Email actions           | Live                                          |
+| Ask follow-ups (incl. email images)    | `chats` + `messages/send` + `files/upload`                               | Home → Email actions           | Live                                          |
+| Save to RAG (chosen group)             | `files/upload` (with `process_level`) + `files/groups`                   | Home → Email actions + modal   | Live                                          |
+| Contact AI Profiling — corpus          | upload/search scoped to `contact:<email>`                                | ContactProfile                 | Live                                          |
+| Contact AI Profiling — rolling profile | `synamail` plugin: `GET/POST/DELETE …/plugins/synamail/profiles/{email}` | ContactProfile profile card    | Live (needs the plugin installed server-side) |
+| Sign in (Office Dialog → API key)      | `/addin/connect` bridge → `apikeys` POST                                 | SignIn                         | Live                                          |
+| Sign out (revoke key)                  | `apikeys` DELETE                                                         | Settings                       | Live                                          |
+| Self-hosted instance override          | n/a (client-side)                                                        | SignIn / Settings              | Live                                          |
+| Model display + language pref          | `config/models` + `config/models/defaults`                               | Settings                       | Live                                          |
+
+### Cut from v1 (design retained)
+
+| Feature                                            | Why cut                                                  | Where the design lives |
+| -------------------------------------------------- | -------------------------------------------------------- | ---------------------- |
+| Compose-mode assistance (draft/improve/RAG-insert) | View was unreachable and wired to wrong prompts          | §2                     |
+| RULE / Synapse routing editor                      | Never built                                              | §5                     |
+| Mail Routes (per-email automations)                | Config UI existed without a runtime engine               | §7 + `MAIL_ROUTES.md`  |
+| Mailbox search → knowledge base                    | EWS-only (mock fallback elsewhere); EWS retires Oct 2026 | git history            |
+| "More from this sender" history                    | EWS-only with mock fallback                              | git history            |
+| Block sender                                       | EWS-only, never had UI                                   | git history            |
+
+Anything not in these tables is either deferred to a future phase (Smart Alerts, `OnNewMessageCompose` autoload, mobile) or out of scope for v1.
 
 ## 7. Mail Routes — per-email AI agent triggers (design / RFC)
 
@@ -231,11 +261,21 @@ Full model, action catalog (with feasibility), data model, trust checklist, and
 phased plan live in [`MAIL_ROUTES.md`](MAIL_ROUTES.md). **Not yet implemented** —
 design-first per the 2026-05-31 decision.
 
-## 8. Contact AI Profiling — rolling relationship memory (design / RFC)
+## 8. Contact AI Profiling — rolling relationship memory (**shipped in v1, Phase 1**)
 
 > Renames and supersedes the "Contact knowledge base" of §4. The
 > `contact:<email>` RAG group stays; profiling adds a durable, recomputed
 > **state object** on top of it.
+>
+> **Shipped 2026-06-10 (Phase 1) — via the `synamail` Synaplan plugin.** The
+> implementation supersedes the client-only "Option B" below: the rolling
+> prompt and the stored profile live **server-side** in the plugin
+> (`synamail-plugin/`, released to `synaplan/plugins/synamail/`), keyed per
+> user + contact in Synaplan's generic `plugin_data` store. The add-in rolls
+> one email at a time into the profile (`POST …/profiles/{email}/update`) —
+> explicitly via the profile card, and automatically whenever an email is
+> saved to the contact's group. See `CONTACT_PROFILING.md` for the updated
+> architecture record.
 
 **User value:** opening a contact instantly answers "where does this
 relationship stand?" — _"you haven't mailed in 6 weeks; last exchange friendly

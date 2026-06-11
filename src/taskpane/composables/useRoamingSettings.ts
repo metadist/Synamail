@@ -9,7 +9,6 @@
  * `localStorage` so the dev loop still works.
  */
 
-import { EMPTY_ROUTES_STATE, type MailRoutesState } from '@shared/mail-routes/types'
 import type { RoamingSettings } from '@shared/types'
 
 const KEY = 'synamail.settings'
@@ -181,27 +180,6 @@ export async function setLastRagGroupId(id: string): Promise<void> {
   const current = loadSettings()
   if (!current) return
   await saveSettings({ ...current, lastRagGroupId: id })
-}
-
-// ---------------------------------------------------------------------------
-// Mail Routes — per-email AI automations (docs/MAIL_ROUTES.md).
-//
-// Stored inside the auth-gated settings record under `routes`. Returns a fresh
-// empty state when the user hasn't created any route yet (or isn't signed in),
-// so callers never have to null-check the shape.
-// ---------------------------------------------------------------------------
-
-export function getMailRoutes(): MailRoutesState {
-  const current = loadSettings()
-  return current?.routes ?? { ...EMPTY_ROUTES_STATE }
-}
-
-export async function saveMailRoutes(state: MailRoutesState): Promise<void> {
-  const current = loadSettings()
-  if (!current) {
-    throw new Error('No roaming settings to store routes in — sign in first')
-  }
-  await saveSettings({ ...current, routes: state })
 }
 
 // ---------------------------------------------------------------------------
