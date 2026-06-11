@@ -124,11 +124,12 @@ make ci-local
 
 That target chains:
 
-1. `make lint` — Prettier + ESLint.
-2. `make check-types` — `vue-tsc -b`.
-3. `make test` — Vitest unit + component.
-4. `make validate` — `office-addin-manifest validate manifest.xml`.
-5. `make build` — Vite production build, fails on bundle-size budget.
+1. `make lint-docs` — markdownlint, the same command CI's `Docs lint` job runs.
+2. `make lint` — Prettier + ESLint.
+3. `make check-types` — `vue-tsc -b`.
+4. `make test` — Vitest unit + component.
+5. `make validate` — `office-addin-manifest validate manifest.xml`.
+6. `make build` — Vite production build, fails on bundle-size budget.
 
 For E2E (Playwright) — not part of the local pre-commit gate; runs in CI on PR. But run it manually when you touch:
 
@@ -226,7 +227,7 @@ Active hooks:
 
 | Hook         | Action                                                                                                                                                                           |
 | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `pre-commit` | Runs `make ci-local` (or `make lint && make check-types && make test` for faster iteration on docs-only changes — auto-detected).                                                |
+| `pre-commit` | Runs `make ci-local` (or `make lint-docs` — the exact markdownlint CI runs — for docs-only changes, auto-detected).                                                              |
 | `commit-msg` | Validates the commit message against Conventional Commits (regex shipped in the hook). Once `npm` is available, swap for `commitlint` (`commitlint.config.cjs` already present). |
 | `pre-push`   | Reminds you to run `make test-e2e` if any of `useAuth.ts`, `synaplan-client.ts`, or `src/taskpane/views/` changed in your branch.                                                |
 
