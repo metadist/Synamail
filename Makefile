@@ -1,4 +1,4 @@
-.PHONY: help bootstrap dev sideload lint format check-types test test-e2e test-e2e-live validate \
+.PHONY: help bootstrap dev sideload lint lint-docs format check-types test test-e2e test-e2e-live validate \
         build build-manifest generate-schemas ci-local clean deps doctor sync bridge \
         up down budget sync-plugin sync-plugin-and-clear
 
@@ -83,6 +83,9 @@ down: ## Stop Synamail dev servers (Synaplan Docker is left running)
 lint: ## Run ESLint + Prettier
 	@if [ -f package.json ]; then npm run lint; else echo "skip: no package.json (Sprint 2.1)"; fi
 
+lint-docs: ## Run markdownlint exactly like CI's "Docs lint" job (uses .markdownlint.jsonc)
+	npx --yes markdownlint-cli2 '**/*.md' '!node_modules/**' '!dist/**' '!.github/copilot-instructions.md'
+
 format: ## Apply Prettier formatting in place
 	@if [ -f package.json ]; then npm run format; else echo "skip: no package.json (Sprint 2.1)"; fi
 
@@ -163,6 +166,8 @@ clean: ## Remove build output + node_modules cache
 ## ---------------------------------------------------------------------------
 
 ci-local: ## Run the full pre-commit gate locally
+	@echo "→ make lint-docs"
+	@$(MAKE) lint-docs
 	@echo "→ make lint"
 	@$(MAKE) lint
 	@echo "→ make check-types"

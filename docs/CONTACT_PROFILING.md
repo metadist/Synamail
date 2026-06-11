@@ -41,6 +41,8 @@ Owner: Synamail.
 > design record for those phases — read them with the plugin architecture in
 > mind.
 
+<!-- two intentionally separate callouts (MD028) -->
+
 > **Read this first — terminology.** A "**profile**" here is a Synamail-owned,
 > evolving summary of one **contact** (a person, identified by email; or an
 > **org**, identified by domain). It is built from the emails you exchange **plus

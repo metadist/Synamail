@@ -56,16 +56,27 @@ while IFS= read -r f; do
 done <<< "$staged"
 
 if $docs_only; then
-  info "[pre-commit] docs-only commit — running docs lint"
-  # markdownlint via npx is too slow without node_modules; do a quick sanity grep.
-  bad=$(grep -InE '	' $(echo "$staged" | grep -E '\.md$' || true) 2>/dev/null || true)
-  if [ -n "$bad" ]; then
-    echo "[pre-commit] tabs found in markdown — please use spaces:" >&2
-    echo "$bad" >&2
-    exit 1
+  info "[pre-commit] docs-only commit — running 'make lint-docs' (mirrors CI's Docs lint job)"
+  # Run the REAL markdownlint (same command as CI's "Markdown style" step) so a
+  # docs-only commit can never go red on GitHub. npx caches the package after
+  # the first run, so this stays fast. Same quiet-output pattern as the full
+  # gate below: IDE git wrappers surface ANY hook output as a fake error modal.
+  if ! command -v make >/dev/null 2>&1; then
+    info "[pre-commit] 'make' not available — skipping docs lint (CI will still gate the PR)"
+    exit 0
   fi
-  info "[pre-commit] OK"
-  exit 0
+  log="$(mktemp)"
+  trap 'rm -f "$log"' EXIT
+  if make lint-docs >"$log" 2>&1; then
+    info "[pre-commit] OK"
+    exit 0
+  fi
+  {
+    echo "[pre-commit] 'make lint-docs' failed — fix the markdown issues below, then re-commit:"
+    echo
+    cat "$log"
+  } >&2
+  exit 1
 fi
 
 # Full gate — run it QUIETLY.

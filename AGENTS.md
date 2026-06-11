@@ -34,19 +34,22 @@ When resolving merge conflicts:
 **You MUST run and pass ALL of these before committing or allowing a commit.** This matches what CI runs on GitHub. If any step fails, fix the issue before committing. No exceptions.
 
 ```bash
-# Step 1: Lint (Prettier + ESLint) — Vue + TS
+# Step 1: Docs lint (markdownlint, same command as CI's "Docs lint" job)
+make lint-docs
+
+# Step 2: Lint (Prettier + ESLint) — Vue + TS
 make lint
 
-# Step 2: Static type check — vue-tsc -b (catches errors ESLint misses!)
+# Step 3: Static type check — vue-tsc -b (catches errors ESLint misses!)
 make check-types
 
-# Step 3: Unit + component tests (Vitest)
+# Step 4: Unit + component tests (Vitest)
 make test
 
-# Step 4: Manifest validation (office-addin-manifest)
+# Step 5: Manifest validation (office-addin-manifest)
 make validate
 
-# Step 5: Production build (Vite, fails on bundle-size budget breach)
+# Step 6: Production build (Vite, fails on bundle-size budget breach)
 make build
 ```
 
@@ -57,13 +60,14 @@ make ci-local
 ```
 
 `make ci-local` is the **local CI** — it runs the exact same steps as the
-GitHub `build` job (lint → check-types → test → validate → build → bundle
-budget). If it's green locally, CI is green. If it's red locally, CI will be
-red — do not push.
+GitHub jobs that gate the PR (lint-docs → lint → check-types → test →
+validate → build → bundle budget). If it's green locally, CI is green. If it
+is red locally, CI will be red — do not push.
 
 **Rules:**
 
 - Run the FULL test suite (`make test`), not just a subset.
+- **Docs are gated too.** CI's `Docs lint` job (markdownlint) blocks the `All Checks Passed` gate exactly like code checks do. `make lint-docs` runs the identical command locally; it is part of `make ci-local` AND of the pre-commit docs-only fast path — never skip it because a change "is only markdown". Lint rules live in `.markdownlint.jsonc`; if a rule misfires, fix or configure the rule there — don't bypass the gate. For two intentionally adjacent blockquotes, separate them with an HTML comment line (MD028).
 - If `make check-types` fails, fix the type errors before committing — no `// @ts-ignore` escape hatches without a tracked issue + comment.
 - E2E (Playwright + sideload) is **not** required on every commit — it runs nightly + before sprint review. But if you touched `useAuth.ts`, `synaplan-client.ts`, or any view, run `make test-e2e` locally before the PR.
 - After changing Synaplan's OpenAPI surface or pulling new schemas, run `make generate-schemas` then re-run `make check-types`.
@@ -74,7 +78,7 @@ red — do not push.
 The local gate is wired so it **cannot be silently skipped**:
 
 - `npm install` runs a `prepare` script that sets `git config core.hooksPath .githooks`. Hooks are enabled automatically on every fresh clone — you never have to remember `make bootstrap`.
-- **`pre-commit`** runs `make ci-local` on any non-docs commit.
+- **`pre-commit`** runs `make ci-local` on any non-docs commit, and `make lint-docs` (real markdownlint, identical to CI) on docs-only commits.
 - **`pre-push`** runs `make ci-local` again (the last line of defence before GitHub). A commit made by a tool that bypassed `pre-commit` — IDE auto-commit, `git commit --no-verify` — is still caught here.
 - **NEVER** use `--no-verify` to bypass the gate on a branch that will be pushed to `main`. If the gate is wrong, fix the gate, not the bypass.
 
