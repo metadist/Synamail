@@ -5,8 +5,6 @@
  * we generate them from Synaplan's OpenAPI spec (see docs/FEATURES.md §6).
  */
 
-import type { MailRoutesState } from './mail-routes/types'
-
 export interface SignInPayload {
   state: string
   apiKey: string
@@ -31,12 +29,6 @@ export interface RoamingSettings {
    * target language — that lives in each view's local `targetLang`.
    */
   language?: 'auto' | 'en' | 'de' | 'fr' | 'es' | 'it' | 'pt'
-  /**
-   * Mail Routes — the user's per-email AI automations (see
-   * `src/shared/mail-routes/types.ts` and docs/MAIL_ROUTES.md). Absent until
-   * the user creates their first route.
-   */
-  routes?: MailRoutesState
 }
 
 export interface SummariseInput {
@@ -112,19 +104,6 @@ export interface ChatTurnResult {
   answer: string
 }
 
-export interface ComposeNewInput {
-  /** Free-form description of the email the user wants written. */
-  description: string
-  /** Target language code; defaults to English. */
-  language?: string
-}
-
-export interface ComposeNewResult {
-  subject: string
-  /** HTML body content (no doctype/html/head wrapper). */
-  htmlBody: string
-}
-
 export interface RagSearchInput {
   query: string
   threshold?: number
@@ -184,52 +163,6 @@ export interface ModelConfig {
   vectorize: ModelChoice | null
 }
 
-export interface SenderHistoryInput {
-  email: string
-  /** Hard cap on results (default 25). */
-  limit?: number
-  /** Optional folder hint; defaults to all mailbox folders. */
-  folder?: 'inbox' | 'all' | 'archive'
-}
-
-export interface SenderHistoryItem {
-  /** ISO 8601 received date. */
-  date: string
-  subject: string
-  /** Short plain-text preview (~120 chars). */
-  snippet: string
-  /** Whether the message has been read. Drives the bold/regular treatment. */
-  unread: boolean
-  /** Stable id usable to deep-link back to the message (EWS id when available). */
-  messageId?: string
-}
-
-export interface SenderHistoryResult {
-  email: string
-  total: number
-  items: SenderHistoryItem[]
-  /** True when the source was Outlook itself (EWS / REST); false when the
-   *  client returned canned mock data — drives the "(mock)" UI badge. */
-  fromOutlook: boolean
-}
-
-export interface CreateSpamRuleInput {
-  senderEmail: string
-  /** Also move existing messages from this sender to Junk. */
-  alsoCleanExisting?: boolean
-  /** Display name for the rule (defaults to "Synamail: block <sender>"). */
-  displayName?: string
-}
-
-export interface CreateSpamRuleResult {
-  ruleId: string
-  /** Number of existing messages moved to Junk (0 when alsoCleanExisting is false). */
-  movedCount: number
-  /** When true the rule was created server-side via EWS / Graph; false when
-   *  the mock client stubbed it for dev. */
-  serverSide: boolean
-}
-
 export interface MeetingExtractInput {
   subject: string
   body: string
@@ -250,32 +183,50 @@ export interface MeetingProposal {
 }
 
 // ---------------------------------------------------------------------------
-// Categorize (Mail Routes — docs/MAIL_ROUTES.md §4a). The AI assigns the
-// best-fitting user-defined Outlook category to an email.
+// Contact AI Profiling (docs/CONTACT_PROFILING.md). The rolling profile is
+// computed and stored server-side by the `synamail` Synaplan plugin; the
+// add-in only feeds emails in and renders the snapshot.
 // ---------------------------------------------------------------------------
 
-/** A user-defined category and what it means (drives AI categorization). */
-export interface CategoryMeaning {
-  /** Outlook category name (often a repurposed colour, e.g. "Blue Category"). */
-  name: string
-  /** Plain-language meaning/example, e.g. "about project XYZ from @bmw.de". */
-  meaning: string
+/**
+ * The rolling profile of one mailing partner, as returned by the synamail
+ * plugin (`GET/POST /api/v1/user/{userId}/plugins/synamail/profiles/...`).
+ */
+export interface ContactProfileData {
+  /** Lower-cased contact email — the profile key. */
+  email: string
+  name?: string
+  /** Organisation derived from the email domain (null for freemail). */
+  org?: string | null
+  /** The rolling narrative — who this person is and where things stand. */
+  summary: string
+  /** Current tone of the relationship, e.g. "friendly but distanced". */
+  tone?: string | null
+  /** Short, stable facts worth remembering. */
+  facts: string[]
+  /** Unresolved commitments/questions, each prefixed "me:" or "them:". */
+  openLoops: string[]
+  /** How many emails have been rolled into this profile. */
+  emailCount: number
+  firstSeen?: string | null
+  lastInbound?: string
+  lastOutbound?: string
+  /** ISO timestamp of the last profile update ("as of" line in the UI). */
+  updatedAt?: string
 }
 
-export interface CategorizeInput {
-  subject: string
+/** One email to roll into a contact's profile. */
+export interface ProfileEmailInput {
+  /** The contact the profile belongs to. */
+  email: string
+  subject?: string
   body: string
-  from?: string
-  categories: CategoryMeaning[]
-  /** Optional free-text "AI clarify" guidance. */
-  clarify?: string
-}
-
-export interface CategorizeResult {
-  /** One of the candidate category names (validated against the input list). */
-  category: string
-  confidence: number
-  reasoning: string
+  /** ISO 8601 date of the email. */
+  date?: string
+  /** inbound = the contact wrote to me; outbound = I wrote to the contact. */
+  direction: 'inbound' | 'outbound'
+  /** Display name of the contact, if known. */
+  name?: string
 }
 
 export interface ApiError {

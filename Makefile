@@ -1,6 +1,12 @@
 .PHONY: help bootstrap dev sideload lint format check-types test test-e2e test-e2e-live validate \
         build build-manifest generate-schemas ci-local clean deps doctor sync bridge \
-        up down budget
+        up down budget sync-plugin sync-plugin-and-clear
+
+# Synaplan-side companion plugin (synamail-plugin/) — released into the main
+# Synaplan repo's plugins/ directory, same flow as Synaform.
+SYNAPLAN_DIR ?= /wwwroot/synaplan
+PLUGIN_SRC    = synamail-plugin
+PLUGIN_DST    = $(SYNAPLAN_DIR)/plugins/synamail
 
 # Default target — print help.
 help: ## Show this help
@@ -117,6 +123,19 @@ build-manifest: ## Generate manifest.unified.json from manifest.xml (Sprint 4)
 
 generate-schemas: ## Regenerate Zod schemas from Synaplan OpenAPI (Sprint 3)
 	@if [ -f package.json ]; then npm run generate:schemas; else echo "skip: no package.json (Sprint 2.1)"; fi
+
+## ---------------------------------------------------------------------------
+## Synaplan plugin (Contact AI Profiling backend)
+## ---------------------------------------------------------------------------
+
+sync-plugin: ## Release synamail-plugin/ into $(SYNAPLAN_DIR)/plugins/synamail
+	rm -rf $(PLUGIN_DST)
+	cp -r $(PLUGIN_SRC) $(PLUGIN_DST)
+	@echo "Synced to $(PLUGIN_DST)"
+
+sync-plugin-and-clear: sync-plugin ## Sync the plugin and clear the Synaplan Symfony cache
+	docker compose -f $(SYNAPLAN_DIR)/docker-compose.yml exec -T backend php bin/console cache:clear
+	@echo "Cache cleared"
 
 clean: ## Remove build output + node_modules cache
 	rm -rf dist coverage playwright-report test-results .vite

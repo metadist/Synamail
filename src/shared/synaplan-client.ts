@@ -22,10 +22,8 @@
 
 import {
   ask as askPrompt,
-  categorize as categorizePrompt,
   classify as classifyPrompt,
   meetingProposals as meetingProposalsPrompt,
-  newMail as newMailPrompt,
   reply as replyPrompt,
   simpleChat as simpleChatPrompt,
   summarise as summarisePrompt,
@@ -33,14 +31,11 @@ import {
 } from './prompts'
 import type {
   ApiError,
-  CategorizeInput,
-  CategorizeResult,
   ChatTurnInput,
   ChatTurnResult,
   ClassifyInput,
   ClassifyResult,
-  ComposeNewInput,
-  ComposeNewResult,
+  ContactProfileData,
   DraftReplyInput,
   DraftReplyResult,
   FileUploadInput,
@@ -48,6 +43,7 @@ import type {
   MeetingExtractInput,
   MeetingProposal,
   ModelConfig,
+  ProfileEmailInput,
   RagGroup,
   RagSearchHit,
   RagSearchInput,
@@ -78,8 +74,6 @@ export interface SynaplanClient {
    * prompt instead of the email-grounded one.
    */
   chat(input: ChatTurnInput, onChunk?: StreamHandler): Promise<ChatTurnResult>
-  /** Draft a brand-new email (subject + HTML body) from a description. */
-  composeNew(input: ComposeNewInput): Promise<ComposeNewResult>
   /**
    * Extract proposed meeting / call times from an email body. Returns a
    * (possibly empty) list of candidate slots the caller can turn into Outlook
@@ -105,18 +99,20 @@ export interface SynaplanClient {
    */
   getModelConfig(): Promise<ModelConfig>
 
-  /**
-   * Categorize an email against a set of user-defined categories (each with a
-   * meaning/example). Returns the best-fitting category name + confidence, or
-   * `null` when nothing fits. Pure AI via `POST /messages/send`; the caller
-   * applies the result as an Outlook category.
-   */
-  categorize(input: CategorizeInput): Promise<CategorizeResult | null>
-}
+  // ---------------------------------------------------------------------
+  // Contact AI Profiling — served by the `synamail` Synaplan plugin
+  // (docs/CONTACT_PROFILING.md). When the plugin isn't installed on the
+  // user's Synaplan instance these calls throw an ApiError with code
+  // `PROFILING_UNAVAILABLE`, which the UI renders as an install hint.
+  // ---------------------------------------------------------------------
 
-// Sender history ("More from this sender") and block-sender are Outlook
-// mailbox operations, not Synaplan calls — they live in the plugin's
-// `useOutlookMailbox` composable (EWS) so this client stays pure-Synaplan.
+  /** The stored rolling profile of a contact, or null when none exists yet. */
+  getContactProfile(email: string): Promise<ContactProfileData | null>
+  /** Roll one email into the contact's profile and return the updated snapshot. */
+  updateContactProfile(input: ProfileEmailInput): Promise<ContactProfileData>
+  /** Delete the contact's profile entirely (privacy / GDPR). */
+  deleteContactProfile(email: string): Promise<void>
+}
 
 export interface ClientOptions {
   baseUrl: string
@@ -137,6 +133,8 @@ export class RealSynaplanClient implements SynaplanClient {
   private readonly apiKey: string
   private readonly fetchImpl: typeof fetch
   private readonly maxRetries: number
+  /** Synaplan user id, resolved lazily from /auth/me for plugin routes. */
+  private userId: number | null = null
 
   constructor(opts: ClientOptions) {
     this.baseUrl = opts.baseUrl.replace(/\/$/, '')
@@ -274,12 +272,6 @@ export class RealSynaplanClient implements SynaplanClient {
     return { chatId, answer }
   }
 
-  async composeNew(input: ComposeNewInput): Promise<ComposeNewResult> {
-    const message = composeMessage(newMailPrompt(input.language ?? 'en'), input.description)
-    const text = await this.sendChat(message)
-    return parseComposeResponse(text, input.description)
-  }
-
   async extractMeetingTimes(input: MeetingExtractInput): Promise<MeetingProposal[]> {
     const message = composeMessage(
       meetingProposalsPrompt(input.nowIso, input.timezone),
@@ -387,17 +379,69 @@ export class RealSynaplanClient implements SynaplanClient {
   }
 
   // -------------------------------------------------------------------------
-  // Categorize (Mail Routes — docs/MAIL_ROUTES.md §4a)
+  // Contact AI Profiling — `synamail` plugin endpoints
   // -------------------------------------------------------------------------
 
-  async categorize(input: CategorizeInput): Promise<CategorizeResult | null> {
-    const list = input.categories.map((c) => `- "${c.name}": ${c.meaning}`).join('\n')
-    const message = composeMessage(
-      categorizePrompt(list, input.clarify),
-      buildEmailBlock({ subject: input.subject, body: input.body, from: input.from }),
+  async getContactProfile(email: string): Promise<ContactProfileData | null> {
+    const res = await this.pluginRequest<ProfileResponse>(
+      `/profiles/${encodeURIComponent(email.trim().toLowerCase())}`,
     )
-    const text = await this.sendChat(message)
-    return parseCategorizeResponse(text, input.categories)
+    return res?.profile ?? null
+  }
+
+  async updateContactProfile(input: ProfileEmailInput): Promise<ContactProfileData> {
+    const res = await this.pluginRequest<ProfileResponse>(
+      `/profiles/${encodeURIComponent(input.email.trim().toLowerCase())}/update`,
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          subject: input.subject ?? '',
+          body: cleanEmailText(input.body),
+          date: input.date ?? '',
+          direction: input.direction,
+          name: input.name ?? '',
+        }),
+      },
+    )
+    if (!res?.success || !res.profile) {
+      throw apiError(0, 'AI_FAILED', 'Profile update failed')
+    }
+    return res.profile
+  }
+
+  async deleteContactProfile(email: string): Promise<void> {
+    await this.pluginRequest(`/profiles/${encodeURIComponent(email.trim().toLowerCase())}`, {
+      method: 'DELETE',
+    })
+  }
+
+  /**
+   * Request against the synamail plugin's user-scoped route prefix. Resolves
+   * (and caches) the numeric user id from /auth/me first, and maps a 404 —
+   * the plugin not being installed on this Synaplan instance — to the
+   * `PROFILING_UNAVAILABLE` error code the UI knows how to explain.
+   */
+  private async pluginRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
+    if (this.userId === null) {
+      const me = await this.request<AuthMeResponse>('/api/v1/auth/me')
+      const id = me?.user?.id
+      if (typeof id !== 'number') {
+        throw apiError(0, 'AUTH_FAILED', 'Could not resolve the Synaplan user id')
+      }
+      this.userId = id
+    }
+    try {
+      return await this.request<T>(`/api/v1/user/${this.userId}/plugins/synamail${path}`, init)
+    } catch (err) {
+      if (isApiError(err) && (err.status === 404 || err.status === 403)) {
+        throw apiError(
+          err.status,
+          'PROFILING_UNAVAILABLE',
+          'The Synamail plugin is not installed on this Synaplan instance.',
+        )
+      }
+      throw err
+    }
   }
 
   // -------------------------------------------------------------------------
@@ -683,41 +727,6 @@ function parseClassifyResponse(text: string): ClassifyResult {
   }
 }
 
-function parseComposeResponse(text: string, description: string): ComposeNewResult {
-  // The newMail prompt asks for JSON { subject, htmlBody }. Tolerate fenced
-  // output and surrounding prose; fall back to treating the whole reply as
-  // the body with a subject derived from the user's description.
-  const cleaned = text
-    .replace(/```(?:json)?\s*/gi, '')
-    .replace(/```/g, '')
-    .trim()
-  const start = cleaned.indexOf('{')
-  const end = cleaned.lastIndexOf('}')
-  if (start !== -1 && end > start) {
-    try {
-      const parsed = JSON.parse(cleaned.slice(start, end + 1)) as Partial<ComposeNewResult>
-      const subject = typeof parsed.subject === 'string' ? parsed.subject.trim() : ''
-      const htmlBody = typeof parsed.htmlBody === 'string' ? parsed.htmlBody.trim() : ''
-      if (subject || htmlBody) {
-        return {
-          subject: subject || deriveSubject(description),
-          htmlBody: htmlBody || `<p>${escapeHtml(text)}</p>`,
-        }
-      }
-    } catch {
-      // Fall through to the plain-text fallback below.
-    }
-  }
-  return {
-    subject: deriveSubject(description),
-    htmlBody: `<p>${escapeHtml(text || description)}</p>`,
-  }
-}
-
-function deriveSubject(description: string): string {
-  return description.split(/\r?\n/)[0]?.slice(0, 80).trim() || 'New message'
-}
-
 function parseMeetingProposals(text: string): MeetingProposal[] {
   // The meetingProposals prompt asks for a JSON array. Tolerate fenced output
   // and surrounding prose; return [] on anything unparseable rather than throw
@@ -764,10 +773,6 @@ function addMinutesIso(iso: string, minutes: number): string {
     `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}` +
     `T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
   )
-}
-
-function escapeHtml(s: string): string {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 }
 
 /**
@@ -909,35 +914,8 @@ interface ConfigModelsResponse {
   models?: Record<string, RawCatalogModel[]>
 }
 
-function parseCategorizeResponse(
-  text: string,
-  categories: { name: string; meaning: string }[],
-): CategorizeResult | null {
-  // The categorize prompt asks for JSON {category, confidence, reasoning}.
-  // Tolerate fences/prose; only return a category that's in the candidate list.
-  const cleaned = text
-    .replace(/```(?:json)?\s*/gi, '')
-    .replace(/```/g, '')
-    .trim()
-  const start = cleaned.indexOf('{')
-  const end = cleaned.lastIndexOf('}')
-  if (start === -1 || end === -1 || end <= start) return null
-  try {
-    const parsed = JSON.parse(cleaned.slice(start, end + 1)) as {
-      category?: string
-      confidence?: number
-      reasoning?: string
-    }
-    const name = typeof parsed.category === 'string' ? parsed.category.trim() : ''
-    if (!name || name.toLowerCase() === 'none') return null
-    const match = categories.find((c) => c.name.toLowerCase() === name.toLowerCase())
-    if (!match) return null
-    return {
-      category: match.name,
-      confidence: typeof parsed.confidence === 'number' ? parsed.confidence : 0,
-      reasoning: typeof parsed.reasoning === 'string' ? parsed.reasoning : '',
-    }
-  } catch {
-    return null
-  }
+/** Wire shape of the synamail plugin's profile endpoints. */
+interface ProfileResponse {
+  success?: boolean
+  profile?: ContactProfileData | null
 }

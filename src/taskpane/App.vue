@@ -3,8 +3,6 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import SignIn from './views/SignIn.vue'
 import Home from './views/Home.vue'
-import ReadMode from './views/ReadMode.vue'
-import ComposeMode from './views/ComposeMode.vue'
 import Settings from './views/Settings.vue'
 import ContactProfile from './views/ContactProfile.vue'
 import { currentView, go } from './router'
@@ -16,8 +14,6 @@ const view = computed(() => currentView.value)
 const components = {
   'sign-in': SignIn,
   home: Home,
-  read: ReadMode,
-  compose: ComposeMode,
   settings: Settings,
   'contact-profile': ContactProfile,
 } as const

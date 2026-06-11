@@ -5,7 +5,7 @@
 
 import { ref } from 'vue'
 
-export type ViewName = 'sign-in' | 'home' | 'read' | 'compose' | 'settings' | 'contact-profile'
+export type ViewName = 'sign-in' | 'home' | 'settings' | 'contact-profile'
 
 export const currentView = ref<ViewName>('sign-in')
 const history: ViewName[] = []
@@ -29,7 +29,7 @@ export function go(view: ViewName): void {
   }
 }
 
-export function back(fallback: ViewName = 'settings'): void {
+export function back(fallback: ViewName = 'home'): void {
   const prev = history.pop()
   currentView.value = prev ?? fallback
 }

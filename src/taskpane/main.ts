@@ -35,8 +35,8 @@ function applyStoredLocale(): void {
 
 function routeAfterAuth(): void {
   // Chat-first: after sign-in we always land on Home, which works with or
-  // without a selected message. The email-specific Read/Compose views are
-  // reachable from Home's contextual link when an item is loaded.
+  // without a selected message. Email actions live inside Home's accordion
+  // when a read item is loaded.
   go(isSignedIn.value ? 'home' : 'sign-in')
 }
 
