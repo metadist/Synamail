@@ -1,6 +1,6 @@
 # =============================================================================
 # addin.synaplan.com — Synamail add-in static host.
-# Runs on ch1 alongside Swiss + Kimai + the EU website, behind the shared Caddy
+# Runs on the host alongside Swiss + Kimai + the EU website, behind the shared Caddy
 # proxy. Image is built & published by CI on push to main:
 #   ghcr.io/metadist/synamail:latest
 # Update flow: handled automatically by the synamail-addin-watchguard timer

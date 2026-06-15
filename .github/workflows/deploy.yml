@@ -61,4 +61,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
-          cache-to: type=gha,mode=max
+          # ignore-error keeps a flaky GHA cache backend ("error writing layer
+          # blob: not_found") from failing the whole job after the image has
+          # already been pushed.
+          cache-to: type=gha,mode=max,ignore-error=true

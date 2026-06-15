@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # =============================================================================
 # Manually roll out the latest Synamail add-in image (addin.synaplan.com) on
-# ch1. CI publishes ghcr.io/metadist/synamail:latest on every push to main; the
+# the host. CI publishes ghcr.io/metadist/synamail:latest on every push to main; the
 # watchguard timer normally rolls it out within ~2 min. Use this to force it.
 # =============================================================================
 set -euo pipefail

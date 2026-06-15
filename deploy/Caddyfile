@@ -1,7 +1,7 @@
 # =============================================================================
-# In-image static server for the Synamail add-in (NOT the ch1 ingress proxy).
+# In-image static server for the Synamail add-in (NOT the the host ingress proxy).
 #
-# Serves the built add-in on :80. The ch1 Caddy proxy reverse-proxies
+# Serves the built add-in on :80. The the host Caddy proxy reverse-proxies
 # addin.synaplan.com -> synamail-addin:80; Cloudflare terminates TLS upstream.
 # =============================================================================
 {

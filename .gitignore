@@ -33,6 +33,9 @@ yarn-error.log*
 .env.local
 .env.*.local
 
+# Internal/private ops note — real SSH/host/deploy details (NEVER commit).
+.development
+
 # Office add-in dev certs (auto-generated)
 .office-addin-dev-certs/
 
