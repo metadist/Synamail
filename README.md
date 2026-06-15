@@ -7,6 +7,16 @@ replies, classify, save emails to your knowledge base, and ask follow-up questio
 without leaving your inbox. Works in Outlook on the Web (Windows, Mac, **and Linux**),
 new Outlook for Windows, classic Outlook 2024, and Outlook on Mac.
 
+Synamail is the Outlook companion to **[Synaplan](https://www.synaplan.com)** — the
+open-source AI knowledge platform. Every action you click runs in **your** Synaplan
+workspace, so you need an account first:
+
+- **Just want to use it?** Create a **free account at
+  [web.synaplan.com](https://web.synaplan.com)**, then install the add-in (below).
+- **Run your own?** Self-host the platform from
+  **[github.com/metadist/synaplan](https://github.com/metadist/synaplan)** and point
+  Synamail at your instance under _"Use a self-hosted instance"_ on the sign-in screen.
+
 ---
 
 ## Pick your path
@@ -48,22 +58,24 @@ Synamail/
 │   └── pre-push                    — reminds to run E2E when auth/views change
 ├── .github/
 │   ├── workflows/ci.yml            — staged CI (docs / commitlint / manifest / build / e2e)
+│   ├── workflows/deploy.yml        — build + publish the add-in host image to GHCR
 │   ├── dependabot.yml              — weekly grouped updates
 │   ├── PULL_REQUEST_TEMPLATE.md
 │   └── ISSUE_TEMPLATE/             — bug + feature templates
+├── Dockerfile / .dockerignore      — tiny static host image (serves addin.synaplan.com)
+├── deploy/                         — container deploy + Caddy ingress runbook (self-host the add-in host)
 ├── docs/
+│   ├── USER_GUIDE.md               — everyday-user guide (no command line)
+│   ├── PROJECT_PLAN.md             — plan, status, and the AppSource checklist
+│   ├── RELEASE_SUMMARY.md          — v1 scope summary
 │   ├── ARCHITECTURE.md             — technical architecture, auth, API surface
-│   ├── COMMIT_PROCESS.md           — commits, branches, reviews, releases
-│   ├── CONTRIBUTING.md             — contributor entry point
+│   ├── AUTH_FLOW.md                — authoritative sign-in / sign-out flow
 │   ├── FEATURES.md                 — feature contract
+│   ├── CONTACT_PROFILING.md        — Contact AI Profiling design
+│   ├── CONTRIBUTING.md             — contributor entry point
+│   ├── COMMIT_PROCESS.md           — commits, branches, reviews, releases
 │   ├── GLOSSARY.md                 — canonical terminology
 │   └── SYNAPLAN_INTEGRATION.md     — what changes in synaplan / synaplan-platform
-├── planning/
-│   ├── PLAN.md                     — 4-sprint plan
-│   ├── STATUS.md                   — current build / sprint status
-│   ├── STEPS.md                    — step-by-step plan, 4 sprints
-│   ├── GUI_DEFINITIONS.md          — views, components, asset list
-│   └── APPSOURCE_CHECKLIST.md      — Microsoft submission gate
 ├── src/                            — Vue 3 + TypeScript add-in source
 │   ├── i18n.ts / locales/
 │   ├── shared/                     — client, prompts, types
@@ -81,26 +93,23 @@ Synamail/
 
 ## Reading order for new contributors
 
-1. [`docs/PROJECT_PLAN.md`](docs/PROJECT_PLAN.md) — what the four sprints deliver and when.
-   - [`docs/PROJECT_PLAN.md`](docs/PROJECT_PLAN.md) — the v1.0 launch plan (AppSource + open source), branding, and help-doc architecture. **Read this for the road to release.**
-2. [`AGENTS.md`](AGENTS.md) — the rules that apply to every commit (humans included).
-3. [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md) — the contributor flow in 90 seconds.
-4. [`docs/COMMIT_PROCESS.md`](docs/COMMIT_PROCESS.md) — Conventional Commits, branches, PR, release.
-5. [`docs/GLOSSARY.md`](docs/GLOSSARY.md) — terminology mapping (read before the others).
-6. [`docs/FEATURES.md`](docs/FEATURES.md) — what the add-in does.
-7. [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — how it does it.
-8. [`docs/PROJECT_PLAN.md`](docs/PROJECT_PLAN.md) — how we ship it, step by step.
-9. [`docs/PROJECT_PLAN.md`](docs/PROJECT_PLAN.md) — what it looks like.
-10. [`docs/PROJECT_PLAN.md`](docs/PROJECT_PLAN.md) — current build / sprint status.
-11. [`docs/SYNAPLAN_INTEGRATION.md`](docs/SYNAPLAN_INTEGRATION.md) — what changes (and doesn't) in `synaplan` / `synaplan-platform`.
-12. [`INSTALL.md`](INSTALL.md) — end-user install (post-AppSource release) + developer sideload guide with the field-tested gotchas.
+1. [`AGENTS.md`](AGENTS.md) — the rules that apply to every commit (humans included).
+2. [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md) — the contributor flow in 90 seconds.
+3. [`docs/GLOSSARY.md`](docs/GLOSSARY.md) — terminology mapping (read before the others).
+4. [`docs/FEATURES.md`](docs/FEATURES.md) — what the add-in does.
+5. [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — how it does it (auth, API surface, security).
+6. [`docs/AUTH_FLOW.md`](docs/AUTH_FLOW.md) — the authoritative sign-in / sign-out flow.
+7. [`docs/SYNAPLAN_INTEGRATION.md`](docs/SYNAPLAN_INTEGRATION.md) — what changes (and doesn't) in `synaplan` / `synaplan-platform`.
+8. [`docs/COMMIT_PROCESS.md`](docs/COMMIT_PROCESS.md) — Conventional Commits, branches, PR, release.
+9. [`docs/PROJECT_PLAN.md`](docs/PROJECT_PLAN.md) — plan, status, and the AppSource checklist.
+10. [`INSTALL.md`](INSTALL.md) — end-user install (post-release) + developer sideload guide with the field-tested gotchas.
 
 ## Quick start
 
 ```bash
 git clone https://github.com/metadist/Synamail.git
 cd Synamail
-make bootstrap       # enables git hooks, installs deps (once Sprint 2.1 has landed)
+make bootstrap       # enables git hooks, installs dependencies
 make doctor          # verifies your local toolchain
 make help            # discover the rest
 ```
@@ -112,6 +121,22 @@ make ci-local        # lint + check-types + test + validate + build
 ```
 
 This is exactly what CI runs on your PR. See [`docs/COMMIT_PROCESS.md`](docs/COMMIT_PROCESS.md) and [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md) for the full process.
+
+## The Synaplan ecosystem
+
+Synamail is one client of the open-source **Synaplan** platform:
+
+- **[www.synaplan.com](https://www.synaplan.com)** — product site and hosted
+  workspaces; the place to **create a free account**.
+- **[web.synaplan.com](https://web.synaplan.com)** — the default workspace Synamail
+  connects to out of the box (you can point it at any instance at sign-in).
+- **[github.com/metadist/synaplan](https://github.com/metadist/synaplan)** — the
+  Synaplan platform (PHP/Symfony + Vue 3), which you can self-host.
+
+Contact AI Profiling ships as a Synaplan plugin in
+[`synamail-plugin/`](synamail-plugin/) and is released into
+`synaplan/plugins/synamail` via `make sync-plugin` — details in
+[`docs/SYNAPLAN_INTEGRATION.md`](docs/SYNAPLAN_INTEGRATION.md).
 
 ## Sprint summary
 
