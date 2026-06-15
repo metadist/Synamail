@@ -1,5 +1,7 @@
 # Synamail
 
+<img width="1721" height="1318" alt="Outlook_Plugin" src="https://github.com/user-attachments/assets/12b629c0-4a04-4502-8423-0abcc09a009a" />
+
 **Your Synaplan AI workspace, right inside Outlook.** Summarise, translate, draft
 replies, classify, save emails to your knowledge base, and ask follow-up questions —
 without leaving your inbox. Works in Outlook on the Web (Windows, Mac, **and Linux**),
