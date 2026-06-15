@@ -13,6 +13,8 @@
     "invalidUrl": "Esto no parece una URL válida. Incluye https:// — p. ej. https://web.synaplan.com",
     "httpsRequired": "Outlook requiere una dirección HTTPS para iniciar sesión. Una URL http:// simple (incluido http://localhost) no funcionará: ejecuta el puente HTTPS local y usa https://localhost:5174 en su lugar.",
     "instanceSaved": "Instancia guardada: {url}",
+    "noAccount": "¿Nuevo en Synaplan?",
+    "createAccount": "Crear una cuenta gratuita",
     "devSettingsLabel": "Ajustes de desarrollo",
     "localDevHint": "Desarrolladores: apunta Synamail a una instancia local mediante HTTPS, p. ej. https://localhost:5174 (ejecuta «make bridge»). Haz clic en Guardar para que el valor se conserve y no se pierda al cambiar algo."
   },
@@ -20,7 +22,8 @@
     "title": "Inicio",
     "emailTitle": "Correo abierto",
     "sections": {
-      "emailActions": "Acciones del correo"
+      "emailActions": "Acciones del correo",
+      "profiling": "Perfilado"
     },
     "commands": {
       "chat": "Chat"
@@ -88,9 +91,11 @@
     "saved": "Guardado en {group}.",
     "ask": "Preguntar sobre este contacto",
     "askPlaceholder": "Pregunta sobre {email}…",
+    "openFull": "Perfil completo",
     "profile": {
       "title": "Perfil continuo",
       "empty": "Aún no hay perfil. Incorpore el correo abierto para crear uno: Synamail construye un resumen creciente de este contacto con cada correo que añade.",
+      "update": "Actualizar el perfil",
       "updateFromEmail": "Actualizar el perfil con este correo",
       "noEmailOpen": "Abra un correo de este contacto para ampliar el perfil.",
       "updated": "Perfil actualizado.",

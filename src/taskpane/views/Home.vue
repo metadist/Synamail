@@ -4,8 +4,10 @@ import { useI18n } from 'vue-i18n'
 import AccordionItem from '@/taskpane/components/AccordionItem.vue'
 import ChatThread from '@/taskpane/components/ChatThread.vue'
 import type { ChatMessage } from '@/taskpane/components/ChatThread.vue'
+import ContactProfilePanel from '@/taskpane/components/ContactProfilePanel.vue'
 import EmailActionsPanel from '@/taskpane/components/EmailActionsPanel.vue'
 import Toast from '@/taskpane/components/Toast.vue'
+import { useContactCounterpart } from '@/taskpane/composables/useContactCounterpart'
 import { useOutlookItem } from '@/taskpane/composables/useOutlookItem'
 import {
   clearChatIdForConversation,
@@ -20,6 +22,7 @@ const HOME_CONVERSATION = 'home'
 const { t } = useI18n()
 const { item } = useOutlookItem()
 const { call } = useSynaplanClient()
+const { contactEmail } = useContactCounterpart(item)
 
 const messages = ref<ChatMessage[]>([])
 const sending = ref(false)
@@ -35,6 +38,10 @@ const emailActionsSubtitle = computed(() =>
   emailOpen.value
     ? `${t('read.subjectLabel')}: ${truncate(item.value.subject || t('home.emailTitle'))}`
     : t('read.noEmail'),
+)
+
+const profilingSubtitle = computed(() =>
+  contactEmail.value ? truncate(contactEmail.value) : t('read.noEmail'),
 )
 
 async function send(text: string): Promise<void> {
@@ -105,6 +112,15 @@ async function resetChat(): Promise<void> {
       :strong-subtitle="emailOpen"
     >
       <EmailActionsPanel />
+    </AccordionItem>
+
+    <!-- 3. Contact profiling for the email's counterpart. -->
+    <AccordionItem
+      :title="t('home.sections.profiling')"
+      :subtitle="profilingSubtitle"
+      :strong-subtitle="!!contactEmail"
+    >
+      <ContactProfilePanel />
     </AccordionItem>
   </section>
 </template>

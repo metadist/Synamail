@@ -24,6 +24,22 @@ describe('SignIn.vue', () => {
     expect(wrapper.findAll('button').some((b) => b.text() === 'Save')).toBe(true)
   })
 
+  it('shows a create-account link pointing at the instance /register page', async () => {
+    const wrapper = mount(SignIn, { global: { plugins: [i18n] } })
+    const link = wrapper.find('.signin__create a')
+    expect(link.exists()).toBe(true)
+    expect(link.text()).toBe('Create a free account')
+    expect(link.attributes('href')).toMatch(/\/register$/)
+  })
+
+  it('points the create-account link at the typed instance', async () => {
+    const wrapper = mount(SignIn, { global: { plugins: [i18n] } })
+    await wrapper.find('input[type=url]').setValue('https://my.synaplan.example')
+    expect(wrapper.find('.signin__create a').attributes('href')).toBe(
+      'https://my.synaplan.example/register',
+    )
+  })
+
   it('rejects an http instance with an HTTPS hint instead of signing in', async () => {
     const wrapper = mount(SignIn, { global: { plugins: [i18n] } })
     await wrapper.find('input[type=url]').setValue('http://localhost/')

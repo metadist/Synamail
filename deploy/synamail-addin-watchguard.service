@@ -1,0 +1,16 @@
+# /etc/systemd/system/synamail-addin-watchguard.service
+[Unit]
+Description=Synamail add-in watchguard (pulls ghcr image, re-up compose if changed)
+Documentation=https://github.com/metadist/Synamail
+After=docker.service network-online.target
+Wants=network-online.target
+Requires=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/synamail-addin-watchguard.sh
+TimeoutStartSec=300
+Nice=10
+
+[Install]
+WantedBy=multi-user.target

@@ -13,6 +13,8 @@
     "invalidUrl": "Cette URL ne semble pas valide. Incluez https:// — par ex. https://web.synaplan.com",
     "httpsRequired": "Outlook exige une adresse HTTPS pour la connexion. Une simple URL http:// (y compris http://localhost) ne fonctionnera pas — lancez le pont HTTPS local et utilisez plutôt https://localhost:5174.",
     "instanceSaved": "Instance enregistrée : {url}",
+    "noAccount": "Nouveau sur Synaplan ?",
+    "createAccount": "Créer un compte gratuit",
     "devSettingsLabel": "Paramètres dév.",
     "localDevHint": "Développeurs : pointez Synamail vers une instance locale en HTTPS, par ex. https://localhost:5174 (lancez « make bridge »). Cliquez sur Enregistrer pour que la valeur persiste et ne soit pas perdue lorsque vous modifiez quelque chose."
   },
@@ -20,7 +22,8 @@
     "title": "Accueil",
     "emailTitle": "E-mail ouvert",
     "sections": {
-      "emailActions": "Actions e-mail"
+      "emailActions": "Actions e-mail",
+      "profiling": "Profilage"
     },
     "commands": {
       "chat": "Discussion"
@@ -88,9 +91,11 @@
     "saved": "Enregistré dans {group}.",
     "ask": "Poser une question sur ce contact",
     "askPlaceholder": "Question sur {email}…",
+    "openFull": "Profil complet",
     "profile": {
       "title": "Profil évolutif",
       "empty": "Pas encore de profil. Intégrez l'e-mail ouvert pour en créer un — Synamail construit un résumé évolutif de ce contact à chaque e-mail ajouté.",
+      "update": "Mettre à jour le profil",
       "updateFromEmail": "Mettre à jour le profil avec cet e-mail",
       "noEmailOpen": "Ouvrez un e-mail de ce contact pour enrichir le profil.",
       "updated": "Profil mis à jour.",

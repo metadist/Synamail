@@ -21,7 +21,6 @@ import {
 import { useSynaplanClient } from '@/taskpane/composables/useSynaplanClient'
 import { errorMessage } from '@shared/synaplan-client'
 import { renderMarkdown } from '@shared/markdown'
-import { openContactProfile } from '@/taskpane/router'
 import type { MeetingProposal } from '@shared/types'
 
 const { t } = useI18n()
@@ -434,16 +433,6 @@ function addToCalendar(p: MeetingProposal): void {
            tags, escapes the rest), so v-html is safe here. -->
       <!-- eslint-disable-next-line vue/no-v-html -->
       <div v-if="result" class="ea__result syn-md" v-html="renderMarkdown(result)" />
-
-      <div v-if="senderEmail" class="ea__block">
-        <h4 class="syn-card-title">{{ t('read.senderTitle') }}</h4>
-        <p class="syn-card-sub">{{ senderEmail }}</p>
-        <div class="syn-stack">
-          <ActionButton @click="openContactProfile(senderEmail)">{{
-            t('read.contactProfile')
-          }}</ActionButton>
-        </div>
-      </div>
 
       <div class="ea__block">
         <h4 class="syn-card-title">{{ t('read.askTitle') }}</h4>

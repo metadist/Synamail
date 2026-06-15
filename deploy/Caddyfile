@@ -1,0 +1,33 @@
+# =============================================================================
+# In-image static server for the Synamail add-in (NOT the ch1 ingress proxy).
+#
+# Serves the built add-in on :80. The ch1 Caddy proxy reverse-proxies
+# addin.synaplan.com -> synamail-addin:80; Cloudflare terminates TLS upstream.
+# =============================================================================
+{
+	admin off
+	auto_https off
+}
+
+:80 {
+	encode zstd gzip
+
+	# Lightweight liveness endpoint used by the compose healthcheck.
+	@health path /healthz
+	handle @health {
+		respond "ok" 200
+	}
+
+	handle {
+		root * /srv
+		header {
+			# Outlook embeds the taskpane + auth relay in an iframe; never block it.
+			-X-Frame-Options
+			# Let Outlook hosts load static assets (icons, JS) cross-origin.
+			Access-Control-Allow-Origin "*"
+			# Short cache so a redeploy is picked up quickly; payload is tiny.
+			Cache-Control "public, max-age=300"
+		}
+		file_server
+	}
+}

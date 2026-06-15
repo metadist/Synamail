@@ -1,0 +1,27 @@
+# Build context hygiene — keep the image build fast and deterministic.
+node_modules
+dist
+dist-*
+.git
+.github
+.githooks
+.vite
+.dev-logs
+coverage
+playwright-report
+test-results
+tests
+docs
+planning
+synamail-plugin
+*.log
+*.tsbuildinfo
+.DS_Store
+Thumbs.db
+.idea
+.vscode
+.office-addin-dev-certs
+.env
+.env.*
+!.env.example
+manifest.unified.json

@@ -1,0 +1,14 @@
+# /etc/systemd/system/synamail-addin-watchguard.timer
+[Unit]
+Description=Run Synamail add-in watchguard every 2 minutes
+Documentation=https://github.com/metadist/Synamail
+
+[Timer]
+OnBootSec=60
+OnUnitActiveSec=2min
+Unit=synamail-addin-watchguard.service
+AccuracySec=15s
+Persistent=true
+
+[Install]
+WantedBy=timers.target

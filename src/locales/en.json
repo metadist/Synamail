@@ -13,6 +13,8 @@
     "invalidUrl": "That doesn't look like a valid URL. Include https:// — e.g. https://web.synaplan.com",
     "httpsRequired": "Outlook requires an HTTPS address for sign-in. A plain http:// URL (including http://localhost) won't work — run the local HTTPS bridge and use https://localhost:5174 instead.",
     "instanceSaved": "Instance saved: {url}",
+    "noAccount": "New to Synaplan?",
+    "createAccount": "Create a free account",
     "devSettingsLabel": "Dev settings",
     "localDevHint": "Developers: point Synamail at a local instance over HTTPS, e.g. https://localhost:5174 (run 'make bridge'). Click Save so the value persists and isn't lost when you change something."
   },
@@ -20,7 +22,8 @@
     "title": "Home",
     "emailTitle": "Open email",
     "sections": {
-      "emailActions": "Email actions"
+      "emailActions": "Email actions",
+      "profiling": "Profiling"
     },
     "commands": {
       "chat": "Chat"
@@ -88,9 +91,11 @@
     "saved": "Saved to {group}.",
     "ask": "Ask about this contact",
     "askPlaceholder": "Ask about {email}…",
+    "openFull": "Full profile",
     "profile": {
       "title": "Rolling profile",
       "empty": "No profile yet. Roll the open email in to start one — Synamail builds a growing summary of this contact with every email you add.",
+      "update": "Update the profile",
       "updateFromEmail": "Update profile from this email",
       "noEmailOpen": "Open an email from this contact to grow the profile.",
       "updated": "Profile updated.",

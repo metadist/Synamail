@@ -37,6 +37,12 @@ function validate(url: string): string | null {
 
 const dirty = computed(() => normalize(baseUrlOverride.value) !== savedUrl.value)
 
+/** Registration page on the chosen instance (falls back to the default). */
+const registerUrl = computed(() => {
+  const base = validate(baseUrlOverride.value) ? defaultBaseUrl() : normalize(baseUrlOverride.value)
+  return `${base}/register`
+})
+
 async function saveInstance(): Promise<void> {
   error.value = null
   status.value = null
@@ -113,6 +119,13 @@ async function handleClick(): Promise<void> {
       {{ loading ? t('signIn.loading') : t('signIn.button') }}
     </ActionButton>
 
+    <p class="syn-muted signin__create">
+      {{ t('signIn.noAccount') }}
+      <a :href="registerUrl" target="_blank" rel="noopener noreferrer">{{
+        t('signIn.createAccount')
+      }}</a>
+    </p>
+
     <Toast v-if="status" kind="success" :message="status" />
     <Toast v-if="error" kind="error" :message="error" />
   </section>
@@ -150,6 +163,11 @@ async function handleClick(): Promise<void> {
 }
 .signin__hint {
   margin: 0;
+  font-size: var(--syn-font-size-sm);
+}
+.signin__create {
+  margin: var(--syn-space-1) 0 0;
+  text-align: center;
   font-size: var(--syn-font-size-sm);
 }
 </style>

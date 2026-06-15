@@ -1,0 +1,22 @@
+# =============================================================================
+# addin.synaplan.com — Synamail add-in static host.
+# Runs on ch1 alongside Swiss + Kimai + the EU website, behind the shared Caddy
+# proxy. Image is built & published by CI on push to main:
+#   ghcr.io/metadist/synamail:latest
+# Update flow: handled automatically by the synamail-addin-watchguard timer
+# (poll GHCR -> `docker compose up -d` on a new digest). Manual: ./deploy.sh
+# =============================================================================
+services:
+  addin:
+    image: ghcr.io/metadist/synamail:latest
+    container_name: synamail-addin
+    restart: unless-stopped
+    ports:
+      # Local debug only; public ingress is via the Caddy proxy by container name.
+      - '127.0.0.1:3001:80'
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -qO- http://127.0.0.1/healthz || exit 1']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
