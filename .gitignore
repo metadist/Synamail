@@ -36,6 +36,9 @@ yarn-error.log*
 # Internal/private ops note — real SSH/host/deploy details (NEVER commit).
 .development
 
+# Local share artifacts (sideload ZIP handed to testers).
+*.zip
+
 # Office add-in dev certs (auto-generated)
 .office-addin-dev-certs/
 
