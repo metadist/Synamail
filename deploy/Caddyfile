@@ -18,6 +18,15 @@
 		respond "ok" 200
 	}
 
+	# Build stamp — served uncached so a freshness check is always accurate.
+	@version path /version.json
+	handle @version {
+		root * /srv
+		header Access-Control-Allow-Origin "*"
+		header Cache-Control "no-store"
+		file_server
+	}
+
 	handle {
 		root * /srv
 		header {

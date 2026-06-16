@@ -21,6 +21,9 @@ COPY . .
 RUN npx vite build
 
 FROM caddy:2-alpine AS runner
+# Build provenance, passed by CI (defaults keep local builds working).
+ARG GIT_SHA=unknown
+ARG BUILD_TIME=unknown
 COPY deploy/Caddyfile /etc/caddy/Caddyfile
 # Vite output (serves /src/taskpane/taskpane.html, /src/commands/commands.html,
 # /src/dialog/auth-relay.html, and the hashed /assets/* JS+CSS).
@@ -28,4 +31,6 @@ COPY --from=build /app/dist/ /srv/
 # Manifest icons referenced by manifest.prod.xml (/assets/icon-*.png). The glob
 # only matches the top-level PNGs, not assets/store/* or assets/source/*.
 COPY --from=build /app/assets/*.png /srv/assets/
+# Build stamp — curl https://addin.synaplan.com/version.json to confirm what's live.
+RUN printf '{"name":"synamail","sha":"%s","built":"%s"}\n' "$GIT_SHA" "$BUILD_TIME" > /srv/version.json
 EXPOSE 80
