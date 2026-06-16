@@ -64,6 +64,9 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            GIT_SHA=${{ github.sha }}
+            BUILD_TIME=${{ steps.stamp.outputs.built }}
           cache-from: type=gha
           # ignore-error keeps a flaky GHA cache backend ("error writing layer
           # blob: not_found") from failing the whole job after the image has
