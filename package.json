@@ -44,7 +44,7 @@
     "@vue/tsconfig": "^0.9.1",
     "eslint": "^9.10.0",
     "eslint-plugin-vue": "^10.9.2",
-    "globals": "^15.9.0",
+    "globals": "^17.6.0",
     "jsdom": "^29.1.1",
     "office-addin-debugging": "^6.1.1",
     "office-addin-dev-certs": "^2.0.7",
