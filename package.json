@@ -22,7 +22,7 @@
     "validate": "office-addin-manifest validate manifest.xml",
     "sideload": "office-addin-debugging start manifest.xml",
     "stop-sideload": "office-addin-debugging stop manifest.xml",
-    "build-manifest": "office-addin-manifest-converter convert manifest.xml -o manifest.unified.json",
+    "build-manifest": "office-addin-manifest-converter convert manifest.prod.xml -o manifest.unified.json",
     "generate:schemas": "echo 'Schema generation lands in Sprint 3 - see docs/FEATURES.md section 6.' && exit 0"
   },
   "dependencies": {

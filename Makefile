@@ -125,7 +125,7 @@ budget: ## Enforce the dist bundle-size budget (mirrors CI; cross-platform)
 	@node -e "const fs=require('fs'),p=require('path');if(!fs.existsSync('dist')){console.log('budget: no dist/ — run make build first');process.exit(0)}let t=0;const w=d=>{for(const e of fs.readdirSync(d,{withFileTypes:true})){const f=p.join(d,e.name);e.isDirectory()?w(f):t+=fs.statSync(f).size}};w('dist');const b=2*1024*1024;console.log('dist size: '+t+' bytes (budget: '+b+')');if(t>b){console.error('::error::Bundle exceeds budget');process.exit(1)}console.log('budget: within 2 MiB')"
 
 build-manifest: ## Generate manifest.unified.json from the PRODUCTION manifest (store submission)
-	npx --yes office-addin-manifest-converter manifest.prod.xml -o manifest.unified.json
+	npx --yes office-addin-manifest-converter convert manifest.prod.xml -o manifest.unified.json
 
 generate-schemas: ## Regenerate Zod schemas from Synaplan OpenAPI (Sprint 3)
 	@if [ -f package.json ]; then npm run generate:schemas; else echo "skip: no package.json (Sprint 2.1)"; fi

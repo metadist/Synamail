@@ -41,6 +41,14 @@
 - Classic Outlook 2024 (Windows)
 - Outlook on Mac
 
+> **Form factor: desktop + web only — NO mobile.** The manifest declares only a
+> `DesktopFormFactor` (no `MobileFormFactor`); `make validate` confirms this with
+> "does not include mobile apps". Therefore set **Apple / iOS store
+> availability = NO** in Partner Center (Availability / Markets). Setting it to
+> YES without a mobile form factor fails certification (policy 1120.2.3.1,
+> "Missing Apple ID"). Only flip it to YES if you later add a `MobileFormFactor`
+> and provide a valid Apple ID.
+
 ## Assets
 
 Already in this `publish/` folder:
@@ -52,8 +60,13 @@ Already in this `publish/` folder:
 
 Optional / nice to have:
 
-- Up to 5 screenshots total (add a couple more, e.g. Settings, Contact Profile)
-- Video: YouTube/Vimeo link + 1280×720 PNG thumbnail
+- Up to 5 screenshots total (add a couple more, e.g. Settings, Contact Profile).
+  Include at least one **compose-mode** shot (Synamail open in a new-mail / reply
+  window) — reviewers asked for it (policy 100.3.2.2).
+- Video: a **canonical** YouTube/Vimeo page URL + 1280×720 PNG thumbnail. Use
+  `https://www.youtube.com/watch?v=<id>` — **not** a `youtu.be/<id>` short link or
+  any redirect/"human-readable" URL (policy 100.3.3.3 rejects those). For the
+  current promo that means `https://www.youtube.com/watch?v=h9Ouzl4AZ1E`.
 
 > Note: the `*.jpg:com.dropbox.attrs` files are Dropbox sync sidecars — harmless,
 > ignore them (don't upload them).
