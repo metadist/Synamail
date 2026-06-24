@@ -2,7 +2,7 @@
   "name": "synamail",
   "version": "0.1.0",
   "private": true,
-  "description": "Synamail — Outlook add-in for Synaplan",
+  "description": "Synamail - Outlook add-in for Synaplan",
   "type": "module",
   "engines": {
     "node": ">=22"
@@ -23,7 +23,7 @@
     "sideload": "office-addin-debugging start manifest.xml",
     "stop-sideload": "office-addin-debugging stop manifest.xml",
     "build-manifest": "office-addin-manifest-converter convert manifest.xml -o manifest.unified.json",
-    "generate:schemas": "echo 'Schema generation lands in Sprint 3 — see docs/FEATURES.md §6.' && exit 0"
+    "generate:schemas": "echo 'Schema generation lands in Sprint 3 - see docs/FEATURES.md section 6.' && exit 0"
   },
   "dependencies": {
     "vue": "^3.5.38",
