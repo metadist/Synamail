@@ -8,7 +8,7 @@
 | Publisher        | Synaplan (metadist data management GmbH)             |
 | Manifest         | `../manifest.prod.xml` (upload this on **Packages**) |
 | Add-in ID (GUID) | `342cee66-dd27-471d-b2ac-fa1bbb5db54f`               |
-| Version          | `1.0.0.0`                                            |
+| Version          | `1.0.0.1`                                            |
 | Manifest type    | Add-in only manifest (XML), schema 1.1               |
 | Permission       | `ReadWriteItem`                                      |
 | Hosting          | `https://addin.synaplan.com` (static, HTTPS, live)   |

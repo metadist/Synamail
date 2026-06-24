@@ -42,7 +42,7 @@ Synamail development is organized into 4 sprints:
 Mirrors Microsoft's certification policy 1100.
 
 - [x] Manifest `Id`, `Version`, `DisplayName` = `Synamail` — `manifest.prod.xml`
-      carries the production GUID (`342cee66-…`), v1.0.0.0, host
+      carries the production GUID (`342cee66-…`), v1.0.0.1, host
       `addin.synaplan.com`, and the narrowed `ReadWriteItem` permission.
 - [x] `make validate` (office-addin-manifest) green for `manifest.xml` AND
       `manifest.prod.xml`; `make build-manifest` converts the prod manifest to
