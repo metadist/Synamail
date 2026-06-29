@@ -64,8 +64,8 @@ _HTML biçimlendirmeye izin verilir. En fazla ~3000 karakter._
 </p>
 
 <p>
-  <b>Açık kaynak.</b> Synamail ve Synaplan eklentisi Apache Lisansı 2.0 ile lisanslanmıştır; tüm
-  kaynak kodu her zaman GitHub'da bulunur (github.com/metadist/Synamail).
+  <b>Açık kaynak.</b> Synamail eklentisi ve Synaplan bileşeni Apache Lisansı 2.0 ile
+  lisanslanmıştır; tüm kaynak kodu her zaman GitHub'da bulunur (github.com/metadist/Synamail).
 </p>
 
 <p>

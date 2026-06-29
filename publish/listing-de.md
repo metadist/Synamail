@@ -65,8 +65,9 @@ _HTML-Formatierung ist erlaubt. Max. ~3000 Zeichen._
 </p>
 
 <p>
-  <b>Open Source.</b> Synamail und das zugehörige Synaplan-Plugin stehen unter der Apache-Lizenz
-  2.0; der vollständige Quellcode ist jederzeit auf GitHub verfügbar (github.com/metadist/Synamail).
+  <b>Open Source.</b> Das Synamail-Add-In und die zugehörige Synaplan-Komponente stehen unter der
+  Apache-Lizenz 2.0; der vollständige Quellcode ist jederzeit auf GitHub verfügbar
+  (github.com/metadist/Synamail).
 </p>
 
 <p>

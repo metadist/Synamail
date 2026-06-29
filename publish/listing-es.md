@@ -64,8 +64,8 @@ _Se permite formato HTML. Máx. ~3000 caracteres._
 </p>
 
 <p>
-  <b>Código abierto.</b> Synamail y su complemento de Synaplan se publican bajo la Licencia Apache
-  2.0; el código fuente completo está disponible en todo momento en GitHub
+  <b>Código abierto.</b> El complemento Synamail y su componente de Synaplan se publican bajo la
+  Licencia Apache 2.0; el código fuente completo está disponible en todo momento en GitHub
   (github.com/metadist/Synamail).
 </p>
 

@@ -16,7 +16,7 @@
     "noAccount": "Neu bei Synaplan?",
     "createAccount": "Kostenloses Konto erstellen",
     "devSettingsLabel": "Dev-Einstellungen",
-    "localDevHint": "Für Entwickler: Synamail über HTTPS auf eine lokale Instanz richten, z. B. https://localhost:5174 ('make bridge' starten). Mit Speichern bleibt der Wert erhalten und geht beim Ändern nicht verloren."
+    "localDevHint": "In den meisten Fällen können Sie web.synaplan.com beibehalten. Ändern Sie die Adresse nur, um eine eigene, selbst gehostete Synaplan-Instanz zu verbinden — sie muss mit https:// beginnen."
   },
   "home": {
     "title": "Start",

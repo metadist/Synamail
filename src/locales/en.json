@@ -16,7 +16,7 @@
     "noAccount": "New to Synaplan?",
     "createAccount": "Create a free account",
     "devSettingsLabel": "Dev settings",
-    "localDevHint": "Developers: point Synamail at a local instance over HTTPS, e.g. https://localhost:5174 (run 'make bridge'). Click Save so the value persists and isn't lost when you change something."
+    "localDevHint": "Most people can leave this as web.synaplan.com. Change it only to connect to your own self-hosted Synaplan server — the address must start with https://."
   },
   "home": {
     "title": "Home",

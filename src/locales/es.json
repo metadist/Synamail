@@ -16,7 +16,7 @@
     "noAccount": "¿Nuevo en Synaplan?",
     "createAccount": "Crear una cuenta gratuita",
     "devSettingsLabel": "Ajustes de desarrollo",
-    "localDevHint": "Desarrolladores: apunta Synamail a una instancia local mediante HTTPS, p. ej. https://localhost:5174 (ejecuta «make bridge»). Haz clic en Guardar para que el valor se conserve y no se pierda al cambiar algo."
+    "localDevHint": "La mayoría de los usuarios pueden dejar web.synaplan.com. Cambia esta dirección solo para conectarte a tu propio servidor Synaplan autoalojado: debe empezar por https://."
   },
   "home": {
     "title": "Inicio",

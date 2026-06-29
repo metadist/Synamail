@@ -28,7 +28,7 @@
 
 > **Privacy policy note:** use the marketing-site page
 > `https://www.synaplan.com/privacy-policy`, which now covers the platform data
-> handling, the Synamail plugin connection, Contact AI Profiling, and the
+> handling, the Synamail companion connection, Contact AI Profiling, and the
 > Apache-2.0 source availability. **Deploy that update before submitting** —
 > the live page must contain those sections (reviewers verify it).
 > (`https://web.synaplan.com/privacy` is the platform's own page and also works,
