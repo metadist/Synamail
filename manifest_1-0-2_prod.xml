@@ -30,7 +30,7 @@
   <Description DefaultValue="Your Synaplan workspace inside Outlook. Summarise, translate, draft replies, save emails to your knowledge base, build AI profiles of your contacts, and ask follow-ups — all without leaving Outlook." />
   <IconUrl DefaultValue="https://addin.synaplan.com/assets/icon-64.png" />
   <HighResolutionIconUrl DefaultValue="https://addin.synaplan.com/assets/icon-128.png" />
-  <SupportUrl DefaultValue="https://web.synaplan.com/support" />
+  <SupportUrl DefaultValue="https://www.synaplan.com/" />
 
   <AppDomains>
     <!-- Sign-in dialog origin (Office.context.ui.displayDialogAsync). Users on
