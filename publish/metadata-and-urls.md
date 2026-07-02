@@ -2,17 +2,17 @@
 
 ## Product / package
 
-| Field            | Value                                                |
-| ---------------- | ---------------------------------------------------- |
-| Product name     | Synamail                                             |
-| Publisher        | Synaplan (metadist data management GmbH)             |
-| Manifest         | `../manifest.prod.xml` (upload this on **Packages**) |
-| Add-in ID (GUID) | `342cee66-dd27-471d-b2ac-fa1bbb5db54f`               |
-| Version          | `1.0.0.1`                                            |
-| Manifest type    | Add-in only manifest (XML), schema 1.1               |
-| Permission       | `ReadWriteItem`                                      |
-| Hosting          | `https://addin.synaplan.com` (static, HTTPS, live)   |
-| Min requirement  | Mailbox requirement set 1.8                          |
+| Field            | Value                                                      |
+| ---------------- | ---------------------------------------------------------- |
+| Product name     | Synamail                                                   |
+| Publisher        | Synaplan (metadist data management GmbH)                   |
+| Manifest         | `../manifest_1-0-2_prod.xml` (upload this on **Packages**) |
+| Add-in ID (GUID) | `342cee66-dd27-471d-b2ac-fa1bbb5db54f`                     |
+| Version          | `1.0.2.0`                                                  |
+| Manifest type    | Add-in only manifest (XML), schema 1.1                     |
+| Permission       | `ReadWriteItem`                                            |
+| Hosting          | `https://addin.synaplan.com` (static, HTTPS, live)         |
+| Min requirement  | Mailbox requirement set 1.8                                |
 
 > The Partner Center **publisher display name must match** the manifest
 > `<ProviderName>` value: **Synaplan**.

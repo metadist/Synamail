@@ -152,6 +152,19 @@ jobs:
       - name: Validate manifest.xml
         run: npx --yes office-addin-manifest validate manifest.xml
 
+      # The production manifest carries a version in its filename
+      # (manifest_<major>-<minor>-<patch>_prod.xml); resolve it by glob like
+      # the Makefile's `validate` target does.
+      - name: Validate production manifest (if present)
+        run: |
+          prod=$(ls manifest_*_prod.xml 2>/dev/null | sort | tail -n 1)
+          if [ -n "$prod" ]; then
+            echo "Validating $prod"
+            npx --yes office-addin-manifest validate "$prod"
+          else
+            echo "No production manifest found — skipping."
+          fi
+
       - name: Validate manifest.unified.json (if present)
         run: |
           if [ -f manifest.unified.json ]; then

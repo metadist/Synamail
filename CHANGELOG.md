@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   profile card in `ContactProfile.vue` and rolls emails in explicitly or on
   save-to-contact-group. Includes a Synaplan-side panel to list/delete all
   profiles (privacy/GDPR surface) and full per-contact delete from Outlook.
-- Production manifest `manifest.prod.xml` (production GUID, hosted URLs on
+- Production manifest `manifest_1-0-2_prod.xml` (production GUID, hosted URLs on
   `addin.synaplan.com`) — `make validate` checks both manifests and
   `make build-manifest` converts the production one for the store submission.
 - Master release & launch plan (`docs/PROJECT_PLAN.md`) covering the path from the

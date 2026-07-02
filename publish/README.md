@@ -24,11 +24,11 @@ Ready-to-paste copy and metadata for the Microsoft Partner Center
 | **Search keywords**  | `listing-en.md` → Search keywords (max 3)    |
 | Privacy policy URL   | `metadata-and-urls.md`                       |
 | Support / Help URL   | `metadata-and-urls.md`                       |
-| Package (manifest)   | `../manifest.prod.xml`                       |
+| Package (manifest)   | `../manifest_1-0-2_prod.xml`                 |
 
 ## Before you submit — checklist
 
-- [ ] **Upload the PRODUCTION manifest: `../manifest.prod.xml`** on the
+- [ ] **Upload the PRODUCTION manifest: `../manifest_1-0-2_prod.xml`** on the
       **Packages** page (URLs on `https://addin.synaplan.com`, GUID
       `342cee66-dd27-471d-b2ac-fa1bbb5db54f`).
       **⚠️ NEVER upload `../manifest.xml`** — that is the local **dev** manifest
@@ -54,10 +54,10 @@ The first submission came back "Attention needed". Re-check each item below
 before resubmitting (Partner Center paths in brackets):
 
 - [ ] **1120.3.1.1 / 1120.3.7.3 / 1120.3.7.8 — "does not load" (Win/Mac/WebView2).**
-      Root cause: wrong/non-loading package. Fix = upload `../manifest.prod.xml`
+      Root cause: wrong/non-loading package. Fix = upload `../manifest_1-0-2_prod.xml`
       (see warning above) and confirm the host is live:
       `curl -sI https://addin.synaplan.com/src/taskpane/taskpane.html` → `200`.
-      Sideload `manifest.prod.xml` yourself first (Outlook → Get Add-ins →
+      Sideload `manifest_1-0-2_prod.xml` yourself first (Outlook → Get Add-ins →
       My add-ins → Custom add-ins → **Add from file**) and confirm the pane opens.
 - [ ] **100.3.3.3 — Video URL** [Offer Listing → Videos]. Use the **canonical**
       YouTube page URL, not a short link:

@@ -352,6 +352,29 @@ For genuine enterprise deployment of Synamail, the admin deploys via AppSource o
 | Clicking Summarise does nothing or errors                           | Signed in to a server that's down, or the key was revoked                                         | Confirm the chosen server URL is reachable; **Settings → Reset saved settings** and sign in again.                                    |
 | `npm install` is extremely slow on WSL                              | Filesystem on the Windows side                                                                    | Make sure the repo is under `/wwwroot/...` (Linux side), **not** `/mnt/c/...` (Windows side mounted into WSL — 10× slower).           |
 
+### Debugging the add-in inside Outlook on Windows
+
+The new Outlook for Windows (`olk.exe`) does **not** support F12 or
+right-click → Inspect inside a taskpane. Use the helper script, which starts
+Outlook with Edge DevTools attached from boot (console + network of the
+taskpane included):
+
+```powershell
+# From a Windows PowerShell prompt, in the repo:
+.\scripts\debug-outlook.ps1            # new Outlook (olk.exe --devtools)
+.\scripts\debug-outlook.ps1 -Classic   # classic Outlook (WebView2 auto-opens DevTools)
+```
+
+```bash
+# Or from WSL:
+powershell.exe -ExecutionPolicy Bypass -File "$(wslpath -w scripts/debug-outlook.ps1)"
+```
+
+Outlook must be fully closed first (the script handles that). If you close the
+DevTools window, close Outlook and run the script again. In Outlook on the
+web, plain browser DevTools (F12) work — filter the Network tab for
+`synaplan` to see whether the taskpane is even being requested.
+
 ---
 
 ## Architecture notes for the installer

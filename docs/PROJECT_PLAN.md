@@ -41,14 +41,15 @@ Synamail development is organized into 4 sprints:
 
 Mirrors Microsoft's certification policy 1100.
 
-- [x] Manifest `Id`, `Version`, `DisplayName` = `Synamail` — `manifest.prod.xml`
-      carries the production GUID (`342cee66-…`), v1.0.0.1, host
-      `addin.synaplan.com`, and the narrowed `ReadWriteItem` permission.
+- [x] Manifest `Id`, `Version`, `DisplayName` = `Synamail` — the versioned
+      production manifest (`manifest_1-0-2_prod.xml`) carries the production
+      GUID (`342cee66-…`), v1.0.2.0, host `addin.synaplan.com`, and the
+      narrowed `ReadWriteItem` permission.
 - [x] `make validate` (office-addin-manifest) green for `manifest.xml` AND
-      `manifest.prod.xml`; `make build-manifest` converts the prod manifest to
-      `manifest.unified.json` for submission.
+      `manifest_1-0-2_prod.xml`; `make build-manifest` converts the prod
+      manifest to `manifest.unified.json` for submission.
 - [ ] Hosted on stable HTTPS: publish `dist/` + `assets/` to
-      `https://addin.synaplan.com` (paths are baked into `manifest.prod.xml`).
+      `https://addin.synaplan.com` (paths are baked into the prod manifest).
 - [ ] Privacy, Terms of Service, and Support URLs publicly reachable. The
       privacy policy MUST mention Contact AI Profiling (profiles of email
       contacts, stored only in the user's own Synaplan workspace, fully

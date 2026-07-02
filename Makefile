@@ -5,6 +5,10 @@
 # Synaplan-side companion plugin (synamail-plugin/) — released into the main
 # Synaplan repo's plugins/ directory, same flow as Synaform.
 SYNAPLAN_DIR ?= /wwwroot/synaplan
+
+# Versioned production manifest (manifest_<major>-<minor>-<patch>_prod.xml).
+# Resolved by glob so a version bump only renames the file — no Makefile edit.
+PROD_MANIFEST := $(lastword $(sort $(wildcard manifest_*_prod.xml)))
 PLUGIN_SRC    = synamail-plugin
 PLUGIN_DST    = $(SYNAPLAN_DIR)/plugins/synamail
 
@@ -107,8 +111,8 @@ validate: ## Validate the dev + production manifests (and unified manifest if pr
 	else \
 	  echo "skip: no manifest.xml (Sprint 2.2)"; \
 	fi
-	@if [ -f manifest.prod.xml ]; then \
-	  npx --yes office-addin-manifest validate manifest.prod.xml; \
+	@if [ -n "$(PROD_MANIFEST)" ]; then \
+	  npx --yes office-addin-manifest validate $(PROD_MANIFEST); \
 	fi
 	@if [ -f manifest.unified.json ]; then \
 	  npx --yes office-addin-manifest validate manifest.unified.json; \
@@ -125,7 +129,7 @@ budget: ## Enforce the dist bundle-size budget (mirrors CI; cross-platform)
 	@node -e "const fs=require('fs'),p=require('path');if(!fs.existsSync('dist')){console.log('budget: no dist/ — run make build first');process.exit(0)}let t=0;const w=d=>{for(const e of fs.readdirSync(d,{withFileTypes:true})){const f=p.join(d,e.name);e.isDirectory()?w(f):t+=fs.statSync(f).size}};w('dist');const b=2*1024*1024;console.log('dist size: '+t+' bytes (budget: '+b+')');if(t>b){console.error('::error::Bundle exceeds budget');process.exit(1)}console.log('budget: within 2 MiB')"
 
 build-manifest: ## Generate manifest.unified.json from the PRODUCTION manifest (store submission)
-	npx --yes office-addin-manifest-converter convert manifest.prod.xml -o manifest.unified.json
+	npx --yes office-addin-manifest-converter convert $(PROD_MANIFEST) -o manifest.unified.json
 
 generate-schemas: ## Regenerate Zod schemas from Synaplan OpenAPI (Sprint 3)
 	@if [ -f package.json ]; then npm run generate:schemas; else echo "skip: no package.json (Sprint 2.1)"; fi

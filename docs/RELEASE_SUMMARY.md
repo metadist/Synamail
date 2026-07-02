@@ -46,7 +46,7 @@ contract draft"_), updated one email at a time from Outlook.
    there, so always commit them as a **dedicated `feat(plugins)`/`fix(plugins)`
    commit**, never mixed into unrelated synaplan work.
 3. Install per user: `php bin/console app:plugin:install <userId> synamail`.
-4. Add-in store packaging: `manifest.prod.xml` (production GUID, hosted on
+4. Add-in store packaging: `manifest_1-0-2_prod.xml` (production GUID, hosted on
    `addin.synaplan.com`) → `make build-manifest` for the AppSource submission.
 
 ## Verification status

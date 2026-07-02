@@ -17,10 +17,13 @@
     The dev manifest is manifest.xml (localhost:3000). `make validate`
     checks both; `make build-manifest` converts THIS file to the unified
     JSON manifest for the store submission.
+
+    Naming convention: manifest_<major>-<minor>-<patch>_prod.xml — rename the
+    file when bumping <Version> so the uploaded package is unambiguous.
   -->
 
   <Id>342cee66-dd27-471d-b2ac-fa1bbb5db54f</Id>
-  <Version>1.0.0.1</Version>
+  <Version>1.0.2.0</Version>
   <ProviderName>Synaplan</ProviderName>
   <DefaultLocale>en-US</DefaultLocale>
   <DisplayName DefaultValue="Synamail" />
@@ -146,73 +149,12 @@
       </bt:LongStrings>
     </Resources>
 
-    <!-- V1.1 overrides: identical command surfaces, but the read task pane is
-         pinnable. SupportsPinning is only valid in the V1.1 schema. Clients on
-         Mailbox 1.5+ use this block; older clients fall back to V1.0 above.
-         Pinning lets the pane stay open and follow the selection (via our
-         ItemChanged handler) when browsing Search results, where the Synamail
-         ribbon button isn't shown because the Search tab is active. -->
-    <VersionOverrides xmlns="http://schemas.microsoft.com/office/mailappversionoverrides/1.1" xsi:type="VersionOverridesV1_1">
-      <Requirements>
-        <bt:Sets DefaultMinVersion="1.8">
-          <bt:Set Name="Mailbox" />
-        </bt:Sets>
-      </Requirements>
-
-      <Hosts>
-        <Host xsi:type="MailHost">
-          <DesktopFormFactor>
-            <FunctionFile resid="Commands.Url" />
-
-            <ExtensionPoint xsi:type="MessageReadCommandSurface">
-              <OfficeTab id="TabDefault">
-                <Group id="msgReadGroup">
-                  <Label resid="GroupLabel" />
-                  <Control xsi:type="Button" id="msgReadOpenPaneButton">
-                    <Label resid="TaskpaneButton.Label" />
-                    <Supertip>
-                      <Title resid="TaskpaneButton.Label" />
-                      <Description resid="TaskpaneButton.Tooltip" />
-                    </Supertip>
-                    <Icon>
-                      <bt:Image size="16" resid="Icon.16x16" />
-                      <bt:Image size="32" resid="Icon.32x32" />
-                      <bt:Image size="80" resid="Icon.80x80" />
-                    </Icon>
-                    <Action xsi:type="ShowTaskpane">
-                      <SourceLocation resid="Taskpane.Url" />
-                      <SupportsPinning>true</SupportsPinning>
-                    </Action>
-                  </Control>
-                </Group>
-              </OfficeTab>
-            </ExtensionPoint>
-
-            <ExtensionPoint xsi:type="MessageComposeCommandSurface">
-              <OfficeTab id="TabDefault">
-                <Group id="msgComposeGroup">
-                  <Label resid="GroupLabel" />
-                  <Control xsi:type="Button" id="msgComposeOpenPaneButton">
-                    <Label resid="TaskpaneButton.Label" />
-                    <Supertip>
-                      <Title resid="TaskpaneButton.Label" />
-                      <Description resid="TaskpaneButton.Tooltip" />
-                    </Supertip>
-                    <Icon>
-                      <bt:Image size="16" resid="Icon.16x16" />
-                      <bt:Image size="32" resid="Icon.32x32" />
-                      <bt:Image size="80" resid="Icon.80x80" />
-                    </Icon>
-                    <Action xsi:type="ShowTaskpane">
-                      <SourceLocation resid="Taskpane.Url" />
-                    </Action>
-                  </Control>
-                </Group>
-              </OfficeTab>
-            </ExtensionPoint>
-          </DesktopFormFactor>
-        </Host>
-      </Hosts>
-    </VersionOverrides>
+    <!-- NOTE: no nested VersionOverridesV1_1 block. We previously nested one
+         to add SupportsPinning, but that structure makes the ribbon button
+         silently dead on M365 business accounts in Outlook on the web / new
+         Outlook (no network request, no error) — see
+         https://github.com/OfficeDev/office-js/issues/5902. A working task
+         pane beats a pinnable one, so pinning is dropped until the platform
+         bug is fixed. -->
   </VersionOverrides>
 </OfficeApp>

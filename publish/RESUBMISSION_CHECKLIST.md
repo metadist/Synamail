@@ -26,7 +26,7 @@ Work top to bottom; everything under **Before you resubmit** must be ticked.
 - [ ] **Descriptions:** re-paste EN/DE/ES/TR descriptions; grep yourself — no
       "plugin".
 - [ ] **Screenshots:** all personal information masked; compose-mode shot added.
-- [ ] **Manifest:** upload `manifest.prod.xml` (GUID
+- [ ] **Manifest:** upload `manifest_1-0-2_prod.xml` (GUID
       `342cee66-dd27-471d-b2ac-fa1bbb5db54f`). Bump `<Version>` if Partner Center
       requires a higher build than the previous submission.
 - [ ] **Cloudflare:** confirm `addin.synaplan.com` is **not** behind a Bot Fight

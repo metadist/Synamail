@@ -46,7 +46,7 @@ Synamail/
 ├── LICENSE
 ├── Makefile                        — make help, make ci-local, make sideload, make sync-plugin, …
 ├── manifest.xml                    — Outlook add-in manifest, DEV (validated by CI)
-├── manifest.prod.xml               — PRODUCTION manifest for the AppSource submission
+├── manifest_1-0-2_prod.xml         — PRODUCTION manifest for the AppSource submission (versioned filename)
 ├── synamail-plugin/                — Synaplan-side plugin (Contact AI Profiling) — released
 │                                     to synaplan/plugins/synamail via `make sync-plugin`
 ├── package.json / tsconfig*.json / vite.config.ts / vitest.config.ts / playwright.config.ts
