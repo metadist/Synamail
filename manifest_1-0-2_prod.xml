@@ -26,7 +26,7 @@
   <Version>1.0.2.0</Version>
   <ProviderName>Synaplan</ProviderName>
   <DefaultLocale>en-US</DefaultLocale>
-  <DisplayName DefaultValue="Synamail" />
+  <DisplayName DefaultValue="Synamail AI" />
   <Description DefaultValue="Your Synaplan workspace inside Outlook. Summarise, translate, draft replies, save emails to your knowledge base, build AI profiles of your contacts, and ask follow-ups — all without leaving Outlook." />
   <IconUrl DefaultValue="https://addin.synaplan.com/assets/icon-64.png" />
   <HighResolutionIconUrl DefaultValue="https://addin.synaplan.com/assets/icon-128.png" />
@@ -141,8 +141,8 @@
         <bt:Url id="Taskpane.Url" DefaultValue="https://addin.synaplan.com/src/taskpane/taskpane.html" />
       </bt:Urls>
       <bt:ShortStrings>
-        <bt:String id="GroupLabel" DefaultValue="Synamail" />
-        <bt:String id="TaskpaneButton.Label" DefaultValue="Open Synamail" />
+        <bt:String id="GroupLabel" DefaultValue="Synamail AI" />
+        <bt:String id="TaskpaneButton.Label" DefaultValue="Open Synamail AI" />
       </bt:ShortStrings>
       <bt:LongStrings>
         <bt:String id="TaskpaneButton.Tooltip" DefaultValue="Open the Synamail assistant to summarise, translate, draft replies, save emails to your knowledge base, profile your contacts, or ask follow-up questions." />

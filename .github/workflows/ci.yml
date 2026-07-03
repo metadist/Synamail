@@ -297,11 +297,13 @@ jobs:
   all-checks-passed:
     name: All Checks Passed
     runs-on: ubuntu-latest
-    needs: [docs, commitlint, manifest, build, e2e]
+    # NOTE: e2e is intentionally NOT a dependency — it is advisory while the
+    # Playwright harness is hardened for CI (see the e2e job). It regularly ran
+    # into its 12-minute timeout, and waiting for it delayed this gate (and the
+    # PR merge) by ~12 minutes even though its result was already ignored.
+    needs: [docs, commitlint, manifest, build]
     if: always()
     steps:
-      # NOTE: e2e is intentionally NOT in the condition below — it is advisory
-      # while the Playwright harness is hardened for CI (see the e2e job).
       - name: Verify
         if: |
           !cancelled() && (
