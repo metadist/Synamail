@@ -11,6 +11,11 @@ import { isSignedIn } from './composables/useAuth'
 const { t } = useI18n()
 const view = computed(() => currentView.value)
 
+// Where this taskpane is actually served from — lets the user tell a local
+// dev sideload ("localhost") apart from the live add-in ("addin.synaplan.com").
+const servedFrom = window.location.hostname
+const year = new Date().getFullYear()
+
 const components = {
   'sign-in': SignIn,
   home: Home,
@@ -54,6 +59,7 @@ const components = {
       </nav>
     </header>
     <component :is="components[view]" />
+    <footer class="app__footer">© {{ year }} · {{ servedFrom }}</footer>
   </div>
 </template>
 
@@ -96,5 +102,12 @@ const components = {
 .app__icon--active {
   color: var(--syn-text);
   background: var(--syn-bg);
+}
+.app__footer {
+  margin-top: auto;
+  padding: var(--syn-space-2) var(--syn-space-3);
+  font-size: var(--syn-font-size-xs);
+  color: var(--syn-muted);
+  text-align: center;
 }
 </style>
