@@ -23,6 +23,7 @@
     "emailTitle": "Geöffnete E-Mail",
     "sections": {
       "emailActions": "E-Mail-Aktionen",
+      "writingAssistant": "Schreibassistent",
       "profiling": "Profiling"
     },
     "commands": {
@@ -79,6 +80,15 @@
       "loadingGroups": "Ordner werden geladen…",
       "savedTo": "Als Datei #{fileId} in {group} gespeichert."
     }
+  },
+  "compose": {
+    "noCompose": "Verfasse eine neue E-Mail oder Antwort, um mit KI zu entwerfen.",
+    "ready": "Diese E-Mail mit KI entwerfen",
+    "hint": "Beschreibe, was du sagen möchtest, und Synaplan schreibt den E-Mail-Text.",
+    "placeholder": "z. B. Lade Alice für nächsten Freitag zum Mittagessen ein und bitte um Bestätigung.",
+    "draft": "Entwerfen",
+    "inserted": "Entwurf in die E-Mail eingefügt.",
+    "insertFailed": "Der E-Mail-Text konnte nicht geschrieben werden. Öffne eine neue Nachricht oder Antwort und versuche es erneut."
   },
   "contactProfile": {
     "noContact": "Öffne eine E-Mail, um einen Kontakt auszuwählen.",

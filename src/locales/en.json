@@ -23,6 +23,7 @@
     "emailTitle": "Open email",
     "sections": {
       "emailActions": "Email actions",
+      "writingAssistant": "Writing assistant",
       "profiling": "Profiling"
     },
     "commands": {
@@ -79,6 +80,15 @@
       "loadingGroups": "Loading folders…",
       "savedTo": "Saved as file #{fileId} in {group}."
     }
+  },
+  "compose": {
+    "noCompose": "Start a new email or reply to draft with AI.",
+    "ready": "Draft this email with AI",
+    "hint": "Describe what you want to say and Synaplan will write the email body.",
+    "placeholder": "e.g. Invite Alice to lunch next Friday and ask her to confirm.",
+    "draft": "Draft",
+    "inserted": "Draft inserted into the email.",
+    "insertFailed": "Couldn't write to the email body. Open a new message or reply and try again."
   },
   "contactProfile": {
     "noContact": "Open an email to pick a contact.",

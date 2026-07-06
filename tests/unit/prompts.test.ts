@@ -18,6 +18,16 @@ describe('prompts', () => {
     expect(a).toMatch(/"en"/)
   })
 
+  it('compose combines tone and language and asks for HTML body only', () => {
+    const a = prompts.compose('friendly', 'de')
+    const b = prompts.compose('friendly', 'de')
+    expect(a).toBe(b)
+    expect(a).toMatch(/friendly/)
+    expect(a).toContain('"de"')
+    expect(a).toMatch(/HTML/i)
+    expect(a).toMatch(/no subject line/i)
+  })
+
   it('classify lists the allowed categories verbatim', () => {
     const p = prompts.classify(['billing', 'support', 'general'])
     expect(p).toContain('billing, support, general')

@@ -23,6 +23,7 @@
     "emailTitle": "E-mail aperta",
     "sections": {
       "emailActions": "Azioni email",
+      "writingAssistant": "Assistente di scrittura",
       "profiling": "Profilazione"
     },
     "commands": {
@@ -79,6 +80,15 @@
       "loadingGroups": "Caricamento cartelle…",
       "savedTo": "Salvato come file n. {fileId} in {group}."
     }
+  },
+  "compose": {
+    "noCompose": "Scrivi una nuova e-mail o una risposta per creare una bozza con l'IA.",
+    "ready": "Scrivi questa e-mail con l'IA",
+    "hint": "Descrivi cosa vuoi dire e Synaplan scriverà il corpo dell'e-mail.",
+    "placeholder": "ad es. Invita Alice a pranzo venerdì prossimo e chiedile di confermare.",
+    "draft": "Scrivi bozza",
+    "inserted": "Bozza inserita nell'e-mail.",
+    "insertFailed": "Impossibile scrivere nel corpo dell'e-mail. Apri un nuovo messaggio o una risposta e riprova."
   },
   "contactProfile": {
     "noContact": "Apri un'email per scegliere un contatto.",

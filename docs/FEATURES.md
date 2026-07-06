@@ -70,22 +70,29 @@ The user opens an email in Outlook → the Synamail taskpane offers its actions 
 - **UI surface:** Anchored input at the bottom of `ReadMode.vue`. History is scrollable.
 - **Edge cases:** Reopening the same thread later reuses the existing `chatId`. If the chat was deleted server-side, fall back to creating a new one and update roaming.
 
-## 2. Compose-mode AI actions — **deferred (not in v1)**
+## 2. Compose-mode AI actions — **partially shipped**
 
-> **Cut from the v1 release (2026-06-10).** The compose view was never reachable
-> from the shipped navigation and used the wrong prompts. The spec below stays
-> as the design for a later release; the compose ribbon button currently opens
-> the same Home taskpane, which explains that email actions need an open
-> (read-mode) message.
+> **§2.1 "Draft from prompt" shipped (2026-07-06).** The compose ribbon button
+> opens the Home taskpane, whose **Writing assistant** section (auto-expanded in
+> compose mode, `ComposeAssistantPanel.vue`) turns a one-line intent into a full
+> email body written straight into the open draft. This closes the AppSource
+> review finding that the pane showed "no interaction" in compose mode.
+> §2.2 (rewrite selection) and §2.3 (insert from RAG) remain deferred — the
+> specs below stay as their design.
 
 The user is writing or replying → the Synamail taskpane offers writing assistance.
 
-### 2.1 Draft from prompt
+### 2.1 Draft from prompt — **shipped (2026-07-06)**
 
 - **User value:** Generate a full email body from a one-line intent.
-- **Input:** User intent text + (optional) referenced email if this is a reply.
-- **Output:** HTML body inserted via `body.setAsync(html, { coercionType: 'html' })`.
-- **Endpoint:** `POST /api/v1/messages/send` with a `compose(intent)` system prompt.
+- **Input:** User intent text + tone + language + (optional) the replied-to email
+  body when composing a reply/forward.
+- **Output:** HTML body written via `body.setAsync(html, { coercionType: 'html' })`.
+- **Endpoint:** `POST /api/v1/messages/send` with a `compose(tone, lang)` system prompt.
+- **UI surface:** Home → **Writing assistant** section (`ComposeAssistantPanel.vue`),
+  shown only in compose mode; intent textarea + tone/language pickers + "Draft".
+- **Edge cases:** Empty intent disables the button; a host that rejects the body
+  write surfaces `compose.insertFailed`.
 
 ### 2.2 Improve / Shorten / Translate selection
 
@@ -215,6 +222,7 @@ Note: in the user's brief this was called "RULE integration". Synaplan's actual 
 | Classify                               | `messages/send` (JSON-mode)                                              | Home → Email actions           | Live                                          |
 | Find meeting times                     | `messages/send` + `displayNewAppointmentForm`                            | Home → Email actions           | Live                                          |
 | Ask follow-ups (incl. email images)    | `chats` + `messages/send` + `files/upload`                               | Home → Email actions           | Live                                          |
+| Draft from prompt (compose mode)       | `messages/send` (`compose` prompt) + `body.setAsync`                     | Home → Writing assistant       | Live (2026-07-06)                             |
 | Save to RAG (chosen group)             | `files/upload` (with `process_level`) + `files/groups`                   | Home → Email actions + modal   | Live                                          |
 | Contact AI Profiling — corpus          | upload/search scoped to `contact:<email>`                                | ContactProfile                 | Live                                          |
 | Contact AI Profiling — rolling profile | `synamail` plugin: `GET/POST/DELETE …/plugins/synamail/profiles/{email}` | ContactProfile profile card    | Live (needs the plugin installed server-side) |
@@ -225,14 +233,14 @@ Note: in the user's brief this was called "RULE integration". Synaplan's actual 
 
 ### Cut from v1 (design retained)
 
-| Feature                                            | Why cut                                                  | Where the design lives |
-| -------------------------------------------------- | -------------------------------------------------------- | ---------------------- |
-| Compose-mode assistance (draft/improve/RAG-insert) | View was unreachable and wired to wrong prompts          | §2                     |
-| RULE / Synapse routing editor                      | Never built                                              | §5                     |
-| Mail Routes (per-email automations)                | Config UI existed without a runtime engine               | §7 + `MAIL_ROUTES.md`  |
-| Mailbox search → knowledge base                    | EWS-only (mock fallback elsewhere); EWS retires Oct 2026 | git history            |
-| "More from this sender" history                    | EWS-only with mock fallback                              | git history            |
-| Block sender                                       | EWS-only, never had UI                                   | git history            |
+| Feature                                          | Why cut                                                  | Where the design lives |
+| ------------------------------------------------ | -------------------------------------------------------- | ---------------------- |
+| Compose-mode rewrite selection / insert from RAG | Deferred after §2.1 shipped (draft-from-prompt is live)  | §2.2 + §2.3            |
+| RULE / Synapse routing editor                    | Never built                                              | §5                     |
+| Mail Routes (per-email automations)              | Config UI existed without a runtime engine               | §7 + `MAIL_ROUTES.md`  |
+| Mailbox search → knowledge base                  | EWS-only (mock fallback elsewhere); EWS retires Oct 2026 | git history            |
+| "More from this sender" history                  | EWS-only with mock fallback                              | git history            |
+| Block sender                                     | EWS-only, never had UI                                   | git history            |
 
 Anything not in these tables is either deferred to a future phase (Smart Alerts, `OnNewMessageCompose` autoload, mobile) or out of scope for v1.
 

@@ -1,6 +1,16 @@
-import { describe, expect, it } from 'vitest'
-import { buildEmailText, getReadItemAsFile } from '@/taskpane/composables/useOutlookItem'
+import { describe, expect, it, vi } from 'vitest'
+import {
+  buildEmailText,
+  getReadItemAsFile,
+  setComposeBody,
+} from '@/taskpane/composables/useOutlookItem'
 import type { OutlookItemSnapshot } from '@/taskpane/composables/useOutlookItem'
+
+function setOfficeItem(item: unknown): void {
+  const office = (globalThis as unknown as { Office: { context: { mailbox: { item: unknown } } } })
+    .Office
+  office.context.mailbox.item = item
+}
 
 function snapshot(overrides: Partial<OutlookItemSnapshot> = {}): OutlookItemSnapshot {
   return {
@@ -46,5 +56,34 @@ describe('buildEmailText', () => {
   it('puts headers before a blank line and the body', () => {
     const text = buildEmailText(snapshot({ subject: 'Hi', from: 'a@b.test', to: [], cc: [] }))
     expect(text).toBe('Subject: Hi\nFrom: a@b.test\n\nHello world')
+  })
+})
+
+describe('setComposeBody', () => {
+  it('writes HTML to the compose body via setAsync and resolves true', async () => {
+    const setAsync = vi.fn((_data: string, _opts: unknown, cb: (r: { status: string }) => void) =>
+      cb({ status: 'succeeded' }),
+    )
+    setOfficeItem({ body: { setAsync } })
+    const ok = await setComposeBody('<p>Hello</p>')
+    expect(ok).toBe(true)
+    expect(setAsync).toHaveBeenCalledTimes(1)
+    expect(setAsync.mock.calls[0][0]).toBe('<p>Hello</p>')
+    expect(setAsync.mock.calls[0][1]).toEqual({ coercionType: 'html' })
+  })
+
+  it('resolves false when there is no editable compose item (read mode)', async () => {
+    setOfficeItem(undefined)
+    expect(await setComposeBody('<p>x</p>')).toBe(false)
+  })
+
+  it('resolves false when the host reports a failed write', async () => {
+    setOfficeItem({
+      body: {
+        setAsync: (_d: string, _o: unknown, cb: (r: { status: string }) => void) =>
+          cb({ status: 'failed' }),
+      },
+    })
+    expect(await setComposeBody('<p>x</p>')).toBe(false)
   })
 })

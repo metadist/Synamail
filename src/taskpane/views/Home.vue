@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import AccordionItem from '@/taskpane/components/AccordionItem.vue'
 import ChatThread from '@/taskpane/components/ChatThread.vue'
 import type { ChatMessage } from '@/taskpane/components/ChatThread.vue'
+import ComposeAssistantPanel from '@/taskpane/components/ComposeAssistantPanel.vue'
 import ContactProfilePanel from '@/taskpane/components/ContactProfilePanel.vue'
 import EmailActionsPanel from '@/taskpane/components/EmailActionsPanel.vue'
 import Toast from '@/taskpane/components/Toast.vue'
@@ -29,6 +30,7 @@ const sending = ref(false)
 const error = ref<string | null>(null)
 
 const emailOpen = computed(() => item.value.mode === 'read')
+const composeOpen = computed(() => item.value.mode === 'compose')
 
 function truncate(text: string, max = 48): string {
   return text.length > max ? `${text.slice(0, max)}…` : text
@@ -38,6 +40,10 @@ const emailActionsSubtitle = computed(() =>
   emailOpen.value
     ? `${t('read.subjectLabel')}: ${truncate(item.value.subject || t('home.emailTitle'))}`
     : t('read.noEmail'),
+)
+
+const writingAssistantSubtitle = computed(() =>
+  composeOpen.value ? t('compose.ready') : t('compose.noCompose'),
 )
 
 const profilingSubtitle = computed(() =>
@@ -114,7 +120,18 @@ async function resetChat(): Promise<void> {
       <EmailActionsPanel />
     </AccordionItem>
 
-    <!-- 3. Contact profiling for the email's counterpart. -->
+    <!-- 3. Writing assistant for the email being composed (auto-opens in
+         compose mode so the pane is immediately useful there). -->
+    <AccordionItem
+      :title="t('home.sections.writingAssistant')"
+      :subtitle="writingAssistantSubtitle"
+      :strong-subtitle="composeOpen"
+      :open="composeOpen"
+    >
+      <ComposeAssistantPanel />
+    </AccordionItem>
+
+    <!-- 4. Contact profiling for the email's counterpart. -->
     <AccordionItem
       :title="t('home.sections.profiling')"
       :subtitle="profilingSubtitle"

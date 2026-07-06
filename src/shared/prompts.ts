@@ -20,6 +20,13 @@ export const reply = (tone: 'formal' | 'concise' | 'friendly', lang: string): st
   `"${lang}". Return well-formed HTML body content only — no doctype, no <html>, ` +
   `no <head>. Use <p>, <br>, <strong> as needed.`
 
+export const compose = (tone: 'formal' | 'concise' | 'friendly', lang: string): string =>
+  `You are an email-writing assistant. Turn the user's short intent into a ` +
+  `ready-to-send email body in ${tone} tone, in language code "${lang}". If a ` +
+  `"[replying to]" block is present, write a fitting response to it. Return ` +
+  `well-formed HTML body content only — no doctype, no <html>, no <head>, no ` +
+  `subject line. Use <p>, <br>, <strong> as needed.`
+
 export const classify = (categories: string[]): string =>
   `You are an email triage assistant. Classify the email into exactly one of: ` +
   `${categories.join(', ')}. Return a JSON object: ` +

@@ -23,6 +23,7 @@
 import {
   ask as askPrompt,
   classify as classifyPrompt,
+  compose as composePrompt,
   meetingProposals as meetingProposalsPrompt,
   reply as replyPrompt,
   simpleChat as simpleChatPrompt,
@@ -35,6 +36,8 @@ import type {
   ChatTurnResult,
   ClassifyInput,
   ClassifyResult,
+  ComposeDraftInput,
+  ComposeDraftResult,
   ContactProfileData,
   DraftReplyInput,
   DraftReplyResult,
@@ -65,6 +68,11 @@ export interface SynaplanClient {
   summarise(input: SummariseInput, onChunk?: StreamHandler): Promise<SummariseResult>
   translate(input: TranslateInput, onChunk?: StreamHandler): Promise<TranslateResult>
   draftReply(input: DraftReplyInput): Promise<DraftReplyResult>
+  /**
+   * Compose-mode "Draft from prompt": turn a short user intent into a full
+   * email body. Returns HTML suitable for `body.setAsync` in the open draft.
+   */
+  composeDraft(input: ComposeDraftInput): Promise<ComposeDraftResult>
   classify(input: ClassifyInput): Promise<ClassifyResult>
   ask(input: ChatTurnInput, onChunk?: StreamHandler): Promise<ChatTurnResult>
   /**
@@ -232,6 +240,16 @@ export class RealSynaplanClient implements SynaplanClient {
         body: input.body,
       }),
     )
+    const text = await this.sendChat(message)
+    return { htmlBody: text }
+  }
+
+  async composeDraft(input: ComposeDraftInput): Promise<ComposeDraftResult> {
+    const parts = ['[intent]', input.intent.trim()]
+    if (input.referenceBody) {
+      parts.push('', '[replying to]', cleanEmailText(input.referenceBody))
+    }
+    const message = composeMessage(composePrompt(input.tone, input.language), parts.join('\n'))
     const text = await this.sendChat(message)
     return { htmlBody: text }
   }

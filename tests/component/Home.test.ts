@@ -58,4 +58,9 @@ describe('Home.vue', () => {
     expect(text).not.toContain('Filter for knowledge base')
     expect(text).not.toContain('Email automations')
   })
+
+  it('renders the writing-assistant accordion section', () => {
+    const text = mountHome().text()
+    expect(text).toContain(en.home.sections.writingAssistant)
+  })
 })

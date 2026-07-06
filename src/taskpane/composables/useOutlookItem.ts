@@ -192,6 +192,42 @@ async function readAttachments(raw: Office.Item): Promise<Office.AttachmentDetai
 }
 
 // ---------------------------------------------------------------------------
+// Compose-mode body writing ("Draft from prompt", docs/FEATURES.md §2.1)
+// ---------------------------------------------------------------------------
+
+/**
+ * Replace the open draft's body with `html`. Resolves `true` on success and
+ * `false` when there is no editable compose item (e.g. read mode) or the host
+ * rejects the write. Uses `body.setAsync` with HTML coercion per §2.1 — this
+ * replaces the current draft body (the intended behaviour for generating a
+ * full email from an intent).
+ */
+export function setComposeBody(html: string): Promise<boolean> {
+  const item = (typeof Office !== 'undefined' ? Office.context?.mailbox?.item : undefined) as
+    | Office.MessageCompose
+    | undefined
+  const body = item?.body as
+    | {
+        setAsync?: (
+          data: string,
+          options: { coercionType: Office.CoercionType },
+          cb: (r: Office.AsyncResult<void>) => void,
+        ) => void
+      }
+    | undefined
+  if (!body || typeof body.setAsync !== 'function') return Promise.resolve(false)
+  return new Promise((resolve) => {
+    try {
+      body.setAsync!(html, { coercionType: Office.CoercionType.Html }, (r) => {
+        resolve(r.status === Office.AsyncResultStatus.Succeeded)
+      })
+    } catch {
+      resolve(false)
+    }
+  })
+}
+
+// ---------------------------------------------------------------------------
 // File extraction for "Save to knowledge base"
 // ---------------------------------------------------------------------------
 

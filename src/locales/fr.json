@@ -23,6 +23,7 @@
     "emailTitle": "E-mail ouvert",
     "sections": {
       "emailActions": "Actions e-mail",
+      "writingAssistant": "Assistant de rédaction",
       "profiling": "Profilage"
     },
     "commands": {
@@ -79,6 +80,15 @@
       "loadingGroups": "Chargement des dossiers…",
       "savedTo": "Enregistré comme fichier n° {fileId} dans {group}."
     }
+  },
+  "compose": {
+    "noCompose": "Rédigez un nouvel e-mail ou une réponse pour créer un brouillon avec l'IA.",
+    "ready": "Rédiger cet e-mail avec l'IA",
+    "hint": "Décrivez ce que vous voulez dire et Synaplan rédigera le corps de l'e-mail.",
+    "placeholder": "par ex. Inviter Alice à déjeuner vendredi prochain et lui demander de confirmer.",
+    "draft": "Rédiger",
+    "inserted": "Brouillon inséré dans l'e-mail.",
+    "insertFailed": "Impossible d'écrire dans le corps de l'e-mail. Ouvrez un nouveau message ou une réponse et réessayez."
   },
   "contactProfile": {
     "noContact": "Ouvrez un e-mail pour choisir un contact.",

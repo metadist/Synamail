@@ -191,6 +191,40 @@ describe('RealSynaplanClient — summarise / translate / draftReply / classify',
     expect(r.htmlBody).toBe('<p>Hi</p>')
   })
 
+  it('composeDraft sends the intent + compose prompt and returns htmlBody', async () => {
+    const fetchImpl = mockFetchSequence([
+      { body: { success: true, outgoingMessage: { text: '<p>Hi Alice, lunch Friday?</p>' } } },
+    ])
+    const c = buildClient(fetchImpl as unknown as typeof fetch)
+    const r = await c.composeDraft({
+      intent: 'Invite Alice to lunch on Friday',
+      tone: 'friendly',
+      language: 'en',
+    })
+    expect(fetchImpl.mock.calls[0][0]).toBe('https://api.test/api/v1/messages/send')
+    const body = lastCallBody(fetchImpl) as { message: string }
+    expect(body.message).toContain('[intent]')
+    expect(body.message).toContain('Invite Alice to lunch on Friday')
+    expect(body.message).toMatch(/friendly/)
+    expect(r.htmlBody).toBe('<p>Hi Alice, lunch Friday?</p>')
+  })
+
+  it('composeDraft includes the replied-to body when composing a reply', async () => {
+    const fetchImpl = mockFetchSequence([
+      { body: { success: true, outgoingMessage: { text: '<p>Sounds good.</p>' } } },
+    ])
+    const c = buildClient(fetchImpl as unknown as typeof fetch)
+    await c.composeDraft({
+      intent: 'Accept the proposal',
+      tone: 'concise',
+      language: 'en',
+      referenceBody: 'Can we meet Tuesday?',
+    })
+    const body = lastCallBody(fetchImpl) as { message: string }
+    expect(body.message).toContain('[replying to]')
+    expect(body.message).toContain('Can we meet Tuesday?')
+  })
+
   it('classify parses JSON in the AI reply', async () => {
     const fetchImpl = mockFetchSequence([
       {

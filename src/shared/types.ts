@@ -56,6 +56,19 @@ export interface DraftReplyResult {
   htmlBody: string
 }
 
+export interface ComposeDraftInput {
+  /** One-line intent, e.g. "invite Alice to lunch on Friday and ask her to confirm". */
+  intent: string
+  tone: 'formal' | 'concise' | 'friendly'
+  language: string
+  /** Body of the message being replied to/forwarded, when composing a reply. */
+  referenceBody?: string
+}
+
+export interface ComposeDraftResult {
+  htmlBody: string
+}
+
 export interface TranslateInput {
   text: string
   targetLanguage: string

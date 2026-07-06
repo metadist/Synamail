@@ -23,6 +23,7 @@
     "emailTitle": "E-mail aberto",
     "sections": {
       "emailActions": "Ações de e-mail",
+      "writingAssistant": "Assistente de redação",
       "profiling": "Perfilagem"
     },
     "commands": {
@@ -79,6 +80,15 @@
       "loadingGroups": "A carregar pastas…",
       "savedTo": "Guardado como ficheiro n.º {fileId} em {group}."
     }
+  },
+  "compose": {
+    "noCompose": "Escreva um novo e-mail ou uma resposta para criar um rascunho com IA.",
+    "ready": "Redigir este e-mail com IA",
+    "hint": "Descreva o que quer dizer e o Synaplan escreverá o corpo do e-mail.",
+    "placeholder": "por ex. Convide a Alice para almoçar na próxima sexta-feira e peça que confirme.",
+    "draft": "Redigir",
+    "inserted": "Rascunho inserido no e-mail.",
+    "insertFailed": "Não foi possível escrever no corpo do e-mail. Abra uma nova mensagem ou resposta e tente novamente."
   },
   "contactProfile": {
     "noContact": "Abra um e-mail para escolher um contacto.",

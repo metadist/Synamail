@@ -23,6 +23,7 @@
     "emailTitle": "Correo abierto",
     "sections": {
       "emailActions": "Acciones del correo",
+      "writingAssistant": "Asistente de redacción",
       "profiling": "Perfilado"
     },
     "commands": {
@@ -79,6 +80,15 @@
       "loadingGroups": "Cargando carpetas…",
       "savedTo": "Guardado como archivo n.º {fileId} en {group}."
     }
+  },
+  "compose": {
+    "noCompose": "Redacta un nuevo correo o una respuesta para crear un borrador con IA.",
+    "ready": "Redactar este correo con IA",
+    "hint": "Describe lo que quieres decir y Synaplan redactará el cuerpo del correo.",
+    "placeholder": "p. ej. Invita a Alice a comer el próximo viernes y pídele que confirme.",
+    "draft": "Redactar",
+    "inserted": "Borrador insertado en el correo.",
+    "insertFailed": "No se pudo escribir en el cuerpo del correo. Abre un nuevo mensaje o respuesta e inténtalo de nuevo."
   },
   "contactProfile": {
     "noContact": "Abre un correo para elegir un contacto.",
