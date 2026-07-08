@@ -1,5 +1,8 @@
 {
   "title": "Contact profiles",
+  "tagline": "Use Synaplan to assist with your emails — summarise, translate, draft replies and build a knowledge base, right inside Outlook.",
+  "docsLink": "Documentation",
+  "repoLink": "Source code",
   "intro": "Rolling AI profiles of your mailing partners, created from the Synamail Outlook add-in. They live only in your workspace — delete any of them here at any time.",
   "loading": "Loading profiles…",
   "empty": "No profiles yet. Open an email in Outlook and use Contact AI Profiling in the Synamail add-in.",

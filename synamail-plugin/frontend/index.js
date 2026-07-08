@@ -10,6 +10,8 @@
  */
 
 const FALLBACK_LANG = 'en'
+const DOCS_URL = 'https://docs.synaplan.com/synamail'
+const REPO_URL = 'https://github.com/metadist/Synamail'
 
 const state = {
   el: null,
@@ -104,6 +106,12 @@ async function render() {
   el.innerHTML = `
     <div>
       <h2 style="margin:0 0 4px;">${esc(t('title'))}</h2>
+      <p style="margin:0 0 8px;">${esc(t('tagline'))}</p>
+      <p style="margin:0 0 16px; font-size:0.9em;">
+        <a href="${DOCS_URL}" target="_blank" rel="noopener noreferrer">${esc(t('docsLink'))}</a>
+        <span class="txt-secondary"> · </span>
+        <a href="${REPO_URL}" target="_blank" rel="noopener noreferrer">${esc(t('repoLink'))}</a>
+      </p>
       <p class="txt-secondary" style="margin:0 0 16px;">${esc(t('intro'))}</p>
       ${error ? `<p style="color:#b42318;">${esc(error)}</p>` : ''}
       ${

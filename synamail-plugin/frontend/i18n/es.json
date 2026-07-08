@@ -1,5 +1,8 @@
 {
   "title": "Perfiles de contacto",
+  "tagline": "Use Synaplan como asistente para sus correos: resuma, traduzca, redacte respuestas y cree una base de conocimiento, directamente en Outlook.",
+  "docsLink": "Documentación",
+  "repoLink": "Código fuente",
   "intro": "Perfiles de IA continuos de sus contactos de correo, creados desde el complemento Synamail para Outlook. Viven solo en su espacio de trabajo: elimine cualquiera de ellos aquí en cualquier momento.",
   "loading": "Cargando perfiles…",
   "empty": "Aún no hay perfiles. Abra un correo en Outlook y use Contact AI Profiling en el complemento Synamail.",

@@ -1,5 +1,8 @@
 {
   "title": "Kişi profilleri",
+  "tagline": "E-postalarınızda yardımcı olması için Synaplan'ı kullanın — doğrudan Outlook içinde özetleyin, çevirin, yanıt taslakları oluşturun ve bir bilgi tabanı kurun.",
+  "docsLink": "Belgeler",
+  "repoLink": "Kaynak kod",
   "intro": "Synamail Outlook eklentisiyle oluşturulan, e-posta bağlantılarınızın sürekli güncellenen yapay zekâ profilleri. Yalnızca kendi çalışma alanınızda saklanır — istediğiniz profili buradan istediğiniz an silebilirsiniz.",
   "loading": "Profiller yükleniyor…",
   "empty": "Henüz profil yok. Outlook'ta bir e-posta açın ve Synamail eklentisinde Contact AI Profiling özelliğini kullanın.",
