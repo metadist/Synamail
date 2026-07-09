@@ -67,7 +67,7 @@
       "title": "In Wissensdatenbank speichern",
       "group": "Wissensdatenbank-Ordner",
       "newGroup": "Oder neuen Ordner anlegen",
-      "newGroupPlaceholder": "z. B. contact:alice@example.com",
+      "newGroupPlaceholder": "z. B. contact:alice{'@'}example.com",
       "contactGroup": "Kontakt-Ordner verwenden",
       "contactGroupHint": "für diesen Absender vorgeschlagen",
       "processLevel": "Verarbeitung",

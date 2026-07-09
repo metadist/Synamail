@@ -67,7 +67,7 @@
       "title": "Enregistrer dans la base de connaissances",
       "group": "Dossier de la base de connaissances",
       "newGroup": "Ou créer un nouveau dossier",
-      "newGroupPlaceholder": "par ex. contact:alice@example.com",
+      "newGroupPlaceholder": "par ex. contact:alice{'@'}example.com",
       "contactGroup": "Utiliser le dossier du contact",
       "contactGroupHint": "suggéré pour cet expéditeur",
       "processLevel": "Traitement",

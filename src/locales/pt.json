@@ -67,7 +67,7 @@
       "title": "Guardar na base de conhecimento",
       "group": "Pasta da base de conhecimento",
       "newGroup": "Ou criar uma nova pasta",
-      "newGroupPlaceholder": "por ex. contact:alice@example.com",
+      "newGroupPlaceholder": "por ex. contact:alice{'@'}example.com",
       "contactGroup": "Utilizar pasta do contacto",
       "contactGroupHint": "sugerido para este remetente",
       "processLevel": "Processamento",

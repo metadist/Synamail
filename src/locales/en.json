@@ -67,7 +67,7 @@
       "title": "Save to knowledge base",
       "group": "Knowledge base folder",
       "newGroup": "Or create a new folder",
-      "newGroupPlaceholder": "e.g. contact:alice@example.com",
+      "newGroupPlaceholder": "e.g. contact:alice{'@'}example.com",
       "contactGroup": "Use contact folder",
       "contactGroupHint": "suggested for this sender",
       "processLevel": "Processing",

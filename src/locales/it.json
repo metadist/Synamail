@@ -67,7 +67,7 @@
       "title": "Salva nella base di conoscenza",
       "group": "Cartella della base di conoscenza",
       "newGroup": "Oppure crea una nuova cartella",
-      "newGroupPlaceholder": "ad es. contact:alice@example.com",
+      "newGroupPlaceholder": "ad es. contact:alice{'@'}example.com",
       "contactGroup": "Usa cartella del contatto",
       "contactGroupHint": "suggerito per questo mittente",
       "processLevel": "Elaborazione",

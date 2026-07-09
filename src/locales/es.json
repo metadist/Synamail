@@ -67,7 +67,7 @@
       "title": "Guardar en la base de conocimiento",
       "group": "Carpeta de la base de conocimiento",
       "newGroup": "O crear una nueva carpeta",
-      "newGroupPlaceholder": "p. ej. contact:alice@example.com",
+      "newGroupPlaceholder": "p. ej. contact:alice{'@'}example.com",
       "contactGroup": "Usar carpeta del contacto",
       "contactGroupHint": "sugerido para este remitente",
       "processLevel": "Procesamiento",
