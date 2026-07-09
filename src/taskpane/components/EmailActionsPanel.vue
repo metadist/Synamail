@@ -148,23 +148,44 @@ async function handleSaveConfirm(payload: {
   showSaveDialog.value = false
   await run('save', async () => {
     const file = getReadItemAsFile(item.value)
-    const r = await call((c) =>
-      c.fileUpload({
-        filename: file.filename,
-        contentBase64: file.contentBase64,
-        mimeType: file.mimeType,
-        groupId: payload.groupId,
-        metadata: {
-          from: item.value.from ?? '',
-          subject: item.value.subject,
-          to: item.value.to.join(', '),
-        },
-        processLevel: payload.processLevel,
-      }),
-    )
+    const upload = (processLevel: 'store' | 'extract' | 'vectorize' | 'full') =>
+      call((c) =>
+        c.fileUpload({
+          filename: file.filename,
+          contentBase64: file.contentBase64,
+          mimeType: file.mimeType,
+          groupId: payload.groupId,
+          metadata: {
+            from: item.value.from ?? '',
+            subject: item.value.subject,
+            to: item.value.to.join(', '),
+          },
+          processLevel,
+        }),
+      )
+
+    // `vectorize`/`full` need an embedding model + reachable vector store, which
+    // some workspaces don't have — that makes the whole upload fail server-side.
+    // Retry once at `extract` so the email is still saved (just not vectorized)
+    // instead of losing it, and tell the user what happened.
+    let vectorizeFailed = false
+    let r: Awaited<ReturnType<typeof upload>>
+    if (payload.processLevel === 'vectorize' || payload.processLevel === 'full') {
+      try {
+        r = await upload(payload.processLevel)
+      } catch {
+        vectorizeFailed = true
+        r = await upload('extract')
+      }
+    } else {
+      r = await upload(payload.processLevel)
+    }
+
     if (r) {
       await setLastRagGroupId(payload.groupId)
-      status.value = t('read.saveDialog.savedTo', { group: payload.groupId, fileId: r.fileId })
+      status.value = vectorizeFailed
+        ? t('read.saveDialog.savedNoVectorize', { group: payload.groupId, fileId: r.fileId })
+        : t('read.saveDialog.savedTo', { group: payload.groupId, fileId: r.fileId })
     }
     return r
   })

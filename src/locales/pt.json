@@ -78,7 +78,8 @@
         "full": "Análise completa"
       },
       "loadingGroups": "A carregar pastas…",
-      "savedTo": "Guardado como ficheiro n.º {fileId} em {group}."
+      "savedTo": "Guardado como ficheiro n.º {fileId} em {group}.",
+      "savedNoVectorize": "Guardado como ficheiro n.º {fileId} em {group} (texto extraído, mas não tornado pesquisável por IA — não há nenhum modelo de embedding configurado)."
     }
   },
   "compose": {

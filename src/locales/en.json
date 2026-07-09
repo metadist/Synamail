@@ -78,7 +78,8 @@
         "full": "Full analysis"
       },
       "loadingGroups": "Loading folders…",
-      "savedTo": "Saved as file #{fileId} in {group}."
+      "savedTo": "Saved as file #{fileId} in {group}.",
+      "savedNoVectorize": "Saved as file #{fileId} in {group} (text extracted, but not made AI-searchable — no embedding model is configured)."
     }
   },
   "compose": {

@@ -31,7 +31,10 @@ const loadingGroups = ref(false)
 const loadError = ref<string | null>(null)
 const groupId = ref<string>('')
 const newGroupName = ref('')
-const processLevel = ref<ProcessLevel>('vectorize')
+// Default to `extract` (store + text extraction): it has no embedding-model
+// dependency, so a save always succeeds. `vectorize`/`full` remain explicit
+// opt-ins for full RAG indexing.
+const processLevel = ref<ProcessLevel>('extract')
 
 const contactGroupId = computed(() =>
   props.contactEmail ? `contact:${props.contactEmail.toLowerCase()}` : '',

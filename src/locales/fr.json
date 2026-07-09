@@ -78,7 +78,8 @@
         "full": "Analyse complète"
       },
       "loadingGroups": "Chargement des dossiers…",
-      "savedTo": "Enregistré comme fichier n° {fileId} dans {group}."
+      "savedTo": "Enregistré comme fichier n° {fileId} dans {group}.",
+      "savedNoVectorize": "Enregistré comme fichier n° {fileId} dans {group} (texte extrait, mais non rendu consultable par l'IA — aucun modèle d'embedding n'est configuré)."
     }
   },
   "compose": {

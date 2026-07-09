@@ -78,7 +78,8 @@
         "full": "Vollständige Analyse"
       },
       "loadingGroups": "Ordner werden geladen…",
-      "savedTo": "Als Datei #{fileId} in {group} gespeichert."
+      "savedTo": "Als Datei #{fileId} in {group} gespeichert.",
+      "savedNoVectorize": "Als Datei #{fileId} in {group} gespeichert (Text extrahiert, aber nicht KI-durchsuchbar gemacht — es ist kein Embedding-Modell konfiguriert)."
     }
   },
   "compose": {
