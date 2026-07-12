@@ -80,7 +80,12 @@ export default defineConfig(async ({ mode, command }) => {
       },
     },
     build: {
-      target: 'es2022',
+      // Down-level to a WebKit-safe floor so no ES2022-only syntax reaches
+      // Safari or the Outlook-on-Mac WKWebView (both lag Chrome/Edge). An
+      // add-in that parses in Chrome but throws a SyntaxError in Safari never
+      // mounts and reads as "the pane won't open". The output delta is tiny
+      // and stays far under the 2 MiB `make budget` gate.
+      target: ['safari15', 'chrome91', 'firefox90', 'edge91'],
       outDir: 'dist',
       emptyOutDir: true,
       sourcemap: mode !== 'production',

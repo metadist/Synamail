@@ -128,12 +128,20 @@
             '</div>'
         }
         window.setTimeout(function () {
+          // main.ts already surfaced a (more specific) error — don't clobber it.
+          if (window.__synamailHandled) return
           // If the app mounted, #app no longer contains the boot placeholder.
           if (!document.getElementById('syn-boot')) return
           if (window.__synamailOfficeFailed) {
             showBootError('Synamail could not load Microsoft Office.js.')
           } else {
-            showBootError('Synamail is taking longer than expected to load.')
+            // Chrome loads but Safari stalls? Safari's "Prevent cross-site
+            // tracking" blocks the storage the add-in iframe needs.
+            showBootError(
+              'Synamail is taking longer than expected to load. ' +
+                'If you are using Safari, turn off "Prevent cross-site tracking" ' +
+                '(Settings → Privacy) and reopen the add-in.',
+            )
           }
         }, 12000)
       })()
