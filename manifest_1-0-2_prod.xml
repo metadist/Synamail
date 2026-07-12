@@ -23,7 +23,7 @@
   -->
 
   <Id>342cee66-dd27-471d-b2ac-fa1bbb5db54f</Id>
-  <Version>1.0.2.0</Version>
+  <Version>1.0.2.1</Version>
   <ProviderName>Synaplan</ProviderName>
   <DefaultLocale>en-US</DefaultLocale>
   <DisplayName DefaultValue="Synamail AI" />
@@ -49,11 +49,23 @@
     </Sets>
   </Requirements>
 
+  <!-- FormSettings MUST declare a Form for every FormType listed in the Rule
+       below. The Rule includes FormType="Edit", so an ItemEdit form is
+       REQUIRED: Outlook on the web / new Outlook validate the base manifest
+       server-side and silently drop the whole compose surface (reply/new mail
+       ribbon button) when the ItemEdit form is missing — while classic
+       Outlook, which builds its ribbon purely from VersionOverrides, still
+       shows it. Keep both forms in sync with the dev manifest. -->
   <FormSettings>
     <Form xsi:type="ItemRead">
       <DesktopSettings>
         <SourceLocation DefaultValue="https://addin.synaplan.com/src/taskpane/taskpane.html" />
         <RequestedHeight>450</RequestedHeight>
+      </DesktopSettings>
+    </Form>
+    <Form xsi:type="ItemEdit">
+      <DesktopSettings>
+        <SourceLocation DefaultValue="https://addin.synaplan.com/src/taskpane/taskpane.html" />
       </DesktopSettings>
     </Form>
   </FormSettings>
