@@ -4,7 +4,12 @@ import { useI18n } from 'vue-i18n'
 import ActionButton from '@/taskpane/components/ActionButton.vue'
 import SaveToRagDialog from '@/taskpane/components/SaveToRagDialog.vue'
 import Toast from '@/taskpane/components/Toast.vue'
-import { getReadItemAsFile, useOutlookItem } from '@/taskpane/composables/useOutlookItem'
+import {
+  getKnowledgeBaseAttachments,
+  getReadItemAsFile,
+  useOutlookItem,
+} from '@/taskpane/composables/useOutlookItem'
+import type { MessageFile } from '@/taskpane/composables/useOutlookItem'
 import { getLastRagGroupId, setLastRagGroupId } from '@/taskpane/composables/useRoamingSettings'
 import { useSynaplanClient } from '@/taskpane/composables/useSynaplanClient'
 import { errorMessage } from '@shared/synaplan-client'
@@ -54,53 +59,87 @@ watch(
   { immediate: true },
 )
 
-async function save(groupId: string, processLevel: ProcessLevel = 'extract'): Promise<void> {
+/**
+ * Upload one file to `groupId`. `vectorize`/`full` can fail server-side when no
+ * embedding model is configured, so we retry once at `extract` — the artefact
+ * is still saved (and its text extracted) rather than lost.
+ */
+async function uploadFile(
+  file: MessageFile,
+  groupId: string,
+  processLevel: ProcessLevel,
+): Promise<{ fileId: number } | null> {
+  const upload = (level: ProcessLevel) =>
+    call((c) =>
+      c.fileUpload({
+        filename: file.filename,
+        contentBase64: file.contentBase64,
+        mimeType: file.mimeType,
+        groupId,
+        metadata: {
+          from: item.value.from ?? '',
+          subject: item.value.subject,
+          to: item.value.to.join(', '),
+        },
+        processLevel: level,
+      }),
+    )
+  if (processLevel === 'vectorize' || processLevel === 'full') {
+    try {
+      return await upload(processLevel)
+    } catch {
+      return await upload('extract')
+    }
+  }
+  return upload(processLevel)
+}
+
+// Default to `vectorize`: "add to knowledge base" means the email must become
+// AI-searchable, i.e. its text ends up in the vector group. `extract` (the old
+// default) only stored + extracted text and never vectorised it — that's why
+// saved emails weren't showing up in the vectors. `uploadFile` still falls
+// back to `extract` if no embedding model is configured, so a save never fails.
+async function save(groupId: string, processLevel: ProcessLevel = 'vectorize'): Promise<void> {
   active.value = groupId
   error.value = null
   status.value = null
   try {
-    const file = getReadItemAsFile(item.value)
-    const upload = (level: ProcessLevel) =>
-      call((c) =>
-        c.fileUpload({
-          filename: file.filename,
-          contentBase64: file.contentBase64,
-          mimeType: file.mimeType,
-          groupId,
-          metadata: {
-            from: item.value.from ?? '',
-            subject: item.value.subject,
-            to: item.value.to.join(', '),
-          },
-          processLevel: level,
-        }),
-      )
+    const emailFile = getReadItemAsFile(item.value)
+    const r = await uploadFile(emailFile, groupId, processLevel)
+    if (!r) return // 401 / cleared client — useSynaplanClient handles the bounce.
 
-    // `vectorize`/`full` can fail server-side without an embedding model; retry
-    // once at `extract` so the email is still saved rather than lost.
-    let r: Awaited<ReturnType<typeof upload>>
-    if (processLevel === 'vectorize' || processLevel === 'full') {
-      try {
-        r = await upload(processLevel)
-      } catch {
-        r = await upload('extract')
+    // Best-effort: also vectorise images + document attachments into the same
+    // group. Individual attachment failures never sink the email save.
+    let savedAttachments = 0
+    try {
+      const attachments = await getKnowledgeBaseAttachments(item.value)
+      for (const att of attachments) {
+        try {
+          if (await uploadFile(att, groupId, processLevel)) savedAttachments++
+        } catch {
+          // Skip this attachment; keep going with the rest.
+        }
       }
-    } else {
-      r = await upload(processLevel)
+    } catch {
+      // Host can't read attachment bytes (pre-1.8) — the email is still saved.
     }
 
-    if (r) {
-      standardId.value = groupId
-      if (!groups.value.some((g) => g.id === groupId)) {
-        groups.value = [{ id: groupId, name: groupId }, ...groups.value]
-      }
-      try {
-        await setLastRagGroupId(groupId)
-      } catch {
-        // Roaming write can fail offline/in tests; the in-memory state still holds.
-      }
-      status.value = t('home.boxes.knowledge.saved', { group: groupLabel(groupId) })
+    standardId.value = groupId
+    if (!groups.value.some((g) => g.id === groupId)) {
+      groups.value = [{ id: groupId, name: groupId }, ...groups.value]
     }
+    try {
+      await setLastRagGroupId(groupId)
+    } catch {
+      // Roaming write can fail offline/in tests; the in-memory state still holds.
+    }
+    status.value =
+      savedAttachments > 0
+        ? t('home.boxes.knowledge.savedWithAttachments', {
+            group: groupLabel(groupId),
+            n: savedAttachments,
+          })
+        : t('home.boxes.knowledge.saved', { group: groupLabel(groupId) })
   } catch (err) {
     error.value = errorMessage(err)
   } finally {

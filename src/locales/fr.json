@@ -44,7 +44,8 @@
       "knowledge": {
         "title": "Enregistrer dans la base de connaissances",
         "new": "Nouveau",
-        "saved": "Enregistré dans {group}."
+        "saved": "Enregistré dans {group}.",
+        "savedWithAttachments": "Enregistré dans {group} — e-mail + {n} pièce(s) jointe(s)."
       }
     },
     "commands": {

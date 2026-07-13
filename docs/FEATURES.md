@@ -118,15 +118,30 @@ Note on terminology: the user's brief says "**RAG keys**"; Synaplan calls these 
 
 - **User value:** Make the email and its attachments retrievable later by Synaplan AI.
 - **Input:**
-  - The email itself: `Office.context.mailbox.item.getAsFileAsync` (returns `.eml`) — requires Mailbox 1.8.
-  - Each attachment: `getAttachmentsAsync` + `getAttachmentContentAsync` — requires Mailbox 1.8.
+  - The email body: `Office.context.mailbox.item.body.getAsync('text')`, wrapped
+    in a small header block and exported as a `.txt` (Synaplan rejects `.eml`).
+    The body is run through `cleanEmailForIngest` (`src/shared/email-clean.ts`)
+    first — tracking URLs, zero-width / control garbage, opaque routing codes,
+    decoration rules and the quoted reply tail are stripped so only useful text
+    is vectorised.
+  - Attachments: `getAttachmentContentAsync` (Mailbox 1.8+). Real images
+    (screenshots/photos — Synaplan's Vision AI reads them on upload) and
+    documents (`pdf`, `doc(x)`, `ppt(x)`, `xls(x)`, `txt`, `csv`, `md`, `rtf`,
+    ODF) are uploaded into the same group. Tiny inline signature logos,
+    oversized (>25 MB), and cloud/URL-only attachments are skipped.
   - A target RAG group (user-picked or default).
-  - A processing level: `Extract Only` (default) / `Extract + Vectorize` / `Full Analysis` — matches the levels in `synaplan/docs/RAG.md`.
-- **Output:** File appears in the user's RAG group; success toast.
-- **Endpoints:**
-  1. `POST /api/v1/files/upload` for each artefact.
-  2. `POST /api/v1/files/{id}/process` with the chosen processing level and group id.
-- **UI surface:** "Save to knowledge base" button in `ReadMode.vue`; modal with group picker, attachment checkboxes, processing-level dropdown.
+  - A processing level (dropdown in the dialog): `Store only` / `Extract text` /
+    **`Make searchable by AI`** (default) / `Full analysis`.
+- **Output:** The email `.txt` and each attachment appear in the user's RAG
+  group; success toast (`savedWithAttachments` names the attachment count).
+- **Endpoint:** `POST /api/v1/files/upload` per artefact, with `group_key` and
+  `process_level` on the same request (no separate `/process` call). The default
+  `process_level` is `vectorize` so the text actually lands in the vector group;
+  if no embedding model is configured the upload is retried once at `extract`
+  so the artefact is still saved rather than lost.
+- **UI surface:** `KnowledgeBaseBox.vue` on Home (one-click save to the last-used
+  folder + quick-topic buttons); `SaveToRagDialog.vue` for picking/creating a
+  group and processing level.
 - **Default group suggestion:** `contact:<sender-email>` — see §4.
 
 ### 3.2 Group picker

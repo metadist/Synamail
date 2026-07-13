@@ -44,7 +44,8 @@
       "knowledge": {
         "title": "Save to knowledge base",
         "new": "New",
-        "saved": "Saved to {group}."
+        "saved": "Saved to {group}.",
+        "savedWithAttachments": "Saved to {group} — email + {n} attachment(s)."
       }
     },
     "commands": {

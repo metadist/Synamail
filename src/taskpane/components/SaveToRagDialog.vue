@@ -31,10 +31,10 @@ const loadingGroups = ref(false)
 const loadError = ref<string | null>(null)
 const groupId = ref<string>('')
 const newGroupName = ref('')
-// Default to `extract` (store + text extraction): it has no embedding-model
-// dependency, so a save always succeeds. `vectorize`/`full` remain explicit
-// opt-ins for full RAG indexing.
-const processLevel = ref<ProcessLevel>('extract')
+// Default to `vectorize` so a saved email actually becomes AI-searchable (its
+// text lands in the vector group). The caller (`KnowledgeBaseBox`) retries at
+// `extract` if no embedding model is configured, so the save still succeeds.
+const processLevel = ref<ProcessLevel>('vectorize')
 
 const contactGroupId = computed(() =>
   props.contactEmail ? `contact:${props.contactEmail.toLowerCase()}` : '',

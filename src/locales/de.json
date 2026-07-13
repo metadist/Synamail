@@ -44,7 +44,8 @@
       "knowledge": {
         "title": "In Wissensdatenbank speichern",
         "new": "Neu",
-        "saved": "In {group} gespeichert."
+        "saved": "In {group} gespeichert.",
+        "savedWithAttachments": "In {group} gespeichert — E-Mail + {n} Anhang/Anhänge."
       }
     },
     "commands": {

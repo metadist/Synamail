@@ -20,6 +20,13 @@ function makeOfficeStub() {
     },
     MailboxEnums: {
       ItemType: { Message: 'message', Appointment: 'appointment' },
+      AttachmentType: { File: 'file', Item: 'item', Cloud: 'cloud' },
+      AttachmentContentFormat: {
+        Base64: 'base64',
+        Url: 'url',
+        Eml: 'eml',
+        ICalendar: 'iCalendar',
+      },
     },
     CoercionType: { Text: 'text', Html: 'html' },
     AsyncResultStatus: { Succeeded: 'succeeded', Failed: 'failed' },

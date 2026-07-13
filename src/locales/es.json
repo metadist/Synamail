@@ -44,7 +44,8 @@
       "knowledge": {
         "title": "Guardar en la base de conocimiento",
         "new": "Nuevo",
-        "saved": "Guardado en {group}."
+        "saved": "Guardado en {group}.",
+        "savedWithAttachments": "Guardado en {group} — correo + {n} adjunto(s)."
       }
     },
     "commands": {

@@ -151,9 +151,12 @@ export interface FileUploadInput {
   metadata?: Record<string, string>
   /**
    * How aggressively Synaplan processes the file after upload. Combines what
-   * used to be a separate POST /files/{id}/process call into the same
-   * request. Defaults to `extract` (safe minimum); use `vectorize` for RAG
-   * ingestion and `full` for full extraction + vectorisation + analysis.
+   * used to be a separate POST /files/{id}/process call into the same request.
+   * The transport defaults to `extract` (safe minimum) when omitted; the
+   * "Save to knowledge base" flow passes `vectorize` so the text is actually
+   * added to the vector group (with a one-shot `extract` fallback when no
+   * embedding model is configured). `full` adds extraction + vectorisation +
+   * analysis.
    */
   processLevel?: 'store' | 'extract' | 'vectorize' | 'full'
 }
