@@ -1,6 +1,7 @@
 {
   "app": {
     "name": "Synamail",
+    "headline": "Email Assistant",
     "tagline": "Your Synaplan workspace in Outlook."
   },
   "signIn": {
@@ -47,10 +48,10 @@
       }
     },
     "commands": {
-      "chat": "Ask synaplan"
+      "chat": "Chat"
     },
     "chat": {
-      "placeholder": "Ask Synaplan anything…",
+      "placeholder": "Ask synaplan",
       "send": "Send",
       "thinking": "Thinking…",
       "emptyHint": "Start a conversation — ask a question or paste some text.",
@@ -159,7 +160,6 @@
       "configure": "Configure models in Synaplan"
     },
     "preferences": "Preferences",
-    "defaultRagGroup": "Default knowledge base folder",
     "language": "Language",
     "resetRoaming": "Reset saved settings"
   },

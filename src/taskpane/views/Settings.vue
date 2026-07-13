@@ -104,8 +104,6 @@ async function saveBaseUrl(): Promise<void> {
   }
 }
 
-const lastRagGroupId = loadSettings()?.lastRagGroupId ?? ''
-
 type LanguagePref = 'auto' | Locale
 const LANGUAGE_OPTIONS = ['auto', ...SUPPORTED_LOCALES] as const
 const languagePref = ref<LanguagePref>((loadSettings()?.language as LanguagePref) ?? 'auto')
@@ -175,10 +173,6 @@ async function onLanguageChange(): Promise<void> {
 
     <div class="syn-card">
       <h3 class="syn-card-title">{{ t('settings.preferences') }}</h3>
-      <label class="settings__field">
-        <span>{{ t('settings.defaultRagGroup') }}</span>
-        <code>{{ lastRagGroupId || '—' }}</code>
-      </label>
       <label class="settings__field">
         <span>{{ t('settings.language') }}</span>
         <select v-model="languagePref" class="settings__select" @change="onLanguageChange">

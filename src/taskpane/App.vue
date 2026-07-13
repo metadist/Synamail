@@ -52,9 +52,9 @@ const components = {
         :aria-label="t('home.title')"
         @click="go('home')"
       >
-        <strong>Synamail</strong>
+        <strong>{{ t('app.headline') }}</strong>
       </button>
-      <strong v-else>Synamail</strong>
+      <strong v-else>{{ t('app.headline') }}</strong>
       <nav v-if="isSignedIn" class="app__nav">
         <button
           type="button"
