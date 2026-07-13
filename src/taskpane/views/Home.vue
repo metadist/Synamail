@@ -1,15 +1,12 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import AccordionItem from '@/taskpane/components/AccordionItem.vue'
 import ChatThread from '@/taskpane/components/ChatThread.vue'
 import type { ChatMessage } from '@/taskpane/components/ChatThread.vue'
-import ComposeAssistantPanel from '@/taskpane/components/ComposeAssistantPanel.vue'
-import ContactProfilePanel from '@/taskpane/components/ContactProfilePanel.vue'
-import EmailActionsPanel from '@/taskpane/components/EmailActionsPanel.vue'
+import EmailWritingBox from '@/taskpane/components/EmailWritingBox.vue'
+import KnowledgeBaseBox from '@/taskpane/components/KnowledgeBaseBox.vue'
+import SummarizeBox from '@/taskpane/components/SummarizeBox.vue'
 import Toast from '@/taskpane/components/Toast.vue'
-import { useContactCounterpart } from '@/taskpane/composables/useContactCounterpart'
-import { useOutlookItem } from '@/taskpane/composables/useOutlookItem'
 import {
   clearChatIdForConversation,
   getChatIdForConversation,
@@ -21,36 +18,13 @@ import { errorMessage } from '@shared/synaplan-client'
 const HOME_CONVERSATION = 'home'
 
 const { t } = useI18n()
-const { item } = useOutlookItem()
 const { call } = useSynaplanClient()
-const { contactEmail } = useContactCounterpart(item)
 
 const messages = ref<ChatMessage[]>([])
 const sending = ref(false)
 const error = ref<string | null>(null)
 
-const emailOpen = computed(() => item.value.mode === 'read')
-const composeOpen = computed(() => item.value.mode === 'compose')
-
-function truncate(text: string, max = 48): string {
-  return text.length > max ? `${text.slice(0, max)}…` : text
-}
-
-const emailActionsSubtitle = computed(() =>
-  emailOpen.value
-    ? `${t('read.subjectLabel')}: ${truncate(item.value.subject || t('home.emailTitle'))}`
-    : t('read.noEmail'),
-)
-
-const writingAssistantSubtitle = computed(() =>
-  composeOpen.value ? t('compose.ready') : t('compose.noCompose'),
-)
-
-const profilingSubtitle = computed(() =>
-  contactEmail.value ? truncate(contactEmail.value) : t('read.noEmail'),
-)
-
-async function send(text: string): Promise<void> {
+async function send(text: string, fileIds?: number[]): Promise<void> {
   messages.value.push({ role: 'user', text })
   // Add the AI bubble up front and stream tokens into it as they arrive.
   const aiIdx = messages.value.push({ role: 'ai', text: '' }) - 1
@@ -59,9 +33,12 @@ async function send(text: string): Promise<void> {
   try {
     const chatId = getChatIdForConversation(HOME_CONVERSATION)
     const r = await call((c) =>
-      c.chat({ conversationId: HOME_CONVERSATION, question: text, chatId }, (textSoFar) => {
-        messages.value[aiIdx].text = textSoFar
-      }),
+      c.chat(
+        { conversationId: HOME_CONVERSATION, question: text, chatId, fileIds },
+        (textSoFar) => {
+          messages.value[aiIdx].text = textSoFar
+        },
+      ),
     )
     if (r) {
       messages.value[aiIdx].text = r.answer
@@ -97,7 +74,19 @@ async function resetChat(): Promise<void> {
 
 <template>
   <section class="home">
-    <!-- 1. Chat — always open, above the flaps. -->
+    <!-- One box per function. Scope is intentionally narrow for now; more
+         tools (and Profiling) return over time. -->
+
+    <!-- (a) Write an email or reply. -->
+    <EmailWritingBox />
+
+    <!-- (b) Summarize the open email. -->
+    <SummarizeBox />
+
+    <!-- (c) Save the open email to the knowledge base. -->
+    <KnowledgeBaseBox />
+
+    <!-- (d) Ask Synaplan — general chat with results above the composer. -->
     <div class="syn-card">
       <h2 class="syn-card-title">{{ t('home.commands.chat') }}</h2>
       <ChatThread
@@ -107,38 +96,14 @@ async function resetChat(): Promise<void> {
         @send="send"
         @reset="resetChat"
       />
+      <Toast v-if="error" kind="error" :message="error" />
     </div>
 
-    <Toast v-if="error" kind="error" :message="error" />
-
-    <!-- 2. Email actions for the active email. -->
-    <AccordionItem
-      :title="t('home.sections.emailActions')"
-      :subtitle="emailActionsSubtitle"
-      :strong-subtitle="emailOpen"
-    >
-      <EmailActionsPanel />
-    </AccordionItem>
-
-    <!-- 3. Writing assistant for the email being composed (auto-opens in
-         compose mode so the pane is immediately useful there). -->
-    <AccordionItem
-      :title="t('home.sections.writingAssistant')"
-      :subtitle="writingAssistantSubtitle"
-      :strong-subtitle="composeOpen"
-      :open="composeOpen"
-    >
-      <ComposeAssistantPanel />
-    </AccordionItem>
-
-    <!-- 4. Contact profiling for the email's counterpart. -->
-    <AccordionItem
-      :title="t('home.sections.profiling')"
-      :subtitle="profilingSubtitle"
-      :strong-subtitle="!!contactEmail"
-    >
+    <!-- Profiling is temporarily disabled and will return in a later iteration.
+    <AccordionItem :title="t('home.sections.profiling')">
       <ContactProfilePanel />
     </AccordionItem>
+    -->
   </section>
 </template>
 

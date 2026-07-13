@@ -26,8 +26,28 @@
       "writingAssistant": "Assistant de rédaction",
       "profiling": "Profilage"
     },
+    "boxes": {
+      "noEmail": "Ouvrez ou commencez un e-mail pour utiliser cette fonction.",
+      "emailWriting": {
+        "title": "Rédiger un e-mail ou une réponse",
+        "topicPlaceholder": "Sujet de votre e-mail",
+        "opened": "Ouvert dans une nouvelle fenêtre d'e-mail.",
+        "inserted": "Brouillon inséré dans l'e-mail ouvert.",
+        "failed": "Impossible d'ouvrir une fenêtre d'e-mail. Ouvrez ou commencez un message et réessayez."
+      },
+      "summarize": {
+        "title": "Résumer l'e-mail",
+        "opened": "Résumé ouvert dans une nouvelle fenêtre d'e-mail.",
+        "failed": "Impossible d'ouvrir une nouvelle fenêtre d'e-mail avec le résumé."
+      },
+      "knowledge": {
+        "title": "Enregistrer dans la base de connaissances",
+        "new": "Nouveau",
+        "saved": "Enregistré dans {group}."
+      }
+    },
     "commands": {
-      "chat": "Discussion"
+      "chat": "Demander à synaplan"
     },
     "chat": {
       "placeholder": "Posez n'importe quelle question à Synaplan…",
@@ -36,7 +56,12 @@
       "emptyHint": "Démarrez une conversation — posez une question ou collez du texte.",
       "sample": "Comment dit-on « efficacité » en anglais ?",
       "scrollTop": "Haut",
-      "reset": "Nouvelle discussion"
+      "reset": "Nouvelle discussion",
+      "attach": "Joindre des fichiers",
+      "dictate": "Dicter",
+      "stopDictation": "Arrêter",
+      "attachments": "{n} fichier(s) joint(s)",
+      "uploading": "Téléversement…"
     }
   },
   "read": {
@@ -151,7 +176,8 @@
   "tone": {
     "formal": "Formel",
     "concise": "Concis",
-    "friendly": "Amical"
+    "friendly": "Amical",
+    "detailed": "Détaillé"
   },
   "language": {
     "auto": "Détection automatique",

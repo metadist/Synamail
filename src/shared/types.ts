@@ -31,11 +31,20 @@ export interface RoamingSettings {
   language?: 'auto' | 'en' | 'de' | 'fr' | 'es' | 'it' | 'pt'
 }
 
+/**
+ * The writing styles offered by the Email-writing box. `concise` (knapp),
+ * `detailed` (ausführlich) and `formal` (formell) are the three surfaced
+ * buttons; `friendly` is retained for the legacy tone picker.
+ */
+export type EmailTone = 'formal' | 'concise' | 'friendly' | 'detailed'
+
 export interface SummariseInput {
   subject: string
   body: string
   from?: string
   to?: string[]
+  /** Target language code for the summary (e.g. "de"). Defaults to English. */
+  language?: string
 }
 
 export interface SummariseResult {
@@ -48,7 +57,7 @@ export interface DraftReplyInput {
   subject: string
   body: string
   threadContext?: string[]
-  tone: 'formal' | 'concise' | 'friendly'
+  tone: EmailTone
   language: string
 }
 
@@ -59,7 +68,7 @@ export interface DraftReplyResult {
 export interface ComposeDraftInput {
   /** One-line intent, e.g. "invite Alice to lunch on Friday and ask her to confirm". */
   intent: string
-  tone: 'formal' | 'concise' | 'friendly'
+  tone: EmailTone
   language: string
   /** Body of the message being replied to/forwarded, when composing a reply. */
   referenceBody?: string

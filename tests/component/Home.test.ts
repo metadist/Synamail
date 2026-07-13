@@ -10,6 +10,7 @@ vi.mock('@/taskpane/composables/useSynaplanClient', () => {
       chatId: input.chatId ?? 5,
       answer: `echo: ${input.question}`,
     })),
+    ragGroups: vi.fn(async () => []),
   }
   return {
     AUTH_INVALIDATED_EVENT: 'synamail:auth-invalidated',
@@ -30,9 +31,10 @@ function mountHome() {
 }
 
 describe('Home.vue', () => {
-  it('renders the chat composer at the top', () => {
+  it('renders the Ask-synaplan chat composer', () => {
     const wrapper = mountHome()
     expect(wrapper.find('textarea').exists()).toBe(true)
+    expect(wrapper.text()).toContain(en.home.commands.chat)
   })
 
   it('seeds the composer with a sample question so Send starts active', () => {
@@ -51,16 +53,23 @@ describe('Home.vue', () => {
     expect(wrapper.text()).toContain('echo: hello world')
   })
 
-  it('renders the email-actions accordion section', () => {
+  it('renders the four function boxes', () => {
     const text = mountHome().text()
-    expect(text).toContain(en.home.sections.emailActions)
-    // Cut features stay cut: no knowledge-filter or mail-routes sections.
-    expect(text).not.toContain('Filter for knowledge base')
-    expect(text).not.toContain('Email automations')
+    expect(text).toContain(en.home.boxes.emailWriting.title)
+    expect(text).toContain(en.home.boxes.summarize.title)
+    expect(text).toContain(en.home.boxes.knowledge.title)
+    expect(text).toContain(en.home.commands.chat)
   })
 
-  it('renders the writing-assistant accordion section', () => {
+  it('offers the three writing styles in the email box', () => {
     const text = mountHome().text()
-    expect(text).toContain(en.home.sections.writingAssistant)
+    expect(text).toContain(en.tone.concise)
+    expect(text).toContain(en.tone.detailed)
+    expect(text).toContain(en.tone.formal)
+  })
+
+  it('hides the (temporarily disabled) profiling section', () => {
+    const text = mountHome().text()
+    expect(text).not.toContain(en.home.sections.profiling)
   })
 })

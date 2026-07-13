@@ -15,12 +15,15 @@ export const translate = (targetLang: string): string =>
   `"${targetLang}". Preserve formatting, line breaks, and meaning. Output the ` +
   `translation only — no commentary, no quotation marks.`
 
-export const reply = (tone: 'formal' | 'concise' | 'friendly', lang: string): string =>
+export const reply = (tone: 'formal' | 'concise' | 'friendly' | 'detailed', lang: string): string =>
   `You are an email assistant. Write a reply in ${tone} tone, in language code ` +
   `"${lang}". Return well-formed HTML body content only — no doctype, no <html>, ` +
   `no <head>. Use <p>, <br>, <strong> as needed.`
 
-export const compose = (tone: 'formal' | 'concise' | 'friendly', lang: string): string =>
+export const compose = (
+  tone: 'formal' | 'concise' | 'friendly' | 'detailed',
+  lang: string,
+): string =>
   `You are an email-writing assistant. Turn the user's short intent into a ` +
   `ready-to-send email body in ${tone} tone, in language code "${lang}". If a ` +
   `"[replying to]" block is present, write a fitting response to it. Return ` +

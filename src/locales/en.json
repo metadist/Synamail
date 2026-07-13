@@ -26,8 +26,28 @@
       "writingAssistant": "Writing assistant",
       "profiling": "Profiling"
     },
+    "boxes": {
+      "noEmail": "Open or start an email to use this.",
+      "emailWriting": {
+        "title": "Write email or reply",
+        "topicPlaceholder": "Topic of your mail",
+        "opened": "Opened in a new email window.",
+        "inserted": "Draft written into the open email.",
+        "failed": "Couldn't open an email window. Open or start a message and try again."
+      },
+      "summarize": {
+        "title": "Summarize email",
+        "opened": "Summary opened in a new email window.",
+        "failed": "Couldn't open a new email window with the summary."
+      },
+      "knowledge": {
+        "title": "Save to knowledge base",
+        "new": "New",
+        "saved": "Saved to {group}."
+      }
+    },
     "commands": {
-      "chat": "Chat"
+      "chat": "Ask synaplan"
     },
     "chat": {
       "placeholder": "Ask Synaplan anything…",
@@ -36,7 +56,12 @@
       "emptyHint": "Start a conversation — ask a question or paste some text.",
       "sample": "What does 'efficiency' mean in German?",
       "scrollTop": "To top",
-      "reset": "New chat"
+      "reset": "New chat",
+      "attach": "Attach files",
+      "dictate": "Dictate",
+      "stopDictation": "Stop",
+      "attachments": "{n} file(s) attached",
+      "uploading": "Uploading…"
     }
   },
   "read": {
@@ -151,7 +176,8 @@
   "tone": {
     "formal": "Formal",
     "concise": "Concise",
-    "friendly": "Friendly"
+    "friendly": "Friendly",
+    "detailed": "Detailed"
   },
   "language": {
     "auto": "Auto-detect",

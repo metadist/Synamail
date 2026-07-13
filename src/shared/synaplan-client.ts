@@ -208,7 +208,7 @@ export class RealSynaplanClient implements SynaplanClient {
   // -------------------------------------------------------------------------
 
   async summarise(input: SummariseInput, onChunk?: StreamHandler): Promise<SummariseResult> {
-    const lang = pickLanguage(input)
+    const lang = input.language ?? 'en'
     const message = composeMessage(summarisePrompt(lang), buildEmailBlock(input))
     const text = await this.runChat(message, { onChunk, chatTitle: 'Outlook: summarise' })
     return {
@@ -693,14 +693,6 @@ export function cleanEmailText(s: string): string {
       .replace(/\n{3,}/g, '\n\n')
       .trim()
   )
-}
-
-function pickLanguage(input: SummariseInput | ClassifyInput): string {
-  // Summarise / classify don't carry a target language in their input shape
-  // today; default to English. Sprint 3.x adds a user override hooked off
-  // Settings.language and Office.context.displayLanguage.
-  void input
-  return 'en'
 }
 
 function parseMarkdownBullets(text: string): string[] {

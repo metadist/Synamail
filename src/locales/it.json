@@ -26,8 +26,28 @@
       "writingAssistant": "Assistente di scrittura",
       "profiling": "Profilazione"
     },
+    "boxes": {
+      "noEmail": "Apri o inizia un'e-mail per usare questa funzione.",
+      "emailWriting": {
+        "title": "Scrivi e-mail o risposta",
+        "topicPlaceholder": "Argomento della tua e-mail",
+        "opened": "Aperto in una nuova finestra e-mail.",
+        "inserted": "Bozza inserita nell'e-mail aperta.",
+        "failed": "Impossibile aprire una finestra e-mail. Apri o inizia un messaggio e riprova."
+      },
+      "summarize": {
+        "title": "Riassumi e-mail",
+        "opened": "Riepilogo aperto in una nuova finestra e-mail.",
+        "failed": "Impossibile aprire una nuova finestra e-mail con il riepilogo."
+      },
+      "knowledge": {
+        "title": "Salva nella base di conoscenza",
+        "new": "Nuovo",
+        "saved": "Salvato in {group}."
+      }
+    },
     "commands": {
-      "chat": "Chat"
+      "chat": "Chiedi a synaplan"
     },
     "chat": {
       "placeholder": "Chiedi qualsiasi cosa a Synaplan…",
@@ -36,7 +56,12 @@
       "emptyHint": "Avvia una conversazione: fai una domanda o incolla del testo.",
       "sample": "Come si dice «efficienza» in inglese?",
       "scrollTop": "Su",
-      "reset": "Nuova chat"
+      "reset": "Nuova chat",
+      "attach": "Allega file",
+      "dictate": "Detta",
+      "stopDictation": "Ferma",
+      "attachments": "{n} file allegati",
+      "uploading": "Caricamento…"
     }
   },
   "read": {
@@ -151,7 +176,8 @@
   "tone": {
     "formal": "Formale",
     "concise": "Conciso",
-    "friendly": "Amichevole"
+    "friendly": "Amichevole",
+    "detailed": "Dettagliato"
   },
   "language": {
     "auto": "Rilevamento automatico",

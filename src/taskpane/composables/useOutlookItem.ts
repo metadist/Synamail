@@ -227,6 +227,45 @@ export function setComposeBody(html: string): Promise<boolean> {
   })
 }
 
+/**
+ * Reply to the currently-open (read-mode) message, pre-filling the reply body
+ * with `html`. Opens Outlook's reply compose window. Resolves `true` on
+ * success, `false` when the host has no `displayReplyForm` (e.g. compose mode
+ * or a non-message item).
+ */
+export function displayReplyWithBody(html: string): boolean {
+  const item = (typeof Office !== 'undefined' ? Office.context?.mailbox?.item : undefined) as
+    | { displayReplyForm?: (arg: { htmlBody: string }) => void }
+    | undefined
+  if (!item || typeof item.displayReplyForm !== 'function') return false
+  try {
+    item.displayReplyForm({ htmlBody: html })
+    return true
+  } catch {
+    return false
+  }
+}
+
+/**
+ * Open a brand-new message compose window pre-filled with `html` (and an
+ * optional subject). Resolves `true` on success, `false` when the host lacks
+ * `displayNewMessageForm` (pre-Mailbox 1.6 or an unsupported client).
+ */
+export function displayNewMessageWithBody(html: string, subject?: string): boolean {
+  const mb = (typeof Office !== 'undefined' ? Office.context?.mailbox : undefined) as
+    | {
+        displayNewMessageForm?: (arg: { htmlBody: string; subject?: string }) => void
+      }
+    | undefined
+  if (!mb || typeof mb.displayNewMessageForm !== 'function') return false
+  try {
+    mb.displayNewMessageForm(subject ? { htmlBody: html, subject } : { htmlBody: html })
+    return true
+  } catch {
+    return false
+  }
+}
+
 // ---------------------------------------------------------------------------
 // File extraction for "Save to knowledge base"
 // ---------------------------------------------------------------------------

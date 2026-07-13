@@ -26,8 +26,28 @@
       "writingAssistant": "Schreibassistent",
       "profiling": "Profiling"
     },
+    "boxes": {
+      "noEmail": "Öffne oder beginne eine E-Mail, um dies zu nutzen.",
+      "emailWriting": {
+        "title": "E-Mail / Antwort erstellen",
+        "topicPlaceholder": "Thema der E-Mail",
+        "opened": "In einem neuen E-Mail-Fenster geöffnet.",
+        "inserted": "Entwurf in die geöffnete E-Mail geschrieben.",
+        "failed": "Es konnte kein E-Mail-Fenster geöffnet werden. Öffne oder beginne eine Nachricht und versuche es erneut."
+      },
+      "summarize": {
+        "title": "E-Mail zusammenfassen",
+        "opened": "Zusammenfassung in einem neuen E-Mail-Fenster geöffnet.",
+        "failed": "Es konnte kein neues E-Mail-Fenster mit der Zusammenfassung geöffnet werden."
+      },
+      "knowledge": {
+        "title": "In Wissensdatenbank speichern",
+        "new": "Neu",
+        "saved": "In {group} gespeichert."
+      }
+    },
     "commands": {
-      "chat": "Chat"
+      "chat": "Frage synaplan"
     },
     "chat": {
       "placeholder": "Frag Synaplan alles…",
@@ -36,7 +56,12 @@
       "emptyHint": "Starte eine Unterhaltung — stelle eine Frage oder füge Text ein.",
       "sample": "Was heißt Effizienz auf Englisch?",
       "scrollTop": "Nach oben",
-      "reset": "Neuer Chat"
+      "reset": "Neuer Chat",
+      "attach": "Dateien anhängen",
+      "dictate": "Diktieren",
+      "stopDictation": "Stopp",
+      "attachments": "{n} Datei(en) angehängt",
+      "uploading": "Wird hochgeladen…"
     }
   },
   "read": {
@@ -151,7 +176,8 @@
   "tone": {
     "formal": "Formell",
     "concise": "Knapp",
-    "friendly": "Freundlich"
+    "friendly": "Freundlich",
+    "detailed": "Ausführlich"
   },
   "language": {
     "auto": "Automatisch erkennen",
