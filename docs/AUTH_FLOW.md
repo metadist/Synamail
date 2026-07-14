@@ -15,8 +15,8 @@ more than once. **Read this before touching anything in the auth path.**
 - **There is no mock mode.** Sign-in is _always_ a real round-trip to whatever
   **Synaplan server URL** the user picks on the SignIn screen.
 - The signed-in **email** identifies the environment (local `admin@synaplan.com`
-  vs your live account). Switching environments = **Settings → Reset saved
-  settings**, then sign in to a different server URL.
+  vs your live account). Switching environments = **Settings → Log out**
+  (full reset), then sign in to a different server URL.
 - The dialog hands the API key back to the taskpane through a **same-origin
   relay**, reached via a **`redirect` query param**. If that param is lost
   anywhere in the chain, the dialog reports "connected" but **never closes**.
@@ -45,9 +45,9 @@ non-HTTPS. That is why local dev uses the `:5174` bridge, not `http://localhost:
 - `src/dialog/auth-relay.html` + `src/dialog/auth-relay.ts` — the **same-origin
   relay**. Loads Office.js and calls `messageParent` with the payload.
 - `src/taskpane/composables/useRoamingSettings.ts` — stores `{ apiKey, keyId,
-email, baseUrl }`; `clearAllSettings()` is the "Reset" wipe.
+email, baseUrl }`; `clearAllSettings()` is the "Log out" (full reset) wipe.
 - `src/taskpane/views/SignIn.vue` — server URL field + Sign in button.
-- `src/taskpane/views/Settings.vue` — Sign out + **Reset saved settings**.
+- `src/taskpane/views/Settings.vue` — Sign out + **Log out** (full reset).
 
 **Synaplan (`/wwwroot/synaplan/frontend/`):**
 
@@ -109,7 +109,7 @@ src=".../office.js">` in `auth-relay.html`).
 
 8. **Sign out (`Settings.vue` → `signOut`).** Revokes the key
    (`DELETE /api/v1/apikeys/{id}`, best-effort) and `clearSettings()`.
-   **Reset saved settings** (`clearAllSettings`) additionally wipes the preferred
+   **Log out** (full reset, `clearAllSettings`) additionally wipes the preferred
    base URL and any `synamail.*` localStorage keys — use this to switch
    environments cleanly (local → live).
 
@@ -193,7 +193,7 @@ root in Windows/macOS covers both `:3000` and `:5174`.
 
 1. Sign in locally: SignIn → server URL `https://localhost:5174` → sign in as
    `admin@synaplan.com`.
-2. To switch: **Settings → Reset saved settings** (wipes key + email + baseUrl).
+2. To switch: **Settings → Log out** (full reset — wipes key + email + baseUrl).
 3. Sign in live: SignIn → server URL `https://web.synaplan.com` → sign in with
    your real account.
 
@@ -216,7 +216,7 @@ never by a build flag.
 | "Connected" but dialog stays open                  | `redirect` relay param lost → cross-origin `messageParent` dropped by desktop | Ensure `AddinConnectView.bootstrap` uses `route.fullPath` (above)     |
 | Dialog opens then immediately closes with an error | `state` nonce mismatch (this is correct for a malformed payload)              | Retry; capture the payload if reproducible                            |
 | Cert warning in the dialog                         | Dev CA not trusted on the OS                                                  | Trust `~/.office-addin-dev-certs/ca.crt`; re-run dev-certs if expired |
-| Stuck signed in as the wrong user/server           | Stale roaming settings                                                        | **Settings → Reset saved settings**, then sign in again               |
+| Stuck signed in as the wrong user/server           | Stale roaming settings                                                        | **Settings → Log out** (full reset), then sign in again               |
 
 ---
 

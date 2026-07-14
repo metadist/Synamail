@@ -28,6 +28,15 @@ describe('prompts', () => {
     expect(a).toMatch(/no subject line/i)
   })
 
+  it('compose writes in the intent language and treats the code as a fallback', () => {
+    const p = prompts.compose('formal', 'en')
+    // Follows the user's intent language, like chat…
+    expect(p).toMatch(/same language/i)
+    expect(p).toMatch(/\[intent\]/)
+    // …and the language code is only the fallback.
+    expect(p).toMatch(/fall back to language code "en"/i)
+  })
+
   it('classify lists the allowed categories verbatim', () => {
     const p = prompts.classify(['billing', 'support', 'general'])
     expect(p).toContain('billing, support, general')

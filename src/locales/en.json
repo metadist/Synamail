@@ -160,8 +160,10 @@
       "configure": "Configure models in Synaplan"
     },
     "preferences": "Preferences",
-    "language": "Language",
-    "resetRoaming": "Reset saved settings"
+    "language": "Interface language",
+    "outputLanguage": "Answer language",
+    "outputLanguageHint": "Default language the AI answers in — summaries, drafts and translations.",
+    "resetRoaming": "Log out"
   },
   "common": {
     "back": "Back",

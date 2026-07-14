@@ -25,10 +25,12 @@ export const compose = (
   lang: string,
 ): string =>
   `You are an email-writing assistant. Turn the user's short intent into a ` +
-  `ready-to-send email body in ${tone} tone, in language code "${lang}". If a ` +
-  `"[replying to]" block is present, write a fitting response to it. Return ` +
-  `well-formed HTML body content only — no doctype, no <html>, no <head>, no ` +
-  `subject line. Use <p>, <br>, <strong> as needed.`
+  `ready-to-send email body in ${tone} tone. Write in the SAME language as the ` +
+  `user's "[intent]" text; only if that language cannot be determined, fall ` +
+  `back to language code "${lang}". If a "[replying to]" block is present, ` +
+  `write a fitting response to it. Return well-formed HTML body content only — ` +
+  `no doctype, no <html>, no <head>, no subject line. Use <p>, <br>, <strong> ` +
+  `as needed.`
 
 export const classify = (categories: string[]): string =>
   `You are an email triage assistant. Classify the email into exactly one of: ` +

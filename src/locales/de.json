@@ -160,8 +160,10 @@
       "configure": "Modelle in Synaplan konfigurieren"
     },
     "preferences": "Einstellungen",
-    "language": "Sprache",
-    "resetRoaming": "Gespeicherte Einstellungen zurücksetzen"
+    "language": "Oberflächensprache",
+    "outputLanguage": "Antwortsprache",
+    "outputLanguageHint": "Standardsprache für Antworten der KI – Zusammenfassungen, Entwürfe und Übersetzungen.",
+    "resetRoaming": "Ausloggen"
   },
   "common": {
     "back": "Zurück",

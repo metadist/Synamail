@@ -121,6 +121,23 @@ async function onLanguageChange(): Promise<void> {
     error.value = errorMessage(err)
   }
 }
+
+// The language the AI answers in (summaries, drafts, translations). Stored
+// separately from the UI language so users can, e.g., keep a German interface
+// but have summaries written in English.
+const outputLanguagePref = ref<LanguagePref>(
+  (loadSettings()?.outputLanguage as LanguagePref) ?? 'auto',
+)
+
+async function onOutputLanguageChange(): Promise<void> {
+  // Purely an AI-output default; it never touches the taskpane UI locale.
+  if (!isSignedIn.value) return
+  try {
+    await patchSettings({ outputLanguage: outputLanguagePref.value })
+  } catch (err) {
+    error.value = errorMessage(err)
+  }
+}
 </script>
 
 <template>
@@ -181,6 +198,19 @@ async function onLanguageChange(): Promise<void> {
           </option>
         </select>
       </label>
+      <label class="settings__field">
+        <span>{{ t('settings.outputLanguage') }}</span>
+        <select
+          v-model="outputLanguagePref"
+          class="settings__select"
+          @change="onOutputLanguageChange"
+        >
+          <option v-for="l in LANGUAGE_OPTIONS" :key="l" :value="l">
+            {{ t(`language.${l}`) }}
+          </option>
+        </select>
+      </label>
+      <p class="syn-card-sub">{{ t('settings.outputLanguageHint') }}</p>
     </div>
 
     <div class="syn-card">

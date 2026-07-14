@@ -13,8 +13,8 @@ const { t } = useI18n()
 const { item } = useOutlookItem()
 const { call } = useSynaplanClient()
 
-// Up to three language buttons: configured standard language first, then
-// German and English when they differ from the standard.
+// Up to three language buttons: the selected answer language first, then
+// English and German when they differ from the selected one.
 const languages = summaryLanguageOptions()
 
 const active = ref<string | null>(null)

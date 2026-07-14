@@ -53,6 +53,8 @@ async function generate(style: EmailTone): Promise<void> {
       c.composeDraft({
         intent: topic.value.trim(),
         tone: style,
+        // The AI writes in the language the user typed the topic in; this is
+        // only the fallback for when that language can't be determined.
         language: standardLanguage(),
         // Ground the AI in the message we're replying to (read mode) or the
         // quoted original already in the compose window.

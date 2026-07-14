@@ -43,6 +43,14 @@ describe('useRoamingSettings', () => {
     expect(loadSettings()?.apiKey).toBe('sk_x')
   })
 
+  it('persists the answer language independently of the UI language', async () => {
+    await saveSettings({ apiKey: 'sk_x', keyId: 1, email: 'a@b.test', baseUrl: 'https://x' })
+    await patchSettings({ language: 'de' })
+    await patchSettings({ outputLanguage: 'en' })
+    expect(loadSettings()?.language).toBe('de')
+    expect(loadSettings()?.outputLanguage).toBe('en')
+  })
+
   it('patch throws when nothing is stored yet', () => {
     expect(() => patchSettings({ language: 'de' })).toThrow()
   })

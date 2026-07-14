@@ -137,7 +137,7 @@ Open **⚙ Settings** in the panel:
 - See which account and server you're signed in to.
 - Change the **language** of the interface.
 - Switch to a **self-hosted** Synaplan (sign out first, then sign back in).
-- **Reset saved settings** if you ever want a clean start.
+- **Log out** if you ever want a clean start.
 
 > **Mail Routes (Preview):** you may see a "Mail Routes" tab marked _Preview_. It's an
 > early feature for automating actions on incoming mail. It only ever acts when you
@@ -162,13 +162,13 @@ Full policy: see your Synaplan instance's **Privacy** and **Terms** pages.
 
 ## 11. It didn't work? (quick fixes)
 
-| What you see                                   | Try this                                                                                                                     |
-| ---------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| The **Synamail** button isn't in the ribbon    | Refresh Outlook on the Web (Ctrl/Cmd+F5), or restart new Outlook. It can take a minute after install.                        |
-| No **"Add a custom add-in"** option            | Your work account blocks add-ins — ask IT to enable the certified Synamail, or use a personal Outlook.com account.           |
-| Sign-in window opens then closes with an error | Just try again. If it keeps happening, sign out and sign in once more.                                                       |
-| **Summarise** does nothing or errors           | Your Synaplan server may be unreachable, or you were signed out. Open **Settings → Reset saved settings** and sign in again. |
-| Everything looks blank                         | Close and reopen the panel; if it persists, remove and re-add the add-in.                                                    |
+| What you see                                   | Try this                                                                                                           |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| The **Synamail** button isn't in the ribbon    | Refresh Outlook on the Web (Ctrl/Cmd+F5), or restart new Outlook. It can take a minute after install.              |
+| No **"Add a custom add-in"** option            | Your work account blocks add-ins — ask IT to enable the certified Synamail, or use a personal Outlook.com account. |
+| Sign-in window opens then closes with an error | Just try again. If it keeps happening, sign out and sign in once more.                                             |
+| **Summarise** does nothing or errors           | Your Synaplan server may be unreachable, or you were signed out. Open **Settings → Log out** and sign in again.    |
+| Everything looks blank                         | Close and reopen the panel; if it persists, remove and re-add the add-in.                                          |
 
 Still stuck? Use the **? Help** link in the panel, or contact support via your Synaplan
 instance's support page.

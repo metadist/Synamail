@@ -160,8 +160,10 @@
       "configure": "Configurer les modèles dans Synaplan"
     },
     "preferences": "Préférences",
-    "language": "Langue",
-    "resetRoaming": "Réinitialiser les paramètres enregistrés"
+    "language": "Langue de l’interface",
+    "outputLanguage": "Langue des réponses",
+    "outputLanguageHint": "Langue par défaut des réponses de l’IA — résumés, brouillons et traductions.",
+    "resetRoaming": "Déconnexion"
   },
   "common": {
     "back": "Retour",

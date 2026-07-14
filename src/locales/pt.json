@@ -160,8 +160,10 @@
       "configure": "Configurar modelos no Synaplan"
     },
     "preferences": "Preferências",
-    "language": "Idioma",
-    "resetRoaming": "Repor definições guardadas"
+    "language": "Idioma da interface",
+    "outputLanguage": "Idioma das respostas",
+    "outputLanguageHint": "Idioma predefinido das respostas da IA — resumos, rascunhos e traduções.",
+    "resetRoaming": "Sair"
   },
   "common": {
     "back": "Voltar",

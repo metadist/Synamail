@@ -23,12 +23,19 @@ export interface RoamingSettings {
   /** Last-used RAG group id, to pre-select in the group picker. */
   lastRagGroupId?: string
   /**
-   * Per-user UI language override (taskpane chrome). `'auto'` follows the
+   * Per-user UI language override (taskpane chrome only). `'auto'` follows the
    * Outlook display language; any other value must be a shipped UI locale
-   * (see `SUPPORTED_LOCALES` in `src/i18n.ts`). This is NOT the translate
-   * target language — that lives in each view's local `targetLang`.
+   * (see `SUPPORTED_LOCALES` in `src/i18n.ts`). This does NOT affect AI output —
+   * that is `outputLanguage` below.
    */
   language?: 'auto' | 'en' | 'de' | 'fr' | 'es' | 'it' | 'pt'
+  /**
+   * Default language the AI answers in — summaries, email drafts and
+   * translations (resolved by `standardLanguage()` in `useLanguagePrefs.ts`).
+   * Independent from the UI `language` above. `'auto'` follows the Outlook
+   * display language.
+   */
+  outputLanguage?: 'auto' | 'en' | 'de' | 'fr' | 'es' | 'it' | 'pt'
 }
 
 /**
