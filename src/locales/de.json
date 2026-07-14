@@ -64,7 +64,16 @@
       "speak": "Vorlesen",
       "stopSpeak": "Stopp",
       "attachments": "{n} Datei(en) angehängt",
-      "uploading": "Wird hochgeladen…"
+      "uploading": "Wird hochgeladen…",
+      "media": {
+        "open": "Im Browser öffnen",
+        "image": "Generiertes Bild",
+        "imageGenerating": "Bild wird generiert…",
+        "videoGenerating": "Video wird generiert…",
+        "audioGenerating": "Audio wird generiert…",
+        "audioGenerated": "Audio bereit.",
+        "fileGenerated": "Datei bereit: {name}"
+      }
     }
   },
   "read": {

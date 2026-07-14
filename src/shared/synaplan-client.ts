@@ -32,6 +32,8 @@ import {
 } from './prompts'
 import type {
   ApiError,
+  ChatMedia,
+  ChatMediaKind,
   ChatTurnInput,
   ChatTurnResult,
   ClassifyInput,
@@ -63,6 +65,12 @@ import type {
  * single blocking round-trip to a live Server-Sent-Events stream.
  */
 export type StreamHandler = (textSoFar: string) => void
+
+/**
+ * Called for each generated media item (image / audio / video) the server
+ * emits over the stream (SSE `file` / `audio` / `task_file` events).
+ */
+export type MediaHandler = (media: ChatMedia) => void
 
 export interface SynaplanClient {
   ping(): Promise<{ ok: boolean; email?: string }>
@@ -311,22 +319,26 @@ export class RealSynaplanClient implements SynaplanClient {
     const prefix = input.emailContext
       ? `${askPrompt()}\n\n[email context]\n${cleanEmailText(input.emailContext)}\n\n[question]\n`
       : `${askPrompt()}\n\n`
+    const media: ChatMedia[] = []
     const answer = await this.runChat(`${prefix}${input.question}`, {
       onChunk,
       chatId,
       fileIds: input.fileIds,
+      onMedia: (m) => media.push(m),
     })
-    return { chatId, answer }
+    return { chatId, answer, media: media.length ? media : undefined }
   }
 
   async chat(input: ChatTurnInput, onChunk?: StreamHandler): Promise<ChatTurnResult> {
     const chatId = input.chatId ?? (await this.ensureChat('Synamail chat'))
+    const media: ChatMedia[] = []
     const answer = await this.runChat(`${simpleChatPrompt()}\n\n${input.question}`, {
       onChunk,
       chatId,
       fileIds: input.fileIds,
+      onMedia: (m) => media.push(m),
     })
-    return { chatId, answer }
+    return { chatId, answer, media: media.length ? media : undefined }
   }
 
   async extractMeetingTimes(input: MeetingExtractInput): Promise<MeetingProposal[]> {
@@ -539,14 +551,24 @@ export class RealSynaplanClient implements SynaplanClient {
    */
   private async runChat(
     message: string,
-    opts: { onChunk?: StreamHandler; chatId?: number; chatTitle?: string; fileIds?: number[] },
+    opts: {
+      onChunk?: StreamHandler
+      chatId?: number
+      chatTitle?: string
+      fileIds?: number[]
+      onMedia?: MediaHandler
+    },
   ): Promise<string> {
     if (!opts.onChunk) {
       return this.sendChat(message, opts.chatId, opts.fileIds)
     }
     const chatId = opts.chatId ?? (await this.ensureChat(opts.chatTitle ?? 'Synamail chat'))
     try {
-      return await this.streamChat(message, opts.onChunk, { chatId, fileIds: opts.fileIds })
+      return await this.streamChat(message, opts.onChunk, {
+        chatId,
+        fileIds: opts.fileIds,
+        onMedia: opts.onMedia,
+      })
     } catch (err) {
       if (isApiError(err) && err.status === 401) throw err
       // Streaming unavailable on this deployment (or it failed): fall back to
@@ -566,7 +588,7 @@ export class RealSynaplanClient implements SynaplanClient {
   private async streamChat(
     message: string,
     onChunk: StreamHandler,
-    opts: { chatId: number; fileIds?: number[] },
+    opts: { chatId: number; fileIds?: number[]; onMedia?: MediaHandler },
   ): Promise<string> {
     const params = new URLSearchParams({ message, chatId: String(opts.chatId) })
     if (opts.fileIds && opts.fileIds.length > 0) params.set('fileIds', opts.fileIds.join(','))
@@ -610,6 +632,9 @@ export class RealSynaplanClient implements SynaplanClient {
         onChunk(full)
       } else if (evt.status === 'error') {
         streamError = evt.error || evt.message || 'Streaming failed'
+      } else if (opts.onMedia) {
+        const media = this.sseMedia(evt)
+        if (media) opts.onMedia(media)
       }
     }
 
@@ -627,6 +652,36 @@ export class RealSynaplanClient implements SynaplanClient {
 
     if (streamError) throw apiError(0, 'AI_FAILED', streamError)
     return full
+  }
+
+  /**
+   * Turn a media-bearing SSE event into a `ChatMedia`, or null when the event
+   * carries no usable URL. Handles the server's `file` and `audio` events plus
+   * the multitask `task_file` event (whose payload lives under `metadata`).
+   */
+  private sseMedia(evt: SseEvent): ChatMedia | null {
+    let type: string | undefined
+    let url: string | undefined
+    if (evt.status === 'file') {
+      type = evt.type
+      url = evt.url
+    } else if (evt.status === 'audio') {
+      type = 'audio'
+      url = evt.url
+    } else if (evt.status === 'task_file') {
+      type = evt.metadata?.type
+      url = evt.metadata?.url
+    } else {
+      return null
+    }
+    if (typeof url !== 'string' || url.length === 0) return null
+    return { kind: mediaKind(type), url: this.absoluteUrl(url) }
+  }
+
+  /** Resolve a possibly host-relative Synaplan URL against the instance base. */
+  private absoluteUrl(url: string): string {
+    if (/^(https?:|data:)/i.test(url)) return url
+    return `${this.baseUrl}${url.startsWith('/') ? '' : '/'}${url}`
   }
 }
 
@@ -900,14 +955,27 @@ interface MessagesSendResponse {
 
 /**
  * One decoded `data:` frame from `GET /messages/stream`. The server tags every
- * frame with `status`; we act on `data` (incremental `chunk`) and `error`, and
- * ignore the rest (`status`, `thinking`, `complete`, `file`, `perf`, …).
+ * frame with `status`; we act on `data` (incremental `chunk`), `error`, and the
+ * media-bearing events (`file`, `audio`, `task_file`), and ignore the rest
+ * (`thinking`, `complete`, `perf`, …).
  */
 interface SseEvent {
   status?: string
   chunk?: string
   error?: string
   message?: string
+  /** Generic media kind on `file` events: `image` / `video` / `audio`. */
+  type?: string
+  /** Host-relative (or absolute) media URL on `file` / `audio` events. */
+  url?: string
+  /** Multitask `task_file` events nest the media under `metadata`. */
+  metadata?: { type?: string; url?: string }
+}
+
+/** Map the server's generic media-kind string to a `ChatMediaKind`. */
+function mediaKind(type: string | undefined): ChatMediaKind {
+  if (type === 'image' || type === 'video' || type === 'audio') return type
+  return 'file'
 }
 
 interface CreateChatResponse {

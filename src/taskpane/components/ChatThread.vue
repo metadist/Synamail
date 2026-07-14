@@ -7,10 +7,13 @@ import { useSynaplanClient } from '@/taskpane/composables/useSynaplanClient'
 import { useTextToSpeech } from '@/taskpane/composables/useTextToSpeech'
 import { errorMessage } from '@shared/synaplan-client'
 import { renderMarkdown } from '@shared/markdown'
+import type { ChatMedia } from '@shared/types'
 
 export interface ChatMessage {
   role: 'user' | 'ai'
   text: string
+  /** Generated media (image / audio / video) attached to an AI answer. */
+  media?: ChatMedia[]
 }
 
 interface Props {
@@ -45,6 +48,25 @@ const { speakingId, loadingId, toggle: toggleSpeak } = useTextToSpeech()
 function isSpeaking(index: number): boolean {
   const id = String(index)
   return speakingId.value === id || loadingId.value === id
+}
+
+// Synaplan streams media as separate events and leaves placeholder tokens in
+// the answer text (e.g. while a video renders). Map those to friendly copy so
+// the raw sentinel never shows; everything else passes through untouched.
+function displayText(text: string): string {
+  switch (text) {
+    case '__IMAGE_GENERATING__':
+      return t('home.chat.media.imageGenerating')
+    case '__VIDEO_GENERATING__':
+      return t('home.chat.media.videoGenerating')
+    case '__AUDIO_GENERATING__':
+      return t('home.chat.media.audioGenerating')
+    case '__AUDIO_GENERATED__':
+      return t('home.chat.media.audioGenerated')
+  }
+  const fileGenerated = text.match(/^__FILE_GENERATED__:(.*)$/)
+  if (fileGenerated) return t('home.chat.media.fileGenerated', { name: fileGenerated[1] })
+  return text
 }
 
 // True when the last message is an AI bubble still waiting for its first token
@@ -277,12 +299,45 @@ onBeforeUnmount(() => {
                indicator; once tokens arrive it renders Markdown. renderMarkdown
                sanitises the text, so v-html is XSS-safe here. -->
           <span v-if="!m.text && loading && i === messages.length - 1" class="chat__loading">
-            <span class="chat__dots" aria-hidden="true">…</span>
+            <span class="chat__spinner" aria-hidden="true" />
             {{ t('home.chat.thinking') }}
           </span>
           <template v-else>
             <!-- eslint-disable-next-line vue/no-v-html -->
-            <div class="syn-md" v-html="renderMarkdown(m.text)" />
+            <div v-if="m.text" class="syn-md" v-html="renderMarkdown(displayText(m.text))" />
+
+            <div v-if="m.media && m.media.length" class="chat__media">
+              <div v-for="(media, mi) in m.media" :key="mi" class="chat__media-item">
+                <img
+                  v-if="media.kind === 'image'"
+                  :src="media.url"
+                  :alt="t('home.chat.media.image')"
+                  class="chat__media-img"
+                  loading="lazy"
+                />
+                <video
+                  v-else-if="media.kind === 'video'"
+                  :src="media.url"
+                  controls
+                  class="chat__media-vid"
+                />
+                <audio
+                  v-else-if="media.kind === 'audio'"
+                  :src="media.url"
+                  controls
+                  class="chat__media-audio"
+                />
+                <a
+                  class="chat__media-link"
+                  :href="media.url"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {{ t('home.chat.media.open') }}
+                </a>
+              </div>
+            </div>
+
             <div v-if="m.text && !(loading && i === messages.length - 1)" class="chat__actions">
               <button
                 type="button"
@@ -290,7 +345,7 @@ onBeforeUnmount(() => {
                 :class="{ 'chat__icon--rec': isSpeaking(i) }"
                 :aria-label="isSpeaking(i) ? t('home.chat.stopSpeak') : t('home.chat.speak')"
                 :title="isSpeaking(i) ? t('home.chat.stopSpeak') : t('home.chat.speak')"
-                @click="toggleSpeak(String(i), m.text)"
+                @click="toggleSpeak(String(i), displayText(m.text))"
               >
                 <svg
                   v-if="isSpeaking(i)"
@@ -318,7 +373,7 @@ onBeforeUnmount(() => {
         <template v-else>{{ m.text }}</template>
       </div>
       <div v-if="loading && !pendingAi" class="chat__bubble chat__bubble--ai chat__bubble--loading">
-        <span class="chat__dots" aria-hidden="true">…</span>
+        <span class="chat__spinner" aria-hidden="true" />
         {{ t('home.chat.thinking') }}
       </div>
     </div>
@@ -481,8 +536,64 @@ onBeforeUnmount(() => {
   opacity: 0.8;
 }
 /* Markdown formatting comes from the shared `.syn-md` rules in app.css. */
-.chat__dots {
-  margin-right: var(--syn-space-1);
+.chat__loading {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--syn-space-2);
+}
+.chat__bubble--loading {
+  display: flex;
+  align-items: center;
+  gap: var(--syn-space-2);
+}
+.chat__spinner {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+  border: 2px solid var(--syn-border);
+  border-top-color: var(--syn-brand-600);
+  border-radius: 50%;
+  animation: chat-spin 0.7s linear infinite;
+}
+@keyframes chat-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .chat__spinner {
+    animation-duration: 2s;
+  }
+}
+/* Inline generated media (images / video / audio) with a link fallback. */
+.chat__media {
+  display: flex;
+  flex-direction: column;
+  gap: var(--syn-space-2);
+  margin-top: var(--syn-space-2);
+}
+.chat__media-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--syn-space-1);
+  align-items: flex-start;
+}
+.chat__media-img,
+.chat__media-vid {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--syn-radius-md);
+  border: 1px solid var(--syn-border);
+}
+.chat__media-audio {
+  width: 100%;
+}
+.chat__media-link {
+  font-size: var(--syn-font-size-xs);
+  color: var(--syn-brand-600);
+}
+.chat__media-link:hover {
+  text-decoration: underline;
 }
 .chat__composer {
   display: flex;

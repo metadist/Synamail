@@ -64,7 +64,16 @@
       "speak": "Read aloud",
       "stopSpeak": "Stop",
       "attachments": "{n} file(s) attached",
-      "uploading": "Uploading…"
+      "uploading": "Uploading…",
+      "media": {
+        "open": "Open in browser",
+        "image": "Generated image",
+        "imageGenerating": "Generating image…",
+        "videoGenerating": "Generating video…",
+        "audioGenerating": "Generating audio…",
+        "audioGenerated": "Audio ready.",
+        "fileGenerated": "File ready: {name}"
+      }
     }
   },
   "read": {

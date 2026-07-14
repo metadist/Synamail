@@ -135,9 +135,20 @@ export interface ChatTurnInput {
   fileIds?: number[]
 }
 
+/** Kind of a generated media attachment surfaced alongside an AI answer. */
+export type ChatMediaKind = 'image' | 'video' | 'audio' | 'file'
+
+export interface ChatMedia {
+  kind: ChatMediaKind
+  /** Absolute URL, ready to drop into an <img>/<video>/<audio> src or a link. */
+  url: string
+}
+
 export interface ChatTurnResult {
   chatId: number
   answer: string
+  /** Generated media (images / audio / video) the assistant produced, if any. */
+  media?: ChatMedia[]
 }
 
 export interface RagSearchInput {

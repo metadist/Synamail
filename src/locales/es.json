@@ -64,7 +64,16 @@
       "speak": "Leer en voz alta",
       "stopSpeak": "Detener",
       "attachments": "{n} archivo(s) adjunto(s)",
-      "uploading": "Subiendo…"
+      "uploading": "Subiendo…",
+      "media": {
+        "open": "Abrir en el navegador",
+        "image": "Imagen generada",
+        "imageGenerating": "Generando imagen…",
+        "videoGenerating": "Generando vídeo…",
+        "audioGenerating": "Generando audio…",
+        "audioGenerated": "Audio listo.",
+        "fileGenerated": "Archivo listo: {name}"
+      }
     }
   },
   "read": {

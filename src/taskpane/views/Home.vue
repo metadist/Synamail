@@ -42,6 +42,7 @@ async function send(text: string, fileIds?: number[]): Promise<void> {
     )
     if (r) {
       messages.value[aiIdx].text = r.answer
+      if (r.media && r.media.length) messages.value[aiIdx].media = r.media
       if (!chatId && r.chatId) {
         try {
           await setChatIdForConversation(HOME_CONVERSATION, r.chatId)

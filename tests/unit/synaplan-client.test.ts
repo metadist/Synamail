@@ -255,6 +255,26 @@ describe('RealSynaplanClient — summarise / translate / draftReply / classify',
     expect(blob.size).toBe(3)
   })
 
+  it('chat surfaces generated media from stream file/audio events as absolute URLs', async () => {
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValueOnce(
+        sseResponse([
+          sseFrame({ status: 'data', chunk: 'Generated image: a cat' }),
+          sseFrame({ status: 'file', type: 'image', url: '/api/v1/files/uploads/13/x.png' }),
+          sseFrame({ status: 'audio', url: '/api/v1/files/uploads/13/tts_1.mp3' }),
+          sseFrame({ status: 'complete' }),
+        ]),
+      )
+    const c = buildClient(fetchImpl as unknown as typeof fetch)
+    const r = await c.chat({ conversationId: 'home', question: '/pic a cat', chatId: 5 }, () => {})
+    expect(r.answer).toContain('Generated image: a cat')
+    expect(r.media).toEqual([
+      { kind: 'image', url: 'https://api.test/api/v1/files/uploads/13/x.png' },
+      { kind: 'audio', url: 'https://api.test/api/v1/files/uploads/13/tts_1.mp3' },
+    ])
+  })
+
   it('classify parses JSON in the AI reply', async () => {
     const fetchImpl = mockFetchSequence([
       {
