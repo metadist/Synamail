@@ -42,7 +42,7 @@
         "failed": "Impossibile aprire una nuova finestra e-mail con il riepilogo."
       },
       "knowledge": {
-        "title": "Salva nella base di conoscenza",
+        "title": "Aggiungi alle tue fonti",
         "new": "Nuovo",
         "saved": "Salvato in {group}.",
         "savedWithAttachments": "Salvato in {group} — email + {n} allegato/i."
@@ -61,6 +61,8 @@
       "attach": "Allega file",
       "dictate": "Detta",
       "stopDictation": "Ferma",
+      "speak": "Leggi ad alta voce",
+      "stopSpeak": "Ferma",
       "attachments": "{n} file allegati",
       "uploading": "Caricamento…"
     }
@@ -76,7 +78,7 @@
       "translate": "Traduci",
       "draftReply": "Scrivi risposta",
       "classify": "Classifica",
-      "saveToRag": "Salva nella base di conoscenza",
+      "saveToRag": "Aggiungi alle tue fonti",
       "ask": "Chiedi",
       "findMeetingTimes": "Trova orari riunione"
     },
@@ -90,8 +92,8 @@
     "askPlaceholder": "Fai una domanda su questa e-mail…",
     "askImageHint": "{n} immagine/i di questa e-mail verranno inviate a Synaplan con la tua domanda.",
     "saveDialog": {
-      "title": "Salva nella base di conoscenza",
-      "group": "Cartella della base di conoscenza",
+      "title": "Aggiungi alle tue fonti",
+      "group": "Cartella delle fonti",
       "newGroup": "Oppure crea una nuova cartella",
       "newGroupPlaceholder": "ad es. contact:alice{'@'}example.com",
       "contactGroup": "Usa cartella del contatto",
@@ -156,7 +158,7 @@
       "loading": "Caricamento modelli…",
       "chat": "Modello di chat",
       "imageGen": "Generazione di immagini",
-      "vectorize": "Modello della base di conoscenza",
+      "vectorize": "Modello delle fonti",
       "configure": "Configura i modelli in Synaplan"
     },
     "preferences": "Preferenze",

@@ -22,7 +22,12 @@ describe('standardLanguage', () => {
     expect(standardLanguage()).toBe('fr')
   })
 
-  it('is independent from the UI language preference', async () => {
+  it('falls back to the selected UI language when no answer language is set', async () => {
+    await saveSettings({ ...auth, language: 'de' })
+    expect(standardLanguage()).toBe('de')
+  })
+
+  it('prefers the explicit answer language over the UI language', async () => {
     await saveSettings({ ...auth, language: 'de', outputLanguage: 'fr' })
     expect(standardLanguage()).toBe('fr')
   })
@@ -42,5 +47,10 @@ describe('summaryLanguageOptions', () => {
   it('leads with the selected language, then English then German', async () => {
     await saveSettings({ ...auth, outputLanguage: 'fr' })
     expect(summaryLanguageOptions()).toEqual(['fr', 'en', 'de'])
+  })
+
+  it('keeps the selected UI language first when no answer language is set', async () => {
+    await saveSettings({ ...auth, language: 'de' })
+    expect(summaryLanguageOptions()).toEqual(['de', 'en'])
   })
 })

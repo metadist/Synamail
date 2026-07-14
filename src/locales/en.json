@@ -42,7 +42,7 @@
         "failed": "Couldn't open a new email window with the summary."
       },
       "knowledge": {
-        "title": "Save to knowledge base",
+        "title": "Add to your sources",
         "new": "New",
         "saved": "Saved to {group}.",
         "savedWithAttachments": "Saved to {group} — email + {n} attachment(s)."
@@ -61,6 +61,8 @@
       "attach": "Attach files",
       "dictate": "Dictate",
       "stopDictation": "Stop",
+      "speak": "Read aloud",
+      "stopSpeak": "Stop",
       "attachments": "{n} file(s) attached",
       "uploading": "Uploading…"
     }
@@ -76,7 +78,7 @@
       "translate": "Translate",
       "draftReply": "Draft reply",
       "classify": "Classify",
-      "saveToRag": "Save to knowledge base",
+      "saveToRag": "Add to your sources",
       "ask": "Ask",
       "findMeetingTimes": "Find meeting times"
     },
@@ -90,8 +92,8 @@
     "askPlaceholder": "Ask about this email…",
     "askImageHint": "{n} image(s) from this email will be sent to Synaplan with your question.",
     "saveDialog": {
-      "title": "Save to knowledge base",
-      "group": "Knowledge base folder",
+      "title": "Add to your sources",
+      "group": "Sources folder",
       "newGroup": "Or create a new folder",
       "newGroupPlaceholder": "e.g. contact:alice{'@'}example.com",
       "contactGroup": "Use contact folder",
@@ -156,7 +158,7 @@
       "loading": "Loading models…",
       "chat": "Chat Model",
       "imageGen": "Image Generation",
-      "vectorize": "Knowledge base model",
+      "vectorize": "Sources model",
       "configure": "Configure models in Synaplan"
     },
     "preferences": "Preferences",

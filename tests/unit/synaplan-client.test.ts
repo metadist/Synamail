@@ -191,28 +191,41 @@ describe('RealSynaplanClient — summarise / translate / draftReply / classify',
     expect(r.htmlBody).toBe('<p>Hi</p>')
   })
 
-  it('composeDraft sends the intent + compose prompt and returns htmlBody', async () => {
-    const fetchImpl = mockFetchSequence([
-      { body: { success: true, outgoingMessage: { text: '<p>Hi Alice, lunch Friday?</p>' } } },
-    ])
+  it('composeDraft routes through the chat stream pipeline (not /messages/send)', async () => {
+    // Full pipeline = create a chat, then stream — so Synaplan's classifier
+    // runs and web search follows the user's config. `/messages/send` bypasses
+    // all of that, so it must NOT be used here.
+    const fetchImpl = mockFetchSequence([{ body: { success: true, chat: { id: 55 } } }])
+    fetchImpl.mockResolvedValueOnce(
+      sseResponse([
+        sseFrame({ status: 'data', chunk: '<p>Hi Alice, lunch Friday?</p>' }),
+        sseFrame({ status: 'complete' }),
+      ]),
+    )
     const c = buildClient(fetchImpl as unknown as typeof fetch)
     const r = await c.composeDraft({
       intent: 'Invite Alice to lunch on Friday',
       tone: 'friendly',
       language: 'en',
     })
-    expect(fetchImpl.mock.calls[0][0]).toBe('https://api.test/api/v1/messages/send')
-    const body = lastCallBody(fetchImpl) as { message: string }
-    expect(body.message).toContain('[intent]')
-    expect(body.message).toContain('Invite Alice to lunch on Friday')
-    expect(body.message).toMatch(/friendly/)
+    expect(fetchImpl.mock.calls[0][0]).toBe('https://api.test/api/v1/chats')
+    const streamUrl = String(fetchImpl.mock.calls[1][0])
+    expect(streamUrl).toContain('/api/v1/messages/stream')
+    const message = new URL(streamUrl).searchParams.get('message') ?? ''
+    expect(message).toContain('[intent]')
+    expect(message).toContain('Invite Alice to lunch on Friday')
+    expect(message).toMatch(/friendly/)
     expect(r.htmlBody).toBe('<p>Hi Alice, lunch Friday?</p>')
   })
 
   it('composeDraft includes the replied-to body when composing a reply', async () => {
-    const fetchImpl = mockFetchSequence([
-      { body: { success: true, outgoingMessage: { text: '<p>Sounds good.</p>' } } },
-    ])
+    const fetchImpl = mockFetchSequence([{ body: { success: true, chat: { id: 7 } } }])
+    fetchImpl.mockResolvedValueOnce(
+      sseResponse([
+        sseFrame({ status: 'data', chunk: '<p>Sounds good.</p>' }),
+        sseFrame({ status: 'complete' }),
+      ]),
+    )
     const c = buildClient(fetchImpl as unknown as typeof fetch)
     await c.composeDraft({
       intent: 'Accept the proposal',
@@ -220,9 +233,26 @@ describe('RealSynaplanClient — summarise / translate / draftReply / classify',
       language: 'en',
       referenceBody: 'Can we meet Tuesday?',
     })
-    const body = lastCallBody(fetchImpl) as { message: string }
-    expect(body.message).toContain('[replying to]')
-    expect(body.message).toContain('Can we meet Tuesday?')
+    const message = new URL(String(fetchImpl.mock.calls[1][0])).searchParams.get('message') ?? ''
+    expect(message).toContain('[replying to]')
+    expect(message).toContain('Can we meet Tuesday?')
+  })
+
+  it('tts fetches the configured TTS stream and returns an audio blob', async () => {
+    const fetchImpl = vi.fn().mockResolvedValueOnce(
+      new Response(new Uint8Array([1, 2, 3]), {
+        status: 200,
+        headers: { 'Content-Type': 'audio/mpeg' },
+      }),
+    )
+    const c = buildClient(fetchImpl as unknown as typeof fetch)
+    const blob = await c.tts({ text: 'Hello world', language: 'en' })
+    const url = new URL(String(fetchImpl.mock.calls[0][0]))
+    expect(url.pathname).toBe('/api/v1/tts/stream')
+    expect(url.searchParams.get('text')).toBe('Hello world')
+    expect(url.searchParams.get('language')).toBe('en')
+    expect(blob.type).toBe('audio/mpeg')
+    expect(blob.size).toBe(3)
   })
 
   it('classify parses JSON in the AI reply', async () => {

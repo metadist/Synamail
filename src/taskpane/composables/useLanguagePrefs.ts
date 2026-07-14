@@ -1,11 +1,13 @@
 /**
  * Resolve the user's "standard" language for AI output (email drafts,
- * summaries, translations). It follows the roaming `outputLanguage`
- * preference, falling back to the Outlook display language when the
- * preference is `auto` or unset.
+ * summaries, translations). Precedence:
+ *   1. the explicit `outputLanguage` (answer language) preference,
+ *   2. otherwise the explicit UI `language` the user picked,
+ *   3. otherwise the Outlook display language.
  *
- * This is distinct from the UI chrome locale (`language`) — it's the default
- * target language the writing/summarize boxes generate in.
+ * Falling back to the UI language (step 2) keeps a user's selected language as
+ * the primary Summarize button even when they haven't set the dedicated answer
+ * language — only `auto`/unset on both drops through to auto-detect.
  */
 
 import { detectLocale, type Locale } from '@/i18n'
@@ -13,8 +15,11 @@ import { loadSettings } from './useRoamingSettings'
 
 /** The configured answer language code (e.g. `de`), or the Outlook locale. */
 export function standardLanguage(): Locale {
-  const pref = loadSettings()?.outputLanguage
-  return pref && pref !== 'auto' ? pref : detectLocale()
+  const s = loadSettings()
+  for (const pref of [s?.outputLanguage, s?.language]) {
+    if (pref && pref !== 'auto') return pref
+  }
+  return detectLocale()
 }
 
 /**

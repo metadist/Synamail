@@ -54,6 +54,7 @@ import type {
   SummariseResult,
   TranslateInput,
   TranslateResult,
+  TtsInput,
 } from './types'
 
 /**
@@ -72,7 +73,7 @@ export interface SynaplanClient {
    * Compose-mode "Draft from prompt": turn a short user intent into a full
    * email body. Returns HTML suitable for `body.setAsync` in the open draft.
    */
-  composeDraft(input: ComposeDraftInput): Promise<ComposeDraftResult>
+  composeDraft(input: ComposeDraftInput, onChunk?: StreamHandler): Promise<ComposeDraftResult>
   classify(input: ClassifyInput): Promise<ClassifyResult>
   ask(input: ChatTurnInput, onChunk?: StreamHandler): Promise<ChatTurnResult>
   /**
@@ -99,6 +100,13 @@ export interface SynaplanClient {
   ragCreateGroup(name: string): Promise<RagGroup>
   fileUpload(input: FileUploadInput): Promise<FileUploadResult>
   revokeApiKey(keyId: number): Promise<void>
+
+  /**
+   * Synthesise speech for `input.text` using the user's configured TEXT2SOUND
+   * model on Synaplan (`GET /api/v1/tts/stream`). Returns the audio as a Blob
+   * the caller can play; the content type follows the configured provider.
+   */
+  tts(input: TtsInput): Promise<Blob>
 
   /**
    * The user's currently-configured models for Chat, Image generation
@@ -244,14 +252,45 @@ export class RealSynaplanClient implements SynaplanClient {
     return { htmlBody: text }
   }
 
-  async composeDraft(input: ComposeDraftInput): Promise<ComposeDraftResult> {
+  async composeDraft(
+    input: ComposeDraftInput,
+    onChunk?: StreamHandler,
+  ): Promise<ComposeDraftResult> {
     const parts = ['[intent]', input.intent.trim()]
     if (input.referenceBody) {
       parts.push('', '[replying to]', cleanEmailText(input.referenceBody))
     }
     const message = composeMessage(composePrompt(input.tone, input.language), parts.join('\n'))
-    const text = await this.sendChat(message)
+    // Route through the full chat pipeline (`GET /messages/stream`) — exactly
+    // like the chat box — so Synaplan runs its classifier and honours the
+    // user's web-search configuration. The blocking `/messages/send` path would
+    // bypass classification and web search entirely. A no-op stream handler is
+    // enough to select the streaming path; the complete text is still returned.
+    const text = await this.runChat(message, {
+      onChunk: onChunk ?? (() => {}),
+      chatTitle: 'Outlook: compose',
+    })
     return { htmlBody: text }
+  }
+
+  async tts(input: TtsInput): Promise<Blob> {
+    const params = new URLSearchParams({ text: input.text })
+    if (input.language) params.set('language', input.language)
+    const headers = new Headers()
+    headers.set('X-API-Key', this.apiKey)
+    // The server picks the user's configured TEXT2SOUND model and streams audio
+    // bytes back; the concrete format follows that provider (read from the
+    // Content-Type on the returned Blob).
+    const res = await this.fetchImpl(`${this.baseUrl}/api/v1/tts/stream?${params}`, {
+      method: 'GET',
+      headers,
+    })
+    if (res.status === 401) throw apiError(401, 'AUTH_FAILED', 'API key rejected')
+    if (!res.ok) {
+      const text = await safeText(res)
+      throw apiError(res.status, 'TTS_FAILED', text || res.statusText)
+    }
+    return await res.blob()
   }
 
   async classify(input: ClassifyInput): Promise<ClassifyResult> {

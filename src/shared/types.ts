@@ -95,6 +95,13 @@ export interface TranslateResult {
   detectedLanguage: string
 }
 
+export interface TtsInput {
+  /** Text to speak. Synaplan sanitises markdown/HTML server-side before synthesis. */
+  text: string
+  /** Optional language hint (e.g. "de") so the TTS provider can pick a voice. */
+  language?: string
+}
+
 export interface ClassifyInput {
   subject: string
   body: string

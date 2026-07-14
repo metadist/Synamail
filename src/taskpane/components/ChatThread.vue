@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import ActionButton from '@/taskpane/components/ActionButton.vue'
 import Toast from '@/taskpane/components/Toast.vue'
 import { useSynaplanClient } from '@/taskpane/composables/useSynaplanClient'
+import { useTextToSpeech } from '@/taskpane/composables/useTextToSpeech'
 import { errorMessage } from '@shared/synaplan-client'
 import { renderMarkdown } from '@shared/markdown'
 
@@ -37,6 +38,14 @@ const { t, locale } = useI18n()
 const { call } = useSynaplanClient()
 const draft = ref(props.initialDraft)
 const root = ref<HTMLElement | null>(null)
+
+// Text-to-speech: each AI answer gets a speaker button that reads it aloud and
+// flips to a stop button while its audio plays.
+const { speakingId, loadingId, toggle: toggleSpeak } = useTextToSpeech()
+function isSpeaking(index: number): boolean {
+  const id = String(index)
+  return speakingId.value === id || loadingId.value === id
+}
 
 // True when the last message is an AI bubble still waiting for its first token
 // (the caller streams into it). The thinking indicator then lives in that
@@ -271,8 +280,40 @@ onBeforeUnmount(() => {
             <span class="chat__dots" aria-hidden="true">…</span>
             {{ t('home.chat.thinking') }}
           </span>
-          <!-- eslint-disable-next-line vue/no-v-html -->
-          <div v-else class="syn-md" v-html="renderMarkdown(m.text)" />
+          <template v-else>
+            <!-- eslint-disable-next-line vue/no-v-html -->
+            <div class="syn-md" v-html="renderMarkdown(m.text)" />
+            <div v-if="m.text && !(loading && i === messages.length - 1)" class="chat__actions">
+              <button
+                type="button"
+                class="chat__icon chat__icon--sm"
+                :class="{ 'chat__icon--rec': isSpeaking(i) }"
+                :aria-label="isSpeaking(i) ? t('home.chat.stopSpeak') : t('home.chat.speak')"
+                :title="isSpeaking(i) ? t('home.chat.stopSpeak') : t('home.chat.speak')"
+                @click="toggleSpeak(String(i), m.text)"
+              >
+                <svg
+                  v-if="isSpeaking(i)"
+                  viewBox="0 0 20 20"
+                  width="16"
+                  height="16"
+                  aria-hidden="true"
+                >
+                  <rect x="5" y="5" width="10" height="10" rx="1.5" fill="currentColor" />
+                </svg>
+                <svg v-else viewBox="0 0 20 20" width="16" height="16" aria-hidden="true">
+                  <path d="M4 8v4h3l4 3V5L7 8H4z" fill="currentColor" />
+                  <path
+                    d="M13.5 7a3.5 3.5 0 0 1 0 6M15.5 5a6 6 0 0 1 0 10"
+                    stroke="currentColor"
+                    stroke-width="1.4"
+                    stroke-linecap="round"
+                    fill="none"
+                  />
+                </svg>
+              </button>
+            </div>
+          </template>
         </template>
         <template v-else>{{ m.text }}</template>
       </div>
@@ -536,5 +577,14 @@ onBeforeUnmount(() => {
   background: var(--syn-danger);
   border-color: var(--syn-danger);
   color: white;
+}
+.chat__icon--sm {
+  width: 28px;
+  height: 28px;
+}
+.chat__actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--syn-space-1);
 }
 </style>
