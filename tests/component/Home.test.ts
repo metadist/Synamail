@@ -37,11 +37,11 @@ describe('Home.vue', () => {
     expect(wrapper.text()).toContain(en.home.commands.chat)
   })
 
-  it('seeds the composer with a sample question so Send starts active', () => {
+  it('starts with an empty composer and Send disabled', () => {
     const wrapper = mountHome()
     const textarea = wrapper.find('textarea').element as HTMLTextAreaElement
-    expect(textarea.value).toBe(en.home.chat.sample)
-    expect(wrapper.find('button.ab--primary').attributes('disabled')).toBeUndefined()
+    expect(textarea.value).toBe('')
+    expect(wrapper.find('button.ab--primary').attributes('disabled')).toBeDefined()
   })
 
   it('sends a chat message and shows the AI reply', async () => {

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, nextTick, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import ActionButton from '@/taskpane/components/ActionButton.vue'
 import Toast from '@/taskpane/components/Toast.vue'
@@ -23,9 +23,17 @@ const { item } = useOutlookItem()
 const { call } = useSynaplanClient()
 
 const topic = ref('')
+const topicInput = ref<HTMLInputElement | null>(null)
 const active = ref<EmailTone | null>(null)
 const error = ref<string | null>(null)
 const status = ref<string | null>(null)
+
+// This is the first box on the taskpane, so give it the cursor as soon as the
+// pane opens — the user can start typing the email topic straight away.
+onMounted(async () => {
+  await nextTick()
+  topicInput.value?.focus()
+})
 
 // A reply when reading an email, or when the open draft already carries
 // text (a reply/forward compose window with the quoted original); otherwise
@@ -85,6 +93,7 @@ async function deliver(html: string): Promise<void> {
     <h2 class="syn-card-title">{{ t('home.boxes.emailWriting.title') }}</h2>
 
     <input
+      ref="topicInput"
       v-model="topic"
       type="text"
       class="ewb__topic"

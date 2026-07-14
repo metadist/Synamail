@@ -89,13 +89,7 @@ async function resetChat(): Promise<void> {
     <!-- (d) Ask Synaplan — general chat with results above the composer. -->
     <div class="syn-card">
       <h2 class="syn-card-title">{{ t('home.commands.chat') }}</h2>
-      <ChatThread
-        :messages="messages"
-        :loading="sending"
-        :initial-draft="t('home.chat.sample')"
-        @send="send"
-        @reset="resetChat"
-      />
+      <ChatThread :messages="messages" :loading="sending" @send="send" @reset="resetChat" />
       <Toast v-if="error" kind="error" :message="error" />
     </div>
 

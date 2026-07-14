@@ -17,14 +17,13 @@ export function standardLanguage(): Locale {
 }
 
 /**
- * Up to three summary-language options for the Summarize box: the configured
- * standard language first, then German and English when they aren't already
- * the standard (deduplicated, capped at three).
+ * Up to three summary-language options for the Summarize box: English first,
+ * then German, then the user's standard language when it differs from those
+ * two (deduplicated, capped at three).
  */
 export function summaryLanguageOptions(): Locale[] {
-  const out: Locale[] = [standardLanguage()]
-  for (const l of ['de', 'en'] as Locale[]) {
-    if (!out.includes(l)) out.push(l)
-  }
+  const out: Locale[] = ['en', 'de']
+  const standard = standardLanguage()
+  if (!out.includes(standard)) out.push(standard)
   return out.slice(0, 3)
 }
