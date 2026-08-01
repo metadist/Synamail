@@ -44,8 +44,7 @@ function configUrl(): string {
 function openModelConfig(): void {
   const url = configUrl()
   const ui = (typeof Office !== 'undefined' ? Office.context?.ui : undefined) as
-    | { openBrowserWindow?: (u: string) => void }
-    | undefined
+    { openBrowserWindow?: (u: string) => void } | undefined
   if (ui && typeof ui.openBrowserWindow === 'function') {
     ui.openBrowserWindow(url)
   } else {

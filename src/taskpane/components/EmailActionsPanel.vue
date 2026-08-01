@@ -28,14 +28,7 @@ const { item } = useOutlookItem()
 const { call } = useSynaplanClient()
 
 type ActionKey =
-  | 'summarise'
-  | 'translate'
-  | 'reply'
-  | 'classify'
-  | 'save'
-  | 'ask'
-  | 'meeting'
-  | null
+  'summarise' | 'translate' | 'reply' | 'classify' | 'save' | 'ask' | 'meeting' | null
 const active = ref<ActionKey>(null)
 const meetingProposals = ref<MeetingProposal[] | null>(null)
 const result = ref<string>('')
@@ -291,8 +284,7 @@ async function findMeetingTimes(): Promise<void> {
 
 function appointmentSupported(): boolean {
   const mb = (typeof Office !== 'undefined' ? Office.context?.mailbox : undefined) as
-    | { displayNewAppointmentForm?: unknown }
-    | undefined
+    { displayNewAppointmentForm?: unknown } | undefined
   return !!mb && typeof mb.displayNewAppointmentForm === 'function'
 }
 

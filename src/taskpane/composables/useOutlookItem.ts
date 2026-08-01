@@ -105,8 +105,7 @@ async function snapshot(raw: Office.Item): Promise<OutlookItemSnapshot> {
 function detectMode(raw: Office.Item): ItemMode {
   // Compose-mode items expose async setters on body; read-mode items don't.
   const body = (raw as Office.MessageRead | Office.MessageCompose).body as
-    | { setAsync?: unknown; getAsync?: unknown }
-    | undefined
+    { setAsync?: unknown; getAsync?: unknown } | undefined
   if (body && typeof (body as { setAsync?: unknown }).setAsync === 'function') {
     return 'compose'
   }
@@ -205,8 +204,7 @@ async function readAttachments(raw: Office.Item): Promise<Office.AttachmentDetai
  */
 export function setComposeBody(html: string): Promise<boolean> {
   const item = (typeof Office !== 'undefined' ? Office.context?.mailbox?.item : undefined) as
-    | Office.MessageCompose
-    | undefined
+    Office.MessageCompose | undefined
   const body = item?.body as
     | {
         setAsync?: (
@@ -236,8 +234,7 @@ export function setComposeBody(html: string): Promise<boolean> {
  */
 export function displayReplyWithBody(html: string): boolean {
   const item = (typeof Office !== 'undefined' ? Office.context?.mailbox?.item : undefined) as
-    | { displayReplyForm?: (arg: { htmlBody: string }) => void }
-    | undefined
+    { displayReplyForm?: (arg: { htmlBody: string }) => void } | undefined
   if (!item || typeof item.displayReplyForm !== 'function') return false
   try {
     item.displayReplyForm({ htmlBody: html })
