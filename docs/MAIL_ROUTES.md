@@ -149,13 +149,7 @@ Per-mailbox, drives a client-side trigger → store in `roamingSettings`
 
 ```ts
 type ConditionType =
-  | 'from'
-  | 'subjectContains'
-  | 'bodyContains'
-  | 'hasAttachment'
-  | 'language'
-  | 'intent'
-  | 'category'
+  'from' | 'subjectContains' | 'bodyContains' | 'hasAttachment' | 'language' | 'intent' | 'category'
 
 interface RouteCondition {
   type: ConditionType

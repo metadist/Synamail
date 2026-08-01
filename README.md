@@ -21,7 +21,7 @@ workspace, so you need an account first:
 
 ## Pick your path
 
-| 👤 **I just want to use it**                                                | 🛠 **I want to build / host it**                                                    |
+| 👤 **I just want to use it**                                                | 🛠 **I want to build / host it**                                                     |
 | --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
 | Install Synamail and start in 60 seconds — no technical setup.              | Run from source, contribute, or self-host against your own Synaplan.                |
 | → **[User Guide](docs/USER_GUIDE.md)** (start here)                         | → **[Developer install & sideload](INSTALL.md#for-developers-running-from-source)** |
