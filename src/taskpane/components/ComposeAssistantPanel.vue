@@ -36,6 +36,7 @@ async function draft(): Promise<void> {
         // On a reply/forward the draft already carries the quoted original —
         // pass it so the AI can respond in context.
         referenceBody: item.value.bodyText || undefined,
+        mailSubject: item.value.subject.trim() || undefined,
       }),
     )
     if (r) {

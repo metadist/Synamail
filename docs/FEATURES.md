@@ -65,10 +65,10 @@ The user opens an email in Outlook → the Synamail taskpane offers its actions 
 - **Output:** AI answer; subsequent questions continue the same chat.
 - **Endpoints:**
   - First turn per Outlook conversation: `POST /api/v1/chats` to create the chat, **keyed by `mailbox.item.conversationId`** stored in `roamingSettings.chats[<conversationId>]`.
-  - Subsequent turns: `POST /api/v1/chats/{chatId}/messages` (or whichever the Synaplan API exposes for sending into an existing chat — confirm during wire-up).
-  - Display: `GET /api/v1/chats/{chatId}/messages`.
-- **UI surface:** Anchored input at the bottom of `ReadMode.vue`. History is scrollable.
-- **Edge cases:** Reopening the same thread later reuses the existing `chatId`. If the chat was deleted server-side, fall back to creating a new one and update roaming.
+  - Subsequent turns: `POST /api/v1/messages/send` (or stream) with `trackId = chatId`.
+  - Display / restore: `GET /api/v1/chats/{chatId}/messages` (taskpane reloads the transcript on mount when a roaming `chatId` exists).
+- **UI surface:** Home → Chat (`Home.vue` / `ChatThread.vue`). When a readable mail body is open, Home chat grounds turns the same way as `ask()` (email context included). `EmailActionsPanel.vue` remains the fuller read-mode action surface.
+- **Edge cases:** Reopening the same thread later reuses the existing `chatId` and restores the in-pane transcript. Switching mails isolates threads by conversation key. If the chat was deleted server-side, clear the roaming id and start fresh. Explicit in-pane Reset clears local + roaming chat id.
 
 ## 2. Compose-mode AI actions — **partially shipped**
 

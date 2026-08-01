@@ -14,12 +14,12 @@
 
 import type { Page, Route } from '@playwright/test'
 
-/** The AI reply text for a `/messages/send`, chosen by the system prompt. */
+/** The AI reply text for a `/messages/send`, chosen by the task directive / content. */
 function aiReplyFor(message: string): string {
-  if (message.includes('email triage assistant')) {
+  if (message.includes('Classify the email into exactly one of')) {
     return '{"category":"support","confidence":0.91,"reasoning":"Reports a problem and asks for confirmation."}'
   }
-  if (message.includes('extract proposed meeting')) {
+  if (message.includes('Extract proposed meeting or call times')) {
     return JSON.stringify([
       {
         title: 'Invoice review',
@@ -29,7 +29,7 @@ function aiReplyFor(message: string): string {
       },
     ])
   }
-  if (message.includes('professional translator')) {
+  if (message.includes('Translate the following text to language code')) {
     return 'Hallo, könnten Sie bitte die Mai-Rechnung bestätigen?'
   }
   if (message.includes('Write a reply in')) {
@@ -38,10 +38,11 @@ function aiReplyFor(message: string): string {
   if (message.includes('Summarise the email')) {
     return '- Alice asks to confirm May invoice #4821\n- Payment is due Friday\n- Proposes a review meeting next Tuesday 3pm'
   }
-  if (message.includes('answering follow-up questions')) {
+  if (message.includes('Answer the question using the email context')) {
     return 'The email asks you to approve invoice #4821 for payment by Friday.'
   }
-  if (message.includes('helpful assistant living inside')) {
+  // Ungrounded Home chat: bare user question (no persona preamble).
+  if (message.includes('efficiency') || message === 'hi' || message.startsWith('[question]')) {
     return 'In German, "efficiency" is "Effizienz".'
   }
   return 'OK.'
@@ -89,6 +90,14 @@ export async function mockSynaplan(page: Page): Promise<void> {
           createdAt: '2026-06-04T10:00:00Z',
           updatedAt: '2026-06-04T10:00:00Z',
         },
+      })
+    }
+
+    if (/^\/api\/v1\/chats\/\d+\/messages$/.test(path) && method === 'GET') {
+      return json(route, {
+        success: true,
+        messages: [],
+        pagination: { offset: 0, limit: 50, total: 0, hasMore: false },
       })
     }
 

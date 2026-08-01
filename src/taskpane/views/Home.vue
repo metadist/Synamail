@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import ChatThread from '@/taskpane/components/ChatThread.vue'
 import type { ChatMessage } from '@/taskpane/components/ChatThread.vue'
@@ -12,17 +12,69 @@ import {
   getChatIdForConversation,
   setChatIdForConversation,
 } from '@/taskpane/composables/useRoamingSettings'
+import { useOutlookItem } from '@/taskpane/composables/useOutlookItem'
 import { useSynaplanClient } from '@/taskpane/composables/useSynaplanClient'
-import { errorMessage } from '@shared/synaplan-client'
-
-const HOME_CONVERSATION = 'home'
+import { errorMessage, isApiError } from '@shared/synaplan-client'
 
 const { t } = useI18n()
 const { call } = useSynaplanClient()
+const { item } = useOutlookItem()
+
+/**
+ * Per-mail chat key (FEATURES.md §1.5). Prefer Outlook's conversationId so
+ * close/reopen on the same mail restores the same Synaplan thread; fall back
+ * to subject, then a stable home key when nothing is open.
+ */
+const conversationKey = computed(() => {
+  if (item.value.conversationId) return item.value.conversationId
+  const subject = item.value.subject.trim()
+  if (subject) return `synamail:${subject}`
+  return 'home'
+})
 
 const messages = ref<ChatMessage[]>([])
 const sending = ref(false)
+const restoring = ref(false)
 const error = ref<string | null>(null)
+
+async function restoreThread(key: string): Promise<void> {
+  const chatId = getChatIdForConversation(key)
+  if (!chatId) {
+    messages.value = []
+    return
+  }
+  restoring.value = true
+  error.value = null
+  try {
+    const history = await call((c) => c.getChatMessages(chatId))
+    // Only seed when we're still on the same conversation (ItemChanged can race).
+    if (conversationKey.value !== key) return
+    messages.value = (history ?? []).map((m) => ({ role: m.role, text: m.text }))
+  } catch (err) {
+    if (conversationKey.value !== key) return
+    messages.value = []
+    // Only drop the roaming id when the server says the chat is gone.
+    if (isApiError(err) && err.status === 404) {
+      try {
+        await clearChatIdForConversation(key)
+      } catch {
+        /* roaming write may fail offline/in tests */
+      }
+    } else {
+      error.value = errorMessage(err)
+    }
+  } finally {
+    if (conversationKey.value === key) restoring.value = false
+  }
+}
+
+watch(
+  conversationKey,
+  (key) => {
+    void restoreThread(key)
+  },
+  { immediate: true },
+)
 
 async function send(text: string, fileIds?: number[]): Promise<void> {
   messages.value.push({ role: 'user', text })
@@ -31,10 +83,23 @@ async function send(text: string, fileIds?: number[]): Promise<void> {
   sending.value = true
   error.value = null
   try {
-    const chatId = getChatIdForConversation(HOME_CONVERSATION)
+    const key = conversationKey.value
+    const chatId = getChatIdForConversation(key)
+    // Ground on the open mail body when readable (#55); keep general chat
+    // when compose is empty or the body could not be read.
+    const body = item.value.bodyText.trim()
+    const emailContext = body.length > 0 ? body : undefined
+    const mailSubject = item.value.subject.trim() || undefined
     const r = await call((c) =>
       c.chat(
-        { conversationId: HOME_CONVERSATION, question: text, chatId, fileIds },
+        {
+          conversationId: key,
+          question: text,
+          chatId,
+          fileIds,
+          emailContext,
+          mailSubject,
+        },
         (textSoFar) => {
           messages.value[aiIdx].text = textSoFar
         },
@@ -45,7 +110,7 @@ async function send(text: string, fileIds?: number[]): Promise<void> {
       if (r.media && r.media.length) messages.value[aiIdx].media = r.media
       if (!chatId && r.chatId) {
         try {
-          await setChatIdForConversation(HOME_CONVERSATION, r.chatId)
+          await setChatIdForConversation(key, r.chatId)
         } catch {
           // Roaming write may fail offline/in tests; the in-memory thread still works.
         }
@@ -63,10 +128,11 @@ async function send(text: string, fileIds?: number[]): Promise<void> {
 }
 
 async function resetChat(): Promise<void> {
+  const key = conversationKey.value
   messages.value = []
   error.value = null
   try {
-    await clearChatIdForConversation(HOME_CONVERSATION)
+    await clearChatIdForConversation(key)
   } catch {
     // Roaming write can fail offline/in tests; the in-memory reset still holds.
   }
@@ -87,16 +153,21 @@ async function resetChat(): Promise<void> {
     <!-- (c) Save the open email to the knowledge base. -->
     <KnowledgeBaseBox />
 
-    <!-- (d) Ask Synaplan — general chat with results above the composer. -->
+    <!-- (d) Ask Synaplan — grounded on the open mail when present (#55). -->
     <div class="syn-card">
       <h2 class="syn-card-title">{{ t('home.commands.chat') }}</h2>
-      <ChatThread :messages="messages" :loading="sending" @send="send" @reset="resetChat" />
+      <ChatThread
+        :messages="messages"
+        :loading="sending || restoring"
+        @send="send"
+        @reset="resetChat"
+      />
       <Toast v-if="error" kind="error" :message="error" />
     </div>
 
     <!-- Profiling is temporarily disabled and will return in a later iteration.
     <AccordionItem :title="t('home.sections.profiling')">
-      <ContactProfilePanel />
+      <ContactProfileView />
     </AccordionItem>
     -->
   </section>

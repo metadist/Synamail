@@ -41,7 +41,7 @@ function buildClient(fetchImpl: typeof fetch): RealSynaplanClient {
 }
 
 describe('RealSynaplanClient.chat', () => {
-  it('creates a chat then sends the simple-chat prompt when no chatId is given', async () => {
+  it('creates a chat then sends the bare question when no email context is given', async () => {
     const fetchImpl = mockFetchSequence([
       { body: { success: true, chat: { id: 7 } } },
       { body: { success: true, outgoingMessage: { text: 'hello there' } } },
@@ -49,12 +49,37 @@ describe('RealSynaplanClient.chat', () => {
     const c = buildClient(fetchImpl as unknown as typeof fetch)
     const r = await c.chat({ conversationId: 'home', question: 'hi' })
     expect(fetchImpl.mock.calls[0][0]).toBe('https://api.test/api/v1/chats')
+    const createBody = JSON.parse((fetchImpl.mock.calls[0][1] as RequestInit).body as string) as {
+      title: string
+    }
+    expect(createBody.title).toBe('hi')
     expect(fetchImpl.mock.calls[1][0]).toBe('https://api.test/api/v1/messages/send')
     const sendBody = JSON.parse((fetchImpl.mock.calls[1][1] as RequestInit).body as string)
     expect(sendBody.trackId).toBe(7)
-    expect(sendBody.message).toMatch(/Synaplan/i)
-    expect(sendBody.message).toContain('hi')
+    // No persona preamble — History shows the question alone (#56).
+    expect(sendBody.message).toBe('hi')
     expect(r).toEqual({ chatId: 7, answer: 'hello there' })
+  })
+
+  it('grounds the turn on emailContext when provided', async () => {
+    const fetchImpl = mockFetchSequence([
+      { body: { success: true, outgoingMessage: { text: 'about the mail' } } },
+    ])
+    const c = buildClient(fetchImpl as unknown as typeof fetch)
+    await c.chat({
+      conversationId: 'c1',
+      question: 'what is this about?',
+      chatId: 1,
+      emailContext: 'Please approve invoice 9.',
+    })
+    const sendBody = JSON.parse((fetchImpl.mock.calls[0][1] as RequestInit).body as string) as {
+      message: string
+    }
+    expect(sendBody.message).toContain('[question]')
+    expect(sendBody.message).toContain('what is this about?')
+    expect(sendBody.message).toContain('[email context]')
+    expect(sendBody.message).toContain('Please approve invoice 9.')
+    expect(sendBody.message).not.toMatch(/you are/i)
   })
 
   it('reuses an existing chatId without creating a new chat', async () => {

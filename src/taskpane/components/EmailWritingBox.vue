@@ -59,6 +59,7 @@ async function generate(style: EmailTone): Promise<void> {
         // Ground the AI in the message we're replying to (read mode) or the
         // quoted original already in the compose window.
         referenceBody: isReply.value ? item.value.bodyText || undefined : undefined,
+        mailSubject: item.value.subject.trim() || undefined,
       }),
     )
     if (r) await deliver(r.htmlBody)
