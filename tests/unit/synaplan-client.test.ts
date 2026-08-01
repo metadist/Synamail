@@ -450,6 +450,18 @@ describe('RealSynaplanClient — getChatMessages', () => {
       { role: 'ai', text: 'hi there' },
     ])
   })
+
+  it('throws instead of reporting an empty transcript when success is false', async () => {
+    const fetchImpl = mockFetchSequence([{ body: { success: false, messages: [] } }])
+    const c = buildClient(fetchImpl as unknown as typeof fetch)
+    await expect(c.getChatMessages(42)).rejects.toMatchObject({ code: 'CHAT_HISTORY_FAILED' })
+  })
+
+  it('tolerates a response without a success flag', async () => {
+    const fetchImpl = mockFetchSequence([{ body: { messages: [{ text: 'hi', direction: 'IN' }] } }])
+    const c = buildClient(fetchImpl as unknown as typeof fetch)
+    await expect(c.getChatMessages(42)).resolves.toEqual([{ role: 'user', text: 'hi' }])
+  })
 })
 
 describe('RealSynaplanClient — rag', () => {

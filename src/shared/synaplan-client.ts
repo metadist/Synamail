@@ -366,6 +366,12 @@ export class RealSynaplanClient implements SynaplanClient {
     const res = await this.request<ChatMessagesResponse>(
       `/api/v1/chats/${chatId}/messages?limit=${limit}&offset=0`,
     )
+    // A 200 carrying `success:false` is a failed read, not an empty chat. Without
+    // this the caller would render a blank thread and the user would think their
+    // history was lost. Deployments that omit the flag entirely are still fine.
+    if (res?.success === false) {
+      throw apiError(0, 'CHAT_HISTORY_FAILED', 'Could not load the chat history')
+    }
     const rows = res?.messages ?? []
     const out: ChatHistoryMessage[] = []
     for (const row of rows) {
