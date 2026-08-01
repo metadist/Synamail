@@ -207,6 +207,10 @@ export async function installOfficeShim(page: Page, seed: OfficeSeed): Promise<v
           removeHandlerAsync: (_type: unknown, cb?: AsyncCb<void>) => {
             if (cb) ok(cb)
           },
+          // Sync form used by SummarizeBox / displayNewMessageWithBody.
+          displayNewMessageForm: (params: unknown) => {
+            record('displayNewMessageForm', params)
+          },
           displayNewMessageFormAsync: (params: unknown, cb?: AsyncCb<void>) => {
             record('displayNewMessageFormAsync', params)
             if (cb) ok(cb)

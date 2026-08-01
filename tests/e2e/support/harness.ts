@@ -13,7 +13,7 @@
  * See docs/E2E_OUTLOOK_AUTOMATION.md.
  */
 
-import { expect, type Page } from '@playwright/test'
+import { expect, type Locator, type Page } from '@playwright/test'
 import { installOfficeShim, type MailItemSeed, type SeedSettings } from './office-shim'
 import { mockSynaplan } from './synaplan-mock'
 
@@ -74,15 +74,16 @@ export async function officeCalls(page: Page): Promise<{ name: string; arg?: unk
   )
 }
 
-/** Expand the "Email actions" accordion on Home. Requires a read item. */
-export async function openReadView(page: Page): Promise<void> {
-  const flap = page.locator('details.acc', { hasText: 'Email actions' })
-  await flap.locator('summary').click()
-  await expect(flap.locator('.ea__actions')).toBeVisible()
+/** Home function card by its visible title (e.g. "Summarize email"). */
+export function homeCard(page: Page, title: string): Locator {
+  return page.locator('.syn-card', { has: page.getByRole('heading', { name: title }) })
 }
 
-/** Click the Go button of one email-action row (e.g. "Summarize"). */
-export async function runEmailAction(page: Page, label: string): Promise<void> {
-  const row = page.locator('.ea__row', { hasText: label })
-  await row.getByRole('button', { name: 'Go' }).click()
+/**
+ * Wait until Home shows the read-mail affordances (summarise language buttons
+ * and knowledge-base actions). Replaces the old "Email actions" accordion.
+ */
+export async function expectHomeReadReady(page: Page): Promise<void> {
+  await expect(homeCard(page, 'Summarize email').getByRole('button').first()).toBeVisible()
+  await expect(homeCard(page, 'Add to your sources').getByRole('button').first()).toBeVisible()
 }

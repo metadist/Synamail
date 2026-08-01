@@ -9,29 +9,29 @@
  * mock/offline mode.
  *
  * All AI features (summarise / translate / draftReply / classify / ask)
- * route through Synaplan's single `POST /api/v1/messages/send` chat
- * endpoint with a per-action system prompt prepended to the email body.
- * Synaplan's `outgoingMessage` response field carries the AI's reply
- * text; its exact internal shape is `type: object` (undocumented) in the
- * OpenAPI spec, so `extractAiText()` tries a handful of common field
- * names. See the comment on that helper for the live-smoke checklist.
+ * route through Synaplan's `POST /api/v1/messages/send` or streaming
+ * chat endpoints. The persisted user turn is the user-visible content
+ * (intent / email / question) first, with a brief task directive after —
+ * never a "You are…" system-persona preamble (see #56). Chat titles use
+ * mail subject / intent (#57).
  *
  * 401 handling: callers wrap calls; on `ApiError.status === 401` the
  * useAuth composable clears roaming settings and bounces to SignIn.
  */
 
+import { titleWithSubject, truncateTitle } from './chat-title'
 import {
   ask as askPrompt,
   classify as classifyPrompt,
   compose as composePrompt,
   meetingProposals as meetingProposalsPrompt,
   reply as replyPrompt,
-  simpleChat as simpleChatPrompt,
   summarise as summarisePrompt,
   translate as translatePrompt,
 } from './prompts'
 import type {
   ApiError,
+  ChatHistoryMessage,
   ChatMedia,
   ChatMediaKind,
   ChatTurnInput,
@@ -85,12 +85,17 @@ export interface SynaplanClient {
   classify(input: ClassifyInput): Promise<ClassifyResult>
   ask(input: ChatTurnInput, onChunk?: StreamHandler): Promise<ChatTurnResult>
   /**
-   * General-purpose chat, not tied to a specific email. Mirrors `ask` for
-   * chat-id persistence (caller stores the returned `chatId` in roaming
-   * under a stable key such as `home`), but uses the simple-chat system
-   * prompt instead of the email-grounded one.
+   * Home / general chat. When `emailContext` is set (open mail body), the
+   * turn is grounded like `ask`; otherwise the bare question is sent.
+   * Caller stores the returned `chatId` in roaming under a per-conversation
+   * key (prefer `mailbox.item.conversationId`).
    */
   chat(input: ChatTurnInput, onChunk?: StreamHandler): Promise<ChatTurnResult>
+  /**
+   * Load prior turns for a Synaplan chat so the taskpane can restore the
+   * in-pane transcript after close/reopen (#58).
+   */
+  getChatMessages(chatId: number, limit?: number): Promise<ChatHistoryMessage[]>
   /**
    * Extract proposed meeting / call times from an email body. Returns a
    * (possibly empty) list of candidate slots the caller can turn into Outlook
@@ -217,16 +222,19 @@ export class RealSynaplanClient implements SynaplanClient {
   }
 
   // -------------------------------------------------------------------------
-  // AI actions — every one of these is a single POST /messages/send call
-  // whose `message` field is the system prompt prepended to the email body.
+  // AI actions — each builds a History-friendly user message (visible content
+  // first, brief task directive last) and posts to /messages/send or stream.
   // The AI's reply comes back in `outgoingMessage` (undocumented shape;
   // extracted via extractAiText below).
   // -------------------------------------------------------------------------
 
   async summarise(input: SummariseInput, onChunk?: StreamHandler): Promise<SummariseResult> {
     const lang = input.language ?? 'en'
-    const message = composeMessage(summarisePrompt(lang), buildEmailBlock(input))
-    const text = await this.runChat(message, { onChunk, chatTitle: 'Outlook: summarise' })
+    const message = composeMessage(buildEmailBlock(input), summarisePrompt(lang))
+    const text = await this.runChat(message, {
+      onChunk,
+      chatTitle: titleWithSubject('Summarise', input.subject),
+    })
     return {
       summary: text,
       bullets: parseMarkdownBullets(text),
@@ -236,10 +244,13 @@ export class RealSynaplanClient implements SynaplanClient {
 
   async translate(input: TranslateInput, onChunk?: StreamHandler): Promise<TranslateResult> {
     const message = composeMessage(
-      translatePrompt(input.targetLanguage),
       cleanEmailText(input.text),
+      translatePrompt(input.targetLanguage),
     )
-    const text = await this.runChat(message, { onChunk, chatTitle: 'Outlook: translate' })
+    const text = await this.runChat(message, {
+      onChunk,
+      chatTitle: titleWithSubject('Translate', input.mailSubject),
+    })
     return {
       translation: text,
       // Detection isn't returned by the server in this call shape; we record
@@ -250,11 +261,11 @@ export class RealSynaplanClient implements SynaplanClient {
 
   async draftReply(input: DraftReplyInput): Promise<DraftReplyResult> {
     const message = composeMessage(
-      replyPrompt(input.tone, input.language),
       buildEmailBlock({
         subject: input.subject,
         body: input.body,
       }),
+      replyPrompt(input.tone, input.language),
     )
     const text = await this.sendChat(message)
     return { htmlBody: text }
@@ -264,11 +275,12 @@ export class RealSynaplanClient implements SynaplanClient {
     input: ComposeDraftInput,
     onChunk?: StreamHandler,
   ): Promise<ComposeDraftResult> {
-    const parts = ['[intent]', input.intent.trim()]
+    const intent = input.intent.trim()
+    const parts = ['[intent]', intent]
     if (input.referenceBody) {
       parts.push('', '[replying to]', cleanEmailText(input.referenceBody))
     }
-    const message = composeMessage(composePrompt(input.tone, input.language), parts.join('\n'))
+    const message = composeMessage(parts.join('\n'), composePrompt(input.tone, input.language))
     // Route through the full chat pipeline (`GET /messages/stream`) — exactly
     // like the chat box — so Synaplan runs its classifier and honours the
     // user's web-search configuration. The blocking `/messages/send` path would
@@ -276,7 +288,7 @@ export class RealSynaplanClient implements SynaplanClient {
     // enough to select the streaming path; the complete text is still returned.
     const text = await this.runChat(message, {
       onChunk: onChunk ?? (() => {}),
-      chatTitle: 'Outlook: compose',
+      chatTitle: titleWithSubject('Compose', input.mailSubject, intent || undefined),
     })
     return { htmlBody: text }
   }
@@ -303,7 +315,7 @@ export class RealSynaplanClient implements SynaplanClient {
 
   async classify(input: ClassifyInput): Promise<ClassifyResult> {
     const categories = ['billing', 'support', 'internal', 'personal', 'spam', 'general']
-    const message = composeMessage(classifyPrompt(categories), buildEmailBlock(input))
+    const message = composeMessage(buildEmailBlock(input), classifyPrompt(categories))
     const text = await this.sendChat(message)
     return parseClassifyResponse(text)
   }
@@ -313,14 +325,14 @@ export class RealSynaplanClient implements SynaplanClient {
     //    supply chatId from roaming, create a fresh chat now and return its
     //    id alongside the answer so the caller can persist it.
     const chatId =
-      input.chatId ?? (await this.ensureChat(`Outlook: ${input.conversationId.slice(0, 40)}`))
-    // 2. Send the question into that chat. Email context is cleaned so tracking
-    //    URLs / autolink soup don't pollute the grounding (or the reply).
-    const prefix = input.emailContext
-      ? `${askPrompt()}\n\n[email context]\n${cleanEmailText(input.emailContext)}\n\n[question]\n`
-      : `${askPrompt()}\n\n`
+      input.chatId ??
+      (await this.ensureChat(
+        titleWithSubject('Outlook', input.mailSubject, input.question || input.conversationId),
+      ))
+    // 2. Question first (History-friendly), then cleaned email grounding.
+    const message = buildGroundedQuestion(input.question, input.emailContext, askPrompt())
     const media: ChatMedia[] = []
-    const answer = await this.runChat(`${prefix}${input.question}`, {
+    const answer = await this.runChat(message, {
       onChunk,
       chatId,
       fileIds: input.fileIds,
@@ -330,9 +342,18 @@ export class RealSynaplanClient implements SynaplanClient {
   }
 
   async chat(input: ChatTurnInput, onChunk?: StreamHandler): Promise<ChatTurnResult> {
-    const chatId = input.chatId ?? (await this.ensureChat('Synamail chat'))
+    const chatId =
+      input.chatId ??
+      (await this.ensureChat(
+        titleWithSubject('Synamail', input.mailSubject, input.question || undefined),
+      ))
+    // Ground on the open mail when present (#55); otherwise send the bare
+    // question with no persona preamble (#56).
+    const message = input.emailContext?.trim()
+      ? buildGroundedQuestion(input.question, input.emailContext, askPrompt())
+      : input.question
     const media: ChatMedia[] = []
-    const answer = await this.runChat(`${simpleChatPrompt()}\n\n${input.question}`, {
+    const answer = await this.runChat(message, {
       onChunk,
       chatId,
       fileIds: input.fileIds,
@@ -341,10 +362,28 @@ export class RealSynaplanClient implements SynaplanClient {
     return { chatId, answer, media: media.length ? media : undefined }
   }
 
+  async getChatMessages(chatId: number, limit = 50): Promise<ChatHistoryMessage[]> {
+    const res = await this.request<ChatMessagesResponse>(
+      `/api/v1/chats/${chatId}/messages?limit=${limit}&offset=0`,
+    )
+    const rows = res?.messages ?? []
+    const out: ChatHistoryMessage[] = []
+    for (const row of rows) {
+      const text = typeof row.text === 'string' ? row.text.trim() : ''
+      if (!text) continue
+      const direction = (row.direction ?? '').toUpperCase()
+      // Synaplan: IN = user, OUT = assistant.
+      if (direction === 'IN' || direction === 'OUT') {
+        out.push({ role: direction === 'IN' ? 'user' : 'ai', text })
+      }
+    }
+    return out
+  }
+
   async extractMeetingTimes(input: MeetingExtractInput): Promise<MeetingProposal[]> {
     const message = composeMessage(
-      meetingProposalsPrompt(input.nowIso, input.timezone),
       buildEmailBlock({ subject: input.subject, body: input.body, from: input.from }),
+      meetingProposalsPrompt(input.nowIso, input.timezone),
     )
     const text = await this.sendChat(message)
     return parseMeetingProposals(text)
@@ -562,7 +601,8 @@ export class RealSynaplanClient implements SynaplanClient {
     if (!opts.onChunk) {
       return this.sendChat(message, opts.chatId, opts.fileIds)
     }
-    const chatId = opts.chatId ?? (await this.ensureChat(opts.chatTitle ?? 'Synamail chat'))
+    const chatId =
+      opts.chatId ?? (await this.ensureChat(opts.chatTitle ?? truncateTitle('Synamail')))
     try {
       return await this.streamChat(message, opts.onChunk, {
         chatId,
@@ -747,8 +787,34 @@ export function errorMessage(err: unknown): string {
   }
 }
 
-function composeMessage(systemPrompt: string, userBlock: string): string {
-  return `${systemPrompt}\n\n${userBlock}`
+/**
+ * Build the persisted user turn: visible content first, brief task directive
+ * last. History list previews then show intent/email/question rather than a
+ * system-persona preamble (#56).
+ */
+function composeMessage(userBlock: string, directive: string): string {
+  const body = userBlock.trim()
+  const hint = directive.trim()
+  if (!hint) return body
+  if (!body) return hint
+  return `${body}\n\n${hint}`
+}
+
+/**
+ * Home/ask grounded turn: question first, then cleaned email context, then a
+ * short grounding directive. Omits the directive when there is no email body.
+ */
+function buildGroundedQuestion(
+  question: string,
+  emailContext: string | undefined,
+  directive: string,
+): string {
+  const q = question.trim()
+  const ctx = emailContext?.trim() ? cleanEmailText(emailContext) : ''
+  if (!ctx) return q
+  const parts = [`[question]\n${q}`, `[email context]\n${ctx}`]
+  if (directive.trim()) parts.push(directive.trim())
+  return parts.join('\n\n')
 }
 
 function buildEmailBlock(input: {
@@ -981,6 +1047,11 @@ function mediaKind(type: string | undefined): ChatMediaKind {
 interface CreateChatResponse {
   success?: boolean
   chat?: { id?: number; title?: string; createdAt?: string; updatedAt?: string }
+}
+
+interface ChatMessagesResponse {
+  success?: boolean
+  messages?: { text?: string; direction?: string }[]
 }
 
 interface RagSearchResponse {

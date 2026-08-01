@@ -96,6 +96,7 @@ async function translate(): Promise<void> {
         {
           text: item.value.bodyText,
           targetLanguage: targetLang.value === 'auto' ? 'en' : targetLang.value,
+          mailSubject: item.value.subject,
         },
         (textSoFar) => {
           result.value = textSoFar
@@ -230,6 +231,7 @@ async function ask(): Promise<void> {
           emailContext: item.value.bodyText,
           chatId,
           fileIds: fileIds.length ? fileIds : undefined,
+          mailSubject: item.value.subject,
         },
         (textSoFar) => {
           askHistory.value[idx].a = textSoFar

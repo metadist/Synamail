@@ -79,6 +79,8 @@ export interface ComposeDraftInput {
   language: string
   /** Body of the message being replied to/forwarded, when composing a reply. */
   referenceBody?: string
+  /** Open mail subject — used for the Synaplan History chat title. */
+  mailSubject?: string
 }
 
 export interface ComposeDraftResult {
@@ -88,6 +90,8 @@ export interface ComposeDraftResult {
 export interface TranslateInput {
   text: string
   targetLanguage: string
+  /** Open mail subject — used for the Synaplan History chat title. */
+  mailSubject?: string
 }
 
 export interface TranslateResult {
@@ -133,6 +137,17 @@ export interface ChatTurnInput {
    * `POST /messages/send`.
    */
   fileIds?: number[]
+  /**
+   * Open mail subject for the Synaplan History title when creating a chat.
+   * Falls back to a truncated first question when omitted.
+   */
+  mailSubject?: string
+}
+
+/** One turn loaded from `GET /api/v1/chats/{id}/messages` for pane restore. */
+export interface ChatHistoryMessage {
+  role: 'user' | 'ai'
+  text: string
 }
 
 /** Kind of a generated media attachment surfaced alongside an AI answer. */

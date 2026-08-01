@@ -142,7 +142,7 @@ describe('RealSynaplanClient — ping', () => {
 })
 
 describe('RealSynaplanClient — summarise / translate / draftReply / classify', () => {
-  it('summarise posts a combined system+email message to /messages/send', async () => {
+  it('summarise posts email content before the task directive (no You-are preamble)', async () => {
     const fetchImpl = mockFetchSequence([
       {
         body: {
@@ -159,8 +159,9 @@ describe('RealSynaplanClient — summarise / translate / draftReply / classify',
     })
     expect(fetchImpl.mock.calls[0][0]).toBe('https://api.test/api/v1/messages/send')
     const body = lastCallBody(fetchImpl) as { message: string }
-    expect(body.message).toMatch(/summarise/i) // system prompt prefix
-    expect(body.message).toContain('Subject: Q3 plan')
+    expect(body.message).toMatch(/summarise/i)
+    expect(body.message).not.toMatch(/you are/i)
+    expect(body.message.indexOf('Subject: Q3 plan')).toBeLessThan(body.message.search(/summarise/i))
     expect(body.message).toContain('Lorem ipsum')
     expect(r.bullets).toEqual(['Point one', 'Point two', 'Point three'])
     expect(r.summary).toContain('Point one')
@@ -207,14 +208,21 @@ describe('RealSynaplanClient — summarise / translate / draftReply / classify',
       intent: 'Invite Alice to lunch on Friday',
       tone: 'friendly',
       language: 'en',
+      mailSubject: 'Team lunch',
     })
     expect(fetchImpl.mock.calls[0][0]).toBe('https://api.test/api/v1/chats')
+    const createBody = JSON.parse((fetchImpl.mock.calls[0][1] as RequestInit).body as string) as {
+      title: string
+    }
+    expect(createBody.title).toBe('Compose: Team lunch')
     const streamUrl = String(fetchImpl.mock.calls[1][0])
     expect(streamUrl).toContain('/api/v1/messages/stream')
     const message = new URL(streamUrl).searchParams.get('message') ?? ''
     expect(message).toContain('[intent]')
     expect(message).toContain('Invite Alice to lunch on Friday')
     expect(message).toMatch(/friendly/)
+    expect(message).not.toMatch(/you are/i)
+    expect(message.indexOf('[intent]')).toBeLessThan(message.search(/friendly/i))
     expect(r.htmlBody).toBe('<p>Hi Alice, lunch Friday?</p>')
   })
 
@@ -399,6 +407,48 @@ describe('RealSynaplanClient — ask (chat round-trip)', () => {
     const body = lastCallBody(fetchImpl) as { message: string }
     expect(body.message).toContain('[email context]')
     expect(body.message).toContain('CTX')
+    expect(body.message).toContain('[question]')
+    expect(body.message).not.toMatch(/you are/i)
+    expect(body.message.indexOf('[question]')).toBeLessThan(body.message.indexOf('[email context]'))
+  })
+
+  it('creates a chat with a subject-based title', async () => {
+    const fetchImpl = mockFetchSequence([
+      { body: { success: true, chat: { id: 3 } } },
+      { body: { success: true, outgoingMessage: { text: 'a' } } },
+    ])
+    const c = buildClient(fetchImpl as unknown as typeof fetch)
+    await c.ask({ conversationId: 't', question: 'why?', mailSubject: 'Budget review' })
+    const createBody = JSON.parse((fetchImpl.mock.calls[0][1] as RequestInit).body as string) as {
+      title: string
+    }
+    expect(createBody.title).toBe('Outlook: Budget review')
+  })
+})
+
+describe('RealSynaplanClient — getChatMessages', () => {
+  it('maps IN/OUT rows to user/ai turns and skips empty text', async () => {
+    const fetchImpl = mockFetchSequence([
+      {
+        body: {
+          success: true,
+          messages: [
+            { text: 'hello', direction: 'IN' },
+            { text: '  ', direction: 'OUT' },
+            { text: 'hi there', direction: 'OUT' },
+          ],
+        },
+      },
+    ])
+    const c = buildClient(fetchImpl as unknown as typeof fetch)
+    const rows = await c.getChatMessages(42)
+    expect(fetchImpl.mock.calls[0][0]).toBe(
+      'https://api.test/api/v1/chats/42/messages?limit=50&offset=0',
+    )
+    expect(rows).toEqual([
+      { role: 'user', text: 'hello' },
+      { role: 'ai', text: 'hi there' },
+    ])
   })
 })
 

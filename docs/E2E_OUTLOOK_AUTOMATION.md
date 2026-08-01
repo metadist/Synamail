@@ -43,8 +43,10 @@ Files:
   a sensible, assertable answer.
 - `tests/e2e/support/harness.ts` — `bootTaskpane(page, item)` ties it together
   (it also blocks the Office.js CDN so the shim isn't overwritten), plus
-  `openReadView` / `openComposeView` / `officeCalls` helpers and the `LIVE` flag.
-- `tests/e2e/{read-mode,compose-mode,contact-profile}.spec.ts` — the flow specs.
+  `expectHomeReadReady` / `homeCard` / `officeCalls` helpers and the `LIVE` flag.
+- `tests/e2e/read-mode.spec.ts` — Home flows (write / summarise / knowledge /
+  chat) against the condensed taskpane. `contact-profile.spec.ts` is skipped
+  until Profiling is re-enabled on Home.
 
 All specs are tagged `@ci`, so they run in GitHub CI's E2E job (which runs
 `--grep '@ci'`) as well as locally. They are deterministic — no real backend, no
