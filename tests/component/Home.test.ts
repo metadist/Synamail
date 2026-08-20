@@ -1,20 +1,23 @@
 import { describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 import { createI18n } from 'vue-i18n'
+import type { Ref } from 'vue'
 import en from '@/locales/en.json'
 
-const { fakeClient, itemRef } = vi.hoisted(() => {
-  const itemRef = {
-    value: {
-      mode: 'none' as 'none' | 'read' | 'compose',
-      subject: '',
-      to: [] as string[],
-      cc: [] as string[],
-      bodyText: '',
-      attachments: [] as unknown[],
-      conversationId: undefined as string | undefined,
-    },
-  }
+interface ItemSnapshot {
+  mode: 'none' | 'read' | 'compose'
+  subject: string
+  to: string[]
+  cc: string[]
+  bodyText: string
+  attachments: unknown[]
+  conversationId: string | undefined
+}
+
+const { fakeClient, holder } = vi.hoisted(() => {
+  // The real ref is created inside the useOutlookItem mock factory (which can
+  // import vue); this hoisted holder just carries it out to the tests.
+  const holder = { itemRef: undefined as unknown }
   const fakeClient = {
     chat: vi.fn(async (input: { chatId?: number; question: string; emailContext?: string }) => ({
       chatId: input.chatId ?? 5,
@@ -23,7 +26,7 @@ const { fakeClient, itemRef } = vi.hoisted(() => {
     getChatMessages: vi.fn(async () => [] as { role: 'user' | 'ai'; text: string }[]),
     ragGroups: vi.fn(async () => []),
   }
-  return { fakeClient, itemRef }
+  return { fakeClient, holder }
 })
 
 vi.mock('@/taskpane/composables/useSynaplanClient', () => {
@@ -37,16 +40,33 @@ vi.mock('@/taskpane/composables/useSynaplanClient', () => {
   }
 })
 
-vi.mock('@/taskpane/composables/useOutlookItem', () => ({
-  useOutlookItem: () => ({
-    item: itemRef,
-    loading: { value: false },
-    error: { value: null },
-    refresh: vi.fn(),
-  }),
-}))
+vi.mock('@/taskpane/composables/useOutlookItem', async () => {
+  // A REAL Vue ref, so tests can swap the open item after mount and Home's
+  // conversationKey watcher actually fires (a plain {value} object would not).
+  const { ref } = await import('vue')
+  const itemRef = ref<ItemSnapshot>({
+    mode: 'none',
+    subject: '',
+    to: [],
+    cc: [],
+    bodyText: '',
+    attachments: [],
+    conversationId: undefined,
+  })
+  holder.itemRef = itemRef
+  return {
+    useOutlookItem: () => ({
+      item: itemRef,
+      loading: { value: false },
+      error: { value: null },
+      refresh: vi.fn(),
+    }),
+  }
+})
 
 import Home from '@/taskpane/views/Home.vue'
+
+const itemRef = holder.itemRef as Ref<ItemSnapshot>
 
 const i18n = createI18n({ legacy: false, locale: 'en', messages: { en } })
 
@@ -157,6 +177,53 @@ describe('Home.vue', () => {
     expect(fakeClient.getChatMessages).toHaveBeenCalledWith(99)
     expect(wrapper.text()).toContain('earlier question')
     expect(wrapper.text()).toContain('earlier answer')
+    resetItem()
+  })
+
+  it('clears the chat spinner when the conversation switches during a restore', async () => {
+    // Regression: on taskpane load the conversation key starts as 'home' and
+    // flips to the mail's conversationId once the Outlook snapshot arrives.
+    // When a restore for the first key was still in flight and the new key had
+    // no saved chat, the `restoring` flag was never cleared — the Send button
+    // spun forever until the user signed out and back in (remounting Home).
+    resetItem()
+    fakeClient.getChatMessages.mockClear()
+    let resolveHistory: (v: { role: 'user' | 'ai'; text: string }[]) => void = () => {}
+    fakeClient.getChatMessages.mockImplementationOnce(
+      () =>
+        new Promise<{ role: 'user' | 'ai'; text: string }[]>((resolve) => {
+          resolveHistory = resolve
+        }),
+    )
+    // A chat previously saved under the no-mail 'home' key.
+    seedRoamingChat('home', 7)
+
+    const wrapper = mountHome()
+    await flushPromises()
+    // The 'home' restore is in flight → the Send button shows its spinner.
+    expect(sendButton(wrapper).classes()).toContain('ab--loading')
+
+    // The mail snapshot arrives; its conversation has NO saved chat.
+    itemRef.value = {
+      mode: 'read',
+      subject: 'Fresh thread',
+      to: [],
+      cc: [],
+      bodyText: 'body',
+      attachments: [],
+      conversationId: 'conv-without-saved-chat',
+    }
+    await flushPromises()
+    // The stale 'home' restore only finishes now.
+    resolveHistory([])
+    await flushPromises()
+
+    expect(sendButton(wrapper).classes()).not.toContain('ab--loading')
+    // The composer must be usable again: type → Send enabled.
+    await wrapper.find('textarea').setValue('still alive?')
+    expect(sendButton(wrapper).attributes('disabled')).toBeUndefined()
+
+    seedRoamingChat('unused', 0)
     resetItem()
   })
 

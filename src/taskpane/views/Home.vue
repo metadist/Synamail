@@ -37,21 +37,33 @@ const sending = ref(false)
 const restoring = ref(false)
 const error = ref<string | null>(null)
 
+// Monotonic token identifying the LATEST restore. Only the latest call may
+// drive `restoring`/`messages` — a superseded in-flight restore must not
+// touch them. (Keying this off `conversationKey` equality deadlocked once:
+// on load the key flips from 'home' to the mail's conversationId while the
+// 'home' restore is still in flight; the new key had no saved chat and
+// returned early, and the stale finally refused to clear `restoring` because
+// the key had changed — leaving the chat spinner stuck until a remount.)
+let restoreSeq = 0
+
 async function restoreThread(key: string): Promise<void> {
+  const seq = ++restoreSeq
   const chatId = getChatIdForConversation(key)
   if (!chatId) {
     messages.value = []
+    // We're the latest restore: clear any flag a superseded call left set.
+    restoring.value = false
     return
   }
   restoring.value = true
   error.value = null
   try {
     const history = await call((c) => c.getChatMessages(chatId))
-    // Only seed when we're still on the same conversation (ItemChanged can race).
-    if (conversationKey.value !== key) return
+    // Only seed when no newer restore has started (ItemChanged can race).
+    if (seq !== restoreSeq) return
     messages.value = (history ?? []).map((m) => ({ role: m.role, text: m.text }))
   } catch (err) {
-    if (conversationKey.value !== key) return
+    if (seq !== restoreSeq) return
     messages.value = []
     // Only drop the roaming id when the server says the chat is gone.
     if (isApiError(err) && err.status === 404) {
@@ -64,7 +76,7 @@ async function restoreThread(key: string): Promise<void> {
       error.value = errorMessage(err)
     }
   } finally {
-    if (conversationKey.value === key) restoring.value = false
+    if (seq === restoreSeq) restoring.value = false
   }
 }
 
