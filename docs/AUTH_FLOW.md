@@ -51,8 +51,15 @@ email, baseUrl }`; `clearAllSettings()` is the "Log out" (full reset) wipe.
 
 **Synaplan (`/wwwroot/synaplan/frontend/`):**
 
-- `src/views/AddinConnectView.vue` — the `/addin/connect` **bridge page** served
-  by Synaplan. Issues the API key and redirects back to the relay.
+- `src/views/PlatformConnectView.vue` — the `/connect/platform` **bridge page**
+  served by Synaplan. Outlook uses `client=outlook` (not flag-gated). Calls
+  `POST /api/v1/addin/connect` and follows the relay redirect the server
+  returns.
+- `backend/src/Service/PlatformLink/OutlookConnectService.php` — mints the
+  add-in key and builds the relay URL **on the server**; the relay host must
+  prefix-match the `outlook-builtin` row in `BPLATFORMINSTANCES`.
+- `/addin/connect` is a **redirect** to `/connect/platform?client=outlook&…`
+  so Synamail's `buildDialogUrl` stays unchanged. Every query param survives.
 - `src/views/LoginView.vue` + `src/utils/pendingAuthRedirect.ts` — the login
   round-trip that **must preserve the `redirect` param**.
 
@@ -73,28 +80,42 @@ email, baseUrl }`; `clearAllSettings()` is the "Log out" (full reset) wipe.
      (e.g. `https://localhost:3000/src/dialog/auth-relay.html`).
 
 2. **Dialog opens** the bridge via `displayDialogAsync(url, { displayInIframe:
-false })`. The taskpane listens on **two** channels: Office
-   `DialogMessageReceived` _and_ a `window` `message` event (OWA fallback).
+false })`. The URL is still `/addin/connect?…`; Synaplan **redirects** it to
+   `/connect/platform?client=outlook&…` (same query, plus `client=outlook`).
+   The taskpane listens on **two** channels: Office
+   `DialogMessageReceived` _and_ a `window` `message` event. The bridge only
+   ever delivers through the relay (step 5) or Office `messageParent`; it no
+   longer posts to `window.opener`, so the `window` listener is a
+   compatibility no-op kept for older bridges.
 
-3. **Bridge bootstrap (`AddinConnectView.vue`).** Waits for `authReady`.
+3. **Bridge bootstrap (`PlatformConnectView.vue`).** Waits for `authReady`.
    - **If NOT authenticated:** it must redirect to
      `/login?redirect=<full original query>` — **including the relay `redirect`
      param**. It uses `route.fullPath` for exactly this reason (see "The #1
      regression" below). The user logs in (e.g. `admin@synaplan.com`).
-   - **If authenticated:** shows "Connect this Outlook to `<email>`?" + button.
+   - **If authenticated:** shows "Connect Outlook at `<host>` as `<email>`?" +
+     button.
 
 4. **Login round-trip (`LoginView.vue`).** After login it navigates to
    `route.query.redirect` (validated by `isSafeRedirectPath`) — restoring
-   `/addin/connect?...&redirect=<relayUrl>` intact. The relay param **survives**
-   only because step 3 used `route.fullPath`.
+   `/connect/platform?client=outlook&…&redirect=<relayUrl>` intact. The relay
+   param **survives** only because step 3 used `route.fullPath`.
 
-5. **Connect (`handleConnect`).** `POST /api/v1/apikeys` mints a scoped key.
-   Then, because `redirect` is present and passes the bridge's `isSafeRedirect`
-   allow-list (`localhost` / `127.0.0.1` / `*.synaplan.com`, HTTPS only), it does:
+5. **Connect (`handleConnect`).** The bridge calls
+   `POST /api/v1/addin/connect { state, redirect_uri, base_url }`. Synaplan
+   mints the scoped add-in key, checks `redirect_uri` against the server-side
+   allow-list (`outlook-builtin` in `BPLATFORMINSTANCES`: `https://localhost`
+   and `https://127.0.0.1` on any port, `https://addin.synaplan.com`,
+   `https://*.synaplan.com`; HTTPS only) and answers
+   `{ redirect, payload }`. When the relay is allow-listed, `redirect` is
 
    ```
-   window.location.assign(`${redirect}#payload=<base64(JSON payload)>`)
+   <redirect_uri>#payload=<base64(JSON payload)>
    ```
+
+   and the bridge does `window.location.assign(redirect)`. When it is not,
+   `redirect` is `null` and the bridge falls back to Office `messageParent`
+   with `payload` (the rejection is audited as `platform_link.redirect_rejected`).
 
    The dialog now navigates to the relay, **same-origin as the taskpane**.
 
@@ -125,7 +146,7 @@ back to a **cross-origin `messageParent`** from the bridge — which **Outlook
 desktop silently drops** after the login navigations. The fallback only works
 reliably in Outlook on the Web.
 
-**The specific bug we keep reintroducing:** `AddinConnectView.bootstrap()`
+**The specific bug we keep reintroducing:** `PlatformConnectView.bootstrap()`
 rebuilds the login-redirect URL from a _subset_ of params (e.g. only `state` +
 `baseUrl`), dropping `redirect`. After login the bridge has no relay target.
 
@@ -133,7 +154,7 @@ rebuilds the login-redirect URL from a _subset_ of params (e.g. only `state` +
 original query. Use `route.fullPath`:
 
 ```ts
-// AddinConnectView.bootstrap(), unauthenticated branch
+// PlatformConnectView.bootstrap(), unauthenticated branch
 const redirect = route.fullPath // keeps state + label + baseUrl + redirect
 setPendingRedirect(redirect)
 void router.push({ path: '/login', query: { redirect } })
@@ -157,9 +178,13 @@ the redirect URL field-by-field.
 5. **The `state` nonce must round-trip unchanged** and is re-validated in the
    taskpane. A mismatch is a _correct_ rejection, not a bug to "fix" by removing
    the check.
-6. **`isSafeRedirect` on the bridge restricts the relay host** to
-   `localhost` / `127.0.0.1` / `*.synaplan.com`, HTTPS only. Keep it tight — it
-   guards against leaking the API key to an attacker-controlled origin.
+6. **The relay allow-list lives on the server**, in the `outlook-builtin` row
+   of `BPLATFORMINSTANCES` (seeded by Synaplan migration
+   `Version20260908120000`, matched by `RedirectUriPolicy`). The bridge never
+   decides where the key goes and never posts it to `window.opener`. Adding a
+   relay host is a Synaplan data change, not a frontend edit — keep the list
+   tight, it guards against leaking the API key to an attacker-controlled
+   origin.
 7. **No mock mode.** Don't reintroduce a mock relay, `mock-key-` auto-selection,
    or a `MockSynaplanClient`. Sign-in is always real.
 
@@ -200,7 +225,7 @@ root in Windows/macOS covers both `:3000` and `:5174`.
 Both directions must work. The environment is identified by the signed-in email,
 never by a build flag.
 
-> Note: a fix to `AddinConnectView.vue` only takes effect on a given server once
+> Note: a fix to `PlatformConnectView.vue` only takes effect on a given server once
 > that server serves the new code. **Local** picks it up immediately (the
 > `synaplan-frontend` container hot-reloads `./frontend`). **Live** requires the
 > Synaplan image to be rebuilt and `synaplan-platform` to pull it — see
@@ -210,13 +235,14 @@ never by a build flag.
 
 ## Quick triage
 
-| Symptom                                            | Most likely cause                                                             | Fix                                                                   |
-| -------------------------------------------------- | ----------------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| `https://localhost:5174` errors / refused          | Bridge process not running (doesn't survive reboot)                           | `./start-dev.sh` (or `./scripts/dev-bridge-proxy.sh`)                 |
-| "Connected" but dialog stays open                  | `redirect` relay param lost → cross-origin `messageParent` dropped by desktop | Ensure `AddinConnectView.bootstrap` uses `route.fullPath` (above)     |
-| Dialog opens then immediately closes with an error | `state` nonce mismatch (this is correct for a malformed payload)              | Retry; capture the payload if reproducible                            |
-| Cert warning in the dialog                         | Dev CA not trusted on the OS                                                  | Trust `~/.office-addin-dev-certs/ca.crt`; re-run dev-certs if expired |
-| Stuck signed in as the wrong user/server           | Stale roaming settings                                                        | **Settings → Log out** (full reset), then sign in again               |
+| Symptom                                                      | Most likely cause                                                             | Fix                                                                         |
+| ------------------------------------------------------------ | ----------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| `https://localhost:5174` errors / refused                    | Bridge process not running (doesn't survive reboot)                           | `./start-dev.sh` (or `./scripts/dev-bridge-proxy.sh`)                       |
+| "Connected" but dialog stays open                            | `redirect` relay param lost → cross-origin `messageParent` dropped by desktop | Ensure `PlatformConnectView.bootstrap` uses `route.fullPath` (above)        |
+| Dialog lands on `/connect/platform` without `client=outlook` | `/addin/connect` redirect dropped `client` or a bookmark skipped it           | The legacy path must redirect with `client=outlook` plus the original query |
+| Dialog opens then immediately closes with an error           | `state` nonce mismatch (this is correct for a malformed payload)              | Retry; capture the payload if reproducible                                  |
+| Cert warning in the dialog                                   | Dev CA not trusted on the OS                                                  | Trust `~/.office-addin-dev-certs/ca.crt`; re-run dev-certs if expired       |
+| Stuck signed in as the wrong user/server                     | Stale roaming settings                                                        | **Settings → Log out** (full reset), then sign in again                     |
 
 ---
 
