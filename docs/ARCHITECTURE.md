@@ -208,7 +208,10 @@ All endpoints accept `X-API-Key`. Reference: `synaplan/backend/src/Controller/`.
 | **Auth — issue API key**                                | `POST /api/v1/apikeys` (existing)                                  | Authenticated user creates a named, scoped API key; returned **once**. We use this from the bridge page below. |
 | **Auth — revoke API key**                               | `DELETE /api/v1/apikeys/{id}` (existing)                           | "Sign out from this Outlook" calls this with the stored key id.                                                |
 
-> **No companion `plugins/synamail/` is planned.** All add-in features run on existing endpoints. If a single endpoint contract ever becomes awkward, we revisit; until then, no Synaplan-side code changes.
+> Contact profiles are the `synamail` plugin in the Synaplan image
+> (`plugins/synamail`). This repository does not contain that plugin. The
+> add-in calls `/api/v1/user/{userId}/plugins/synamail/profiles…` when it is
+> installed, and explains the gap when it is not.
 
 ## 7.5 Authentication & onboarding (no copy-paste)
 
@@ -385,7 +388,7 @@ This is the section that must pass AppSource validation, so we design for it fro
 | **3 — Distribution**                | Unified manifest variant, store assets, Partner Center submission, validation iterations (4–6 weeks Microsoft turnaround).                                                                                               | 4–8 weeks calendar        |
 | **4 — Mobile + on-prem Exchange**   | Verify against Mailbox 1.5 / Exchange SE, restricted feature set on iOS/Android.                                                                                                                                         | 1 week dev + verification |
 
-(Companion `plugins/synamail/` was considered and **dropped** — the existing Synaplan endpoints are sufficient.)
+(Contact profiles live in synaplan `plugins/synamail`. This repository is the add-in.)
 
 ## 11. Test plan
 

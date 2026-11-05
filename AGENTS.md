@@ -195,7 +195,7 @@ make generate-schemas  # Regenerate Zod schemas from Synaplan OpenAPI spec
 
 - All UI text through `vue-i18n`.
 - **Always update ALL six locales** in `src/locales/` (`en`, `de`, `fr`, `es`, `it`, `pt`) — a key missing from one silently falls back to English.
-- The Synaplan-side plugin (`synamail-plugin/frontend/i18n/`) follows Synaplan's locale set instead: `en`, `de`, `es`, `tr`.
+- Contact profiles are not in this repository. They live in synaplan at `plugins/synamail`, with locales `en`, `de`, `es`, `fr` and `tr`.
 
 ### Styling & form readability (MANDATORY — must be consistent + dark-mode safe)
 

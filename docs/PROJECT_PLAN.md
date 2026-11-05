@@ -12,8 +12,8 @@ Synamail development is organized into 4 sprints:
 - **Sprint 4 — Release (AppSource & Open Source)**: Current focus. The app was
   **condensed for release on 2026-06-10**: compose mode, Mail Routes, the rule
   editor, and all EWS-dependent features were cut (see `FEATURES.md` §6), and
-  **Contact AI Profiling (rolling profiles)** shipped via the new `synamail`
-  Synaplan plugin (`synamail-plugin/`, released with `make sync-plugin`).
+  **Contact AI Profiling (rolling profiles)** shipped via the `synamail`
+  Synaplan plugin, which now lives in the Synaplan image at `plugins/synamail`.
 
 ## GUI Definitions & Assets
 

@@ -133,50 +133,29 @@ make sideload     # opens Outlook on the Web with the manifest
 # page should now load inside the dialog.
 ```
 
-### 2.5 SHIPPED (2026-06-10) — the `synamail` Synaplan plugin (Contact AI Profiling)
+### 2.5 SHIPPED — the `synamail` Synaplan plugin (Contact AI Profiling)
 
-The plugin anticipated here now exists and carries **Contact AI Profiling**:
-rolling per-contact profiles (summary / tone / facts / open loops) whose AI
-prompt and storage live server-side, so profiling can evolve without an add-in
-release. Same dev→release flow as Synaform:
+The profile plugin lives in the Synaplan repository at `plugins/synamail`
+and ships in the Synaplan image. This repository does not contain it, and
+there is no copy step. The add-in calls:
 
-- **Developed in this repo** under `synamail-plugin/`:
+`/api/v1/user/{userId}/plugins/synamail/profiles…`
 
-```
-synamail-plugin/
-├── manifest.json              (id synamail, namespace Plugin\Synamail)
-├── backend/
-│   └── Controller/
-│       └── SynamailController.php   (profile endpoints + the rolling-summary prompt)
-├── frontend/
-│   ├── index.js               (Synaplan web panel: list + delete profiles)
-│   └── i18n/{en,de,es,tr}.json
-└── migrations/
-    └── 001_setup.sql          (per-user BCONFIG group P_synamail)
-```
-
-- **Released to the main repo** with `make sync-plugin` (copies to
-  `synaplan/plugins/synamail/`; `make sync-plugin-and-clear` also clears the
-  Symfony cache). For production, copy the same directory to
-  `synaplan-platform/plugins/synamail/`.
-
-Routes namespace: `/api/v1/user/{userId}/plugins/synamail/profiles...`
 (API-key authenticated; the add-in resolves the numeric user id via
 `GET /api/v1/auth/me`). Profiles are stored in Synaplan's generic
 `plugin_data` table — **no core schema change**.
 
-After dropping the plugin in:
+Install it for one user:
 
 ```bash
-docker compose restart backend worker
-# Then per-user install via:
 docker compose exec backend php bin/console app:plugin:install <userId> synamail
 ```
 
 **Graceful degradation:** on instances without the plugin, the add-in's
 profile card shows an install hint (`PROFILING_UNAVAILABLE`); every other
 feature keeps working. Remember to install the plugin for the AppSource
-reviewer demo account.
+reviewer demo account. The plugin source, tests and locales are in
+[synaplan `plugins/synamail`](https://github.com/metadist/synaplan/tree/main/plugins/synamail).
 
 ## 3. CORS — already permissive
 
@@ -202,16 +181,16 @@ If at some point Synaplan tightens CORS to an explicit allow-list, **then** the 
 
 Almost nothing in v1. For completeness:
 
-| `synaplan-platform/` artefact | Touched for Synamail?                                                                    |
-| ----------------------------- | ---------------------------------------------------------------------------------------- |
-| `docker-compose.yml`          | No.                                                                                      |
-| `.env`                        | No — Synamail introduces no new env vars on the Synaplan side in v1.                     |
-| `plugins/`                    | **Yes** — copy `synamail-plugin/` → `plugins/synamail/` for Contact AI Profiling (§2.5). |
-| `up/` (NFS uploads)           | No — file-upload path is unchanged.                                                      |
-| `re-startweb{1,2,3}.sh`       | No — just **run** them after `docker compose pull`.                                      |
-| `synaplan.sql`                | No — no schema changes for Synamail.                                                     |
-| Galera DB                     | No — no schema changes.                                                                  |
-| Reverse proxy / TLS           | No — `web.synaplan.com` already terminates TLS and routes to the image.                  |
+| `synaplan-platform/` artefact | Touched for Synamail?                                                                                                                      |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `docker-compose.yml`          | No.                                                                                                                                        |
+| `.env`                        | No — Synamail introduces no new env vars on the Synaplan side in v1.                                                                       |
+| `plugins/`                    | **No copy.** Contact profiles already ship in the Synaplan image at `plugins/synamail` (§2.5). Install per user with `app:plugin:install`. |
+| `up/` (NFS uploads)           | No — file-upload path is unchanged.                                                                                                        |
+| `re-startweb{1,2,3}.sh`       | No — just **run** them after `docker compose pull`.                                                                                        |
+| `synaplan.sql`                | No — no schema changes for Synamail.                                                                                                       |
+| Galera DB                     | No — no schema changes.                                                                                                                    |
+| Reverse proxy / TLS           | No — `web.synaplan.com` already terminates TLS and routes to the image.                                                                    |
 
 ## 5. Cheat sheet — your operator actions per sprint
 
@@ -220,7 +199,7 @@ Almost nothing in v1. For completeness:
 | 1      | Nothing.                                                                                                                                                             | Nothing — planning only.                                                                          |
 | 2      | After the bridge-page PR merges and CI republishes the image: `docker compose pull && re-startweb{1,2,3}.sh`. Verify `https://web.synaplan.com/addin/connect` → 200. | Merge the bridge-page PR (`frontend/src/router/index.ts` + `views/AddinConnectView.vue`).         |
 | 3      | Same loop if any Sprint-3 Synaplan-side change ships (none expected for v1 unless the RULE audit forces it).                                                         | Optional: ship the `BSELECTION_RULES` user-scoped write endpoint if the audit shows it's missing. |
-| 3.5    | Optional: drop `plugins/synamail/` into `synaplan-platform/plugins/`, restart backend + worker, run `app:plugin:install`.                                            | Optional plugin source.                                                                           |
+| 3.5    | Install `synamail` for the reviewer account: `app:plugin:install`. The plugin is already in the Synaplan image.                                                      | No plugin source in this repository.                                                              |
 | 4      | Same image-pull loop if any final polish ships.                                                                                                                      | Bump version if the API surface changes during certification iteration.                           |
 
 ## 6. References

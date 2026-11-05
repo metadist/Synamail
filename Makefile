@@ -1,16 +1,10 @@
 .PHONY: help bootstrap dev sideload lint lint-docs format check-types test test-e2e test-e2e-live validate \
         build build-manifest generate-schemas ci-local clean deps doctor sync bridge \
-        up down budget sync-plugin sync-plugin-and-clear
-
-# Synaplan-side companion plugin (synamail-plugin/) — released into the main
-# Synaplan repo's plugins/ directory, same flow as Synaform.
-SYNAPLAN_DIR ?= /wwwroot/synaplan
+        up down budget
 
 # Versioned production manifest (manifest_<major>-<minor>-<patch>_prod.xml).
 # Resolved by glob so a version bump only renames the file — no Makefile edit.
 PROD_MANIFEST := $(lastword $(sort $(wildcard manifest_*_prod.xml)))
-PLUGIN_SRC    = synamail-plugin
-PLUGIN_DST    = $(SYNAPLAN_DIR)/plugins/synamail
 
 # Default target — print help.
 help: ## Show this help
@@ -133,34 +127,6 @@ build-manifest: ## Generate manifest.unified.json from the PRODUCTION manifest (
 
 generate-schemas: ## Regenerate Zod schemas from Synaplan OpenAPI (Sprint 3)
 	@if [ -f package.json ]; then npm run generate:schemas; else echo "skip: no package.json (Sprint 2.1)"; fi
-
-## ---------------------------------------------------------------------------
-## Synaplan plugin (Contact AI Profiling backend)
-## ---------------------------------------------------------------------------
-
-sync-plugin: ## Release synamail-plugin/ into $(SYNAPLAN_DIR)/plugins/synamail
-	rm -rf $(PLUGIN_DST)
-	cp -r $(PLUGIN_SRC) $(PLUGIN_DST)
-	@echo "Synced to $(PLUGIN_DST)"
-	@# plugins/synamail is TRACKED in the synaplan repo (like plugins/synaform).
-	@# Surface the drift right away so the sync never gets swept silently into
-	@# an unrelated synaplan commit — release it as its own dedicated commit.
-	@if git -C $(SYNAPLAN_DIR) rev-parse --is-inside-work-tree >/dev/null 2>&1; then \
-	  status=$$(git -C $(SYNAPLAN_DIR) status --short -- plugins/synamail); \
-	  if [ -n "$$status" ]; then \
-	    echo ""; \
-	    echo "Uncommitted plugin changes in $(SYNAPLAN_DIR):"; \
-	    echo "$$status"; \
-	    echo "→ commit them there as a dedicated commit, e.g.:"; \
-	    echo "  git -C $(SYNAPLAN_DIR) add plugins/synamail && git -C $(SYNAPLAN_DIR) commit -m 'feat(plugins): update synamail plugin to <version>'"; \
-	  else \
-	    echo "synaplan repo: plugins/synamail is clean (in sync with HEAD)"; \
-	  fi; \
-	fi
-
-sync-plugin-and-clear: sync-plugin ## Sync the plugin and clear the Synaplan Symfony cache
-	docker compose -f $(SYNAPLAN_DIR)/docker-compose.yml exec -T backend php bin/console cache:clear
-	@echo "Cache cleared"
 
 clean: ## Remove build output + node_modules cache
 	rm -rf dist coverage playwright-report test-results .vite

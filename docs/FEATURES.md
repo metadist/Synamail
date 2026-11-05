@@ -292,8 +292,8 @@ design-first per the 2026-05-31 decision.
 >
 > **Shipped 2026-06-10 (Phase 1) — via the `synamail` Synaplan plugin.** The
 > implementation supersedes the client-only "Option B" below: the rolling
-> prompt and the stored profile live **server-side** in the plugin
-> (`synamail-plugin/`, released to `synaplan/plugins/synamail/`), keyed per
+> prompt and the stored profile live **server-side** in the Synaplan image at
+> `plugins/synamail` (this repository no longer contains that plugin), keyed per
 > user + contact in Synaplan's generic `plugin_data` store. The add-in rolls
 > one email at a time into the profile (`POST …/profiles/{email}/update`) —
 > explicitly via the profile card, and automatically whenever an email is

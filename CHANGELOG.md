@@ -11,9 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Contact AI Profiling — rolling profiles (Phase 1).** A growing, AI-merged
   summary of every mailing partner: summary, tone, facts, and open loops,
-  updated one email at a time. The prompt and profile storage ship as a
-  separate **Synaplan plugin** (`synamail-plugin/`, released to
-  `synaplan/plugins/synamail/` via `make sync-plugin`); the add-in renders the
+  updated one email at a time. The prompt and profile storage ship in the
+  Synaplan image at `plugins/synamail` (they used to be copied from this
+  repository). The add-in renders the
   profile card in `ContactProfile.vue` and rolls emails in explicitly or on
   save-to-contact-group. Includes a Synaplan-side panel to list/delete all
   profiles (privacy/GDPR surface) and full per-contact delete from Outlook.
@@ -28,6 +28,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- This repository is the Outlook add-in only. Contact profiles moved to
+  `plugins/synamail` in the Synaplan repository. `make sync-plugin` is gone.
 - **Condensed the app to the working v1 feature set for the AppSource release.**
   Everything that was partial, unreachable, or EWS-dependent was removed:
   compose mode (orphaned view, wrong prompts), Mail Routes (config UI without a

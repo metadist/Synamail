@@ -13,7 +13,6 @@ test-results
 tests
 docs
 planning
-synamail-plugin
 *.log
 *.tsbuildinfo
 .DS_Store
