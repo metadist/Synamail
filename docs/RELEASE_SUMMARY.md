@@ -29,23 +29,23 @@ A **rolling profile per mailing partner**: a growing AI-merged summary (who the
 person is, relationship tone, stable facts, open loops like _"they owe you the
 contract draft"_), updated one email at a time from Outlook.
 
-- **The prompt and storage ship as a separate Synaplan plugin** —
-  `synamail-plugin/` in this repo, released to `synaplan/plugins/synamail/`
-  (same model as Synaform: develop in the product repo, release to `plugins/`
-  for customers who want it). No Synaplan core changes.
+- **The prompt and storage ship as a Synaplan plugin** at
+  `plugins/synamail` in the Synaplan repository. This repository is the
+  Outlook add-in only. No Synaplan core schema changes.
 - Deterministic facts (email count, first/last seen, org) are computed in code;
   the AI only writes the narrative. Profiles are user-owned, listed in a
   Synaplan web panel, and deletable from both sides (GDPR).
 - Add-ins on instances **without** the plugin degrade gracefully (install hint).
 
-## Release flow (two repos — keep them honest)
+## Where the two products live
 
-1. Develop in `Synamail/` (add-in + `synamail-plugin/`).
-2. `make sync-plugin` copies the plugin to `synaplan/plugins/synamail/` and
-   **prints the git drift in the synaplan repo** — those files are tracked
-   there, so always commit them as a **dedicated `feat(plugins)`/`fix(plugins)`
-   commit**, never mixed into unrelated synaplan work.
-3. Install per user: `php bin/console app:plugin:install <userId> synamail`.
+1. Develop the add-in in this repository. Manifests, certificates and the
+   host at `addin.synaplan.com` stay here.
+2. Develop contact profiles in
+   [synaplan `plugins/synamail`](https://github.com/metadist/synaplan/tree/main/plugins/synamail).
+   There is no copy step.
+3. Install the plugin per user:
+   `php bin/console app:plugin:install <userId> synamail`.
 4. Add-in store packaging: `manifest_1-0-2_prod.xml` (production GUID, hosted on
    `addin.synaplan.com`) → `make build-manifest` for the AppSource submission.
 

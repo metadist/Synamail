@@ -8,25 +8,22 @@ that file's coverage matrix still wins for _release timing_. Companion to
 [`MAIL_ROUTES.md`](MAIL_ROUTES.md) and [`ARCHITECTURE.md`](ARCHITECTURE.md).
 Owner: Synamail.
 
-> **Architecture update (2026-06-10) — supersedes the 2026-06-07 Option-B
-> lock.** Per the release decision, the profiling prompt must be an **extra,
-> separately-releasable artifact** following the Synaplan plugin structure
-> (like Synaform): developed in this repo under `synamail-plugin/`, released
-> to `synaplan/plugins/synamail/` with `make sync-plugin`, and installed
-> per-user with `php bin/console app:plugin:install <userId> synamail`.
+> **Architecture update (2026-11-05).** The profile plugin lives in the
+> Synaplan repository at `plugins/synamail`. This repository is the Outlook
+> add-in only. Install the plugin per user with
+> `php bin/console app:plugin:install <userId> synamail`.
 >
 > What shipped (Phase 1):
 >
 > - **Server-side rolling profile** per contact, stored in Synaplan's generic
->   `plugin_data` table (dataType `synamail_profile`, key = lower-cased
->   email). No core-schema change — a plugin is additive, so the spirit of
->   "no platform changes" is preserved while gaining real cross-machine sync
->   and removing the 32 KB roaming-quota concern entirely.
+>   `plugin_data` table (dataType `synamail_profile`). The storage key is a
+>   hash of the lower-cased email, because `plugin_data` reduces keys to
+>   `[a-z0-9_]`. The address itself is inside the JSON. No core-schema change.
 > - **The rolling-update prompt lives in the plugin**
->   (`SynamailController::buildProfileUpdatePrompt()`): existing narrative +
->   ONE new email in → merged `summary` / `tone` / `facts` / `openLoops` out.
->   Deterministic fields (email count, first/last seen, org-from-domain) are
->   computed in PHP, never by the model.
+>   (`ContactProfileService`): existing narrative + ONE new email in → merged
+>   `summary` / `tone` / `facts` / `openLoops` out. Deterministic fields
+>   (email count, first/last seen, org-from-domain) are computed in PHP,
+>   never by the model.
 > - **Add-in surfaces** (`ContactProfile.vue`): profile card with the rolling
 >   summary, tone/org chips, facts, open loops, "as of" timestamp, an
 >   "Update profile from this email" action, and full profile delete.

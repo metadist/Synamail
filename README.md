@@ -44,11 +44,9 @@ Synamail/
 ├── INSTALL.md                      — end-user install (post-release) + developer sideload guide
 ├── AGENTS.md                       — workspace rules (AI + human contributors)
 ├── LICENSE
-├── Makefile                        — make help, make ci-local, make sideload, make sync-plugin, …
+├── Makefile                        — make help, make ci-local, make sideload, …
 ├── manifest.xml                    — Outlook add-in manifest, DEV (validated by CI)
 ├── manifest_1-0-2_prod.xml         — PRODUCTION manifest for the AppSource submission (versioned filename)
-├── synamail-plugin/                — Synaplan-side plugin (Contact AI Profiling) — released
-│                                     to synaplan/plugins/synamail via `make sync-plugin`
 ├── package.json / tsconfig*.json / vite.config.ts / vitest.config.ts / playwright.config.ts
 ├── eslint.config.js / commitlint.config.cjs
 ├── .editorconfig / .gitattributes / .gitignore / .markdownlint.jsonc / .nvmrc / .prettierrc.json / .prettierignore
@@ -133,9 +131,10 @@ Synamail is one client of the open-source **Synaplan** platform:
 - **[github.com/metadist/synaplan](https://github.com/metadist/synaplan)** — the
   Synaplan platform (PHP/Symfony + Vue 3), which you can self-host.
 
-Contact AI Profiling ships as a Synaplan plugin in
-[`synamail-plugin/`](synamail-plugin/) and is released into
-`synaplan/plugins/synamail` via `make sync-plugin` — details in
+Contact profiles ship in the Synaplan image at
+[`plugins/synamail`](https://github.com/metadist/synaplan/tree/main/plugins/synamail).
+This repository is only the Outlook add-in: the task pane, the manifests, the
+certificates and the host at `addin.synaplan.com`. Details in
 [`docs/SYNAPLAN_INTEGRATION.md`](docs/SYNAPLAN_INTEGRATION.md).
 
 ## Sprint summary
