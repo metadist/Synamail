@@ -143,6 +143,7 @@
     "profile": {
       "title": "Perfil continuo",
       "empty": "Aún no hay perfil. Incorpore el correo abierto para crear uno: Synamail construye un resumen creciente de este contacto con cada correo que añade.",
+      "create": "Crear perfil del contacto",
       "update": "Actualizar el perfil",
       "updateFromEmail": "Actualizar el perfil con este correo",
       "noEmailOpen": "Abra un correo de este contacto para ampliar el perfil.",

@@ -143,6 +143,7 @@
     "profile": {
       "title": "Profil évolutif",
       "empty": "Pas encore de profil. Intégrez l'e-mail ouvert pour en créer un — Synamail construit un résumé évolutif de ce contact à chaque e-mail ajouté.",
+      "create": "Créer le profil du contact",
       "update": "Mettre à jour le profil",
       "updateFromEmail": "Mettre à jour le profil avec cet e-mail",
       "noEmailOpen": "Ouvrez un e-mail de ce contact pour enrichir le profil.",

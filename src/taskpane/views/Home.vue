@@ -3,6 +3,7 @@ import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import ChatThread from '@/taskpane/components/ChatThread.vue'
 import type { ChatMessage } from '@/taskpane/components/ChatThread.vue'
+import ContactProfilePanel from '@/taskpane/components/ContactProfilePanel.vue'
 import EmailWritingBox from '@/taskpane/components/EmailWritingBox.vue'
 import KnowledgeBaseBox from '@/taskpane/components/KnowledgeBaseBox.vue'
 import SummarizeBox from '@/taskpane/components/SummarizeBox.vue'
@@ -153,9 +154,6 @@ async function resetChat(): Promise<void> {
 
 <template>
   <section class="home">
-    <!-- One box per function. Scope is intentionally narrow for now; more
-         tools (and Profiling) return over time. -->
-
     <!-- (a) Write an email or reply. -->
     <EmailWritingBox />
 
@@ -165,7 +163,13 @@ async function resetChat(): Promise<void> {
     <!-- (c) Save the open email to the knowledge base. -->
     <KnowledgeBaseBox />
 
-    <!-- (d) Ask Synaplan — grounded on the open mail when present (#55). -->
+    <!-- (d) Create or update the contact profile for the open email. -->
+    <div class="syn-card">
+      <h2 class="syn-card-title">{{ t('home.sections.profiling') }}</h2>
+      <ContactProfilePanel />
+    </div>
+
+    <!-- (e) Ask Synaplan — grounded on the open mail when present (#55). -->
     <div class="syn-card">
       <h2 class="syn-card-title">{{ t('home.commands.chat') }}</h2>
       <ChatThread
@@ -176,12 +180,6 @@ async function resetChat(): Promise<void> {
       />
       <Toast v-if="error" kind="error" :message="error" />
     </div>
-
-    <!-- Profiling is temporarily disabled and will return in a later iteration.
-    <AccordionItem :title="t('home.sections.profiling')">
-      <ContactProfileView />
-    </AccordionItem>
-    -->
   </section>
 </template>
 

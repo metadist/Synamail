@@ -111,7 +111,11 @@ watch(contactEmail, load, { immediate: true })
             :loading="active === 'update'"
             @click="update"
           >
-            {{ t('contactProfile.profile.update') }}
+            {{
+              profileLoaded && !profile
+                ? t('contactProfile.profile.create')
+                : t('contactProfile.profile.update')
+            }}
           </ActionButton>
           <button type="button" class="pp__link" @click="openContactProfile(contactEmail)">
             {{ t('contactProfile.openFull') }} →

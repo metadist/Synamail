@@ -25,6 +25,8 @@ const { fakeClient, holder } = vi.hoisted(() => {
     })),
     getChatMessages: vi.fn(async () => [] as { role: 'user' | 'ai'; text: string }[]),
     ragGroups: vi.fn(async () => []),
+    getContactProfile: vi.fn(async () => null),
+    updateContactProfile: vi.fn(async () => null),
   }
   return { fakeClient, holder }
 })
@@ -244,9 +246,9 @@ describe('Home.vue', () => {
     expect(text).toContain(en.tone.formal)
   })
 
-  it('hides the (temporarily disabled) profiling section', () => {
+  it('shows the profiling section that creates a contact profile', () => {
     resetItem()
     const text = mountHome().text()
-    expect(text).not.toContain(en.home.sections.profiling)
+    expect(text).toContain(en.home.sections.profiling)
   })
 })

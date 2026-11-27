@@ -269,7 +269,11 @@ async function ask(): Promise<void> {
               :loading="active === 'profileUpdate'"
               @click="updateProfileFromEmail"
             >
-              {{ t('contactProfile.profile.updateFromEmail') }}
+              {{
+                profile
+                  ? t('contactProfile.profile.updateFromEmail')
+                  : t('contactProfile.profile.create')
+              }}
             </ActionButton>
             <p v-else class="syn-muted cp__hint">{{ t('contactProfile.profile.noEmailOpen') }}</p>
             <button
