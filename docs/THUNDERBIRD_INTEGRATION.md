@@ -179,7 +179,7 @@ stubbing in tests and decouples the UI from the host.
 
 ## 9. Non-goals (for the first iteration)
 
-- Contact AI Profiling (currently disabled in the taskpane too).
+- Contact AI Profiling (it is back on the Outlook taskpane; not in the first Thunderbird iteration).
 - Whisper-backend dictation fallback (Web Speech only, hidden when unsupported).
 - Server-side chat-id roaming (accept per-profile chat continuity).
 - Any other mail client (Apple Mail, etc.) — but the `MailHost` seam is the

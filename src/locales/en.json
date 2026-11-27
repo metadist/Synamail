@@ -143,6 +143,7 @@
     "profile": {
       "title": "Rolling profile",
       "empty": "No profile yet. Roll the open email in to start one — Synamail builds a growing summary of this contact with every email you add.",
+      "create": "Create user profile",
       "update": "Update the profile",
       "updateFromEmail": "Update profile from this email",
       "noEmailOpen": "Open an email from this contact to grow the profile.",

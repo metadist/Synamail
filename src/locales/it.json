@@ -143,6 +143,7 @@
     "profile": {
       "title": "Profilo evolutivo",
       "empty": "Nessun profilo ancora. Integra l'e-mail aperta per crearne uno: Synamail costruisce un riepilogo crescente di questo contatto con ogni e-mail aggiunta.",
+      "create": "Crea il profilo del contatto",
       "update": "Aggiorna il profilo",
       "updateFromEmail": "Aggiorna il profilo con questa e-mail",
       "noEmailOpen": "Apri un'e-mail di questo contatto per ampliare il profilo.",

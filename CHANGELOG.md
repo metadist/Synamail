@@ -28,6 +28,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Profiling is back on the Outlook taskpane.** The Home card creates a contact
+  profile from the open email (`Create user profile`) and opens the full profile
+  for search, save, ask, and delete. It talks to the `synamail` plugin routes
+  already in Synaplan.
 - This repository is the Outlook add-in only. Contact profiles moved to
   `plugins/synamail` in the Synaplan repository. `make sync-plugin` is gone.
 - **Condensed the app to the working v1 feature set for the AppSource release.**

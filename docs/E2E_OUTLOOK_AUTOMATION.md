@@ -45,8 +45,9 @@ Files:
   (it also blocks the Office.js CDN so the shim isn't overwritten), plus
   `expectHomeReadReady` / `homeCard` / `officeCalls` helpers and the `LIVE` flag.
 - `tests/e2e/read-mode.spec.ts` — Home flows (write / summarise / knowledge /
-  chat) against the condensed taskpane. `contact-profile.spec.ts` is skipped
-  until Profiling is re-enabled on Home.
+  chat). `contact-profile.spec.ts` covers the Profiling card: create a contact
+  profile from the open email, then search, save, ask, and delete on the full
+  profile.
 
 All specs are tagged `@ci`, so they run in GitHub CI's E2E job (which runs
 `--grep '@ci'`) as well as locally. They are deterministic — no real backend, no

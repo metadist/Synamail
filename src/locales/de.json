@@ -143,6 +143,7 @@
     "profile": {
       "title": "Laufendes Profil",
       "empty": "Noch kein Profil. Übernehmen Sie die geöffnete E-Mail, um eines zu starten — Synamail baut mit jeder hinzugefügten E-Mail eine wachsende Zusammenfassung dieses Kontakts auf.",
+      "create": "Kontaktprofil erstellen",
       "update": "Profil aktualisieren",
       "updateFromEmail": "Profil mit dieser E-Mail aktualisieren",
       "noEmailOpen": "Öffnen Sie eine E-Mail dieses Kontakts, um das Profil zu erweitern.",
